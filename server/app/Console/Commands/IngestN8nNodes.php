@@ -6,14 +6,12 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
 class IngestN8nNodes extends Command{
-
     protected $signature = 'app:ingest-n8n-nodes';
-    protected $description = 'Fetch n8n nodes from GitHub and store in Qdrant';
+    protected $description = 'Ingest n8n node catalog from GitHub into Qdrant';
 
     public function handle(){
-        $this->info("Fetching node list from GitHub...");
+        $this->info("Fetching n8n node folders...");
 
-        // get nodes folder from n8n github (contains essentially all nodes)
         $response = Http::withHeaders([
             'User-Agent' => 'Laravel-RAG'
         ])->get('https://api.github.com/repos/n8n-io/n8n/contents/packages/nodes-base/nodes');
@@ -22,49 +20,60 @@ class IngestN8nNodes extends Command{
             $this->error('GitHub API failed');
             return;
         }
-        
-        $nodes = $response->json();
-        // for each folder in nodes get required data (description/properties/operations...)
-        foreach ($nodes as $node) {
-            if ($node['type'] !== 'dir') continue;
 
-            $nodeName = $node['name'];
-            $this->info("Processing $nodeName");
+        foreach ($response->json() as $folder) {
+            if ($folder['type'] !== 'dir') continue;
 
-            $url = "https://raw.githubusercontent.com/n8n-io/n8n/master/packages/nodes-base/nodes/$nodeName/$nodeName.description.ts";
+            $this->info("Scanning {$folder['name']}");
 
-            $ts = Http::get($url)->body();
-            if (!$ts) continue;
+            $files = Http::withHeaders([
+                'User-Agent' => 'Laravel-RAG'
+            ])->get($folder['url'])->json();
 
-            $parsed = $this->parseDescriptionFile($ts, $nodeName);
-            if (!$parsed) continue;
+            $nodeJson = null;
 
-            $this->storeInQdrant($parsed);
+            foreach ($files as $file) {
+                if (str_ends_with($file['name'], '.node.json')) {
+                    $nodeJson = $file['download_url'];
+                    break;
+                }
+            }
+
+            if (!$nodeJson) {
+                $this->warn("No .node.json found for {$folder['name']}");
+                continue;
+            }
+
+            $data = Http::get($nodeJson)->json();
+            if (!$data) continue;
+
+            $payload = $this->buildPayload($data);
+            $this->storeInQdrant($payload);
         }
 
-        $this->info("Done.");
+        $this->info("n8n node catalog ingestion completed.");
     }
 
-    private function parseDescriptionFile(string $ts, string $nodeName): ?array{
-        // extract displayName along with some meta data
-        preg_match("/displayName:\s*'([^']+)'/", $ts, $display);
-        preg_match("/description:\s*'([^']+)'/", $ts, $description);
-        preg_match("/group:\s*\[([^\]]+)\]/", $ts, $group);
-        preg_match("/version:\s*([0-9]+)/", $ts, $version);
-
+    private function buildPayload(array $data): array{
         return [
-            "id" => strtolower($nodeName),
-            "node_name" => $nodeName,
-            "display_name" => $display[1] ?? $nodeName,
-            "description" => $description[1] ?? '',
-            "group" => $group[1] ?? '',
-            "version" => intval($version[1] ?? 1),
-            "raw" => $ts
+            "id" => $data['node'],
+            "node" => $data['node'],
+            "key" => str_replace('n8n-nodes-base.', '', $data['node']),
+            "categories" => $data['categories'] ?? [],
+            "docs" => $data['resources']['primaryDocumentation'][0]['url'] ?? null,
+            "credentials" => $data['resources']['credentialDocumentation'][0]['url'] ?? null,
+            "codex" => $data['codexVersion'] ?? null,
         ];
     }
 
     private function storeInQdrant(array $node){
-        $vector = $this->embed($node['display_name'] . " " . $node['description']);
+        $text = implode(' ', [
+            $node['node'],
+            implode(' ', $node['categories']),
+            $node['docs'] ?? ''
+        ]);
+
+        $vector = $this->embed($text);
 
         Http::put(env('QDRANT_CLUSTER_ENDPOINT') . '/collections/n8n_catalog/points', [
             "points" => [
@@ -78,7 +87,7 @@ class IngestN8nNodes extends Command{
     }
 
     private function embed(string $text): array{
-        $response = Http::withToken(env('QDRANT_API_KEY'))
+        $response = Http::withToken(env('OPENAI_API_KEY'))
             ->post('https://api.openai.com/v1/embeddings', [
                 "model" => "text-embedding-3-large",
                 "input" => $text
@@ -87,4 +96,3 @@ class IngestN8nNodes extends Command{
         return $response['data'][0]['embedding'];
     }
 }
-
