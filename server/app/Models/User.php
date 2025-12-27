@@ -38,4 +38,8 @@ class User extends Authenticatable
     public function posts(){
         return $this->hasMany(ModelsUserPost::class);
     }
+
+    public function copilotHistory(){
+        return $this->hasMany(UserCopilotHistory::class , 'user_id' , 'id');
+    }
 }

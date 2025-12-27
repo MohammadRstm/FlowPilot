@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\PostComment;
 use Illuminate\Database\Seeder;
 use App\Models\User as ModelsUser;
+use App\Models\UserCopilotHistory;
 use App\Models\UserPost as ModelsUserPost;
 
 class UserPostSeeder extends Seeder{
@@ -18,6 +19,10 @@ class UserPostSeeder extends Seeder{
                     PostComment::fake()
                     ->count(10)
                 )
+            )
+            ->has(
+                UserCopilotHistory::factory()
+                ->count(3)
             )
             ->create();
     }
