@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 class UserController extends Controller{
     public function ask(CopilotPayload $req){
         try{
-            $answer = UserService::getCopilotAnwer($req["question"]);
+            $answer = UserService::getCopilotAnswer($req["question"]);
             return $this->successResponse($answer);
         }catch(Exception $ex){
             return $this->errorResponse("Failed to ask copilot" , ["1" => $ex->getMessage()]);
