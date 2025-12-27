@@ -8,6 +8,7 @@ use Illuminate\Database\Seeder;
 use App\Models\User as ModelsUser;
 use App\Models\UserCopilotHistory;
 use App\Models\UserPost as ModelsUserPost;
+use App\Models\UserRole;
 
 class UserPostSeeder extends Seeder{
 

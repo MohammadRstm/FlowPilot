@@ -2,24 +2,22 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Http\Models\UserPost;
 use App\Models\UserPost as ModelsUserPost;
 
-class User extends Authenticatable
-{
+class User extends Authenticatable{
     use HasFactory, Notifiable;
 
     protected $fillable = [
+        'user_role_id',
         'first_name',
         'last_name',
         'email',
         'password',
         'photo_url',
-        'email_verified_at'
+        'email_verified_at',
     ];
 
     protected function casts(): array{
@@ -32,6 +30,10 @@ class User extends Authenticatable
     }
 
     /* RELATIONSHIPS */
+
+    public function role(){
+        return $this->belongsTo(UserRole::class);
+    }
 
     public function posts(){
         return $this->hasMany(ModelsUserPost::class);

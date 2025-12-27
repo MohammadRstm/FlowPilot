@@ -4,12 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Http\Models\User;
 use App\Models\User as ModelsUser;
 
-class UserPost extends Model
-{
-    /** @use HasFactory<\Database\Factories\UserPostFactory> */
+class UserPost extends Model{
     use HasFactory;
 
     protected $fillable = [
