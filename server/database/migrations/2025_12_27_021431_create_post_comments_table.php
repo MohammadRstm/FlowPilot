@@ -8,13 +8,13 @@ return new class extends Migration{
     public function up(): void{
         Schema::create('post_comments', function (Blueprint $table) {
             $table->id();
-            $table->string('content');
             $table->bigInteger('user_id');
             $table->bigInteger('post_id');
+            $table->string('content');
             $table->timestamps();
         });
     }
-    
+
     public function down(): void
     {
         Schema::dropIfExists('post_comments');

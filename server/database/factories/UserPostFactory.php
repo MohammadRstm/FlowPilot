@@ -12,7 +12,6 @@ class UserPostFactory extends Factory{// only create posts if you have some user
             'title' => fake()->title(),
             'description' => fake()->sentence(),
             'photo_url' => fake()->imageUrl(),
-            'user_id' => User::inRandomOrder()->first()->id,
             'likes' => fake()->numberBetween(30 , 200),
             'imports' => fake()->numberBetween(2 , 10),
             'json_content' => [

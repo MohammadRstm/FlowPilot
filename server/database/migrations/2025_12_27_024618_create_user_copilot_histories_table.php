@@ -10,9 +10,9 @@ return new class extends Migration{
         Schema::create('user_copilot_histories', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('user_id');
-            $table->string('response');
+            $table->json('response');
             $table->string('question');
-            $table->string('description');
+            $table->text('ai_description');
             $table->string('ai_model');
             $table->timestamps();
         });

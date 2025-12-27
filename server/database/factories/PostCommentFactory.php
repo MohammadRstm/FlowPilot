@@ -11,8 +11,6 @@ class PostCommentFactory extends Factory{// can create comments even if users an
     public function definition(): array{
         return [
             'content' => fake()->sentence(),
-            'user_id' => User::factory()->create()->id,
-            'post_id' => UserPost::factory()->create()->id
         ];
     }
 }

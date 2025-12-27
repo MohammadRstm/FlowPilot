@@ -32,6 +32,6 @@ class UserPost extends Model{
     }
 
     public function comments(){
-        return $this->hasMany(PostComment::class);
+        return $this->hasMany(PostComment::class , 'post_id', 'id');
     }
 }

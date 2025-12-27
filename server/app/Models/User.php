@@ -43,6 +43,10 @@ class User extends Authenticatable{
         return $this->hasMany(UserCopilotHistory::class , 'user_id' , 'id');
     }
 
+    public function comments(){
+        return $this->hasMany(PostComment::class , 'user_id' , 'id');
+    }
+
     public function followings(){
         return $this->belongsToMany(
             User::class,     

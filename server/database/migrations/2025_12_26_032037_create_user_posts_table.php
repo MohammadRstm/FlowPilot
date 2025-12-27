@@ -9,11 +9,11 @@ return new class extends Migration{
     public function up(): void{
         Schema::create('user_posts', function (Blueprint $table) {
             $table->id();
+            $table->bigInteger('user_id');
             $table->string('title');
             $table->bigInteger('likes');
             $table->bigInteger('imports');
-            $table->bigInteger('user_id');
-            $table->string('json_content');
+            $table->json('json_content');
             $table->string('description');
             $table->string('photo_url');
             $table->timestamps();

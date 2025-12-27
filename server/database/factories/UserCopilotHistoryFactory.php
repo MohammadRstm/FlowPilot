@@ -12,8 +12,7 @@ class UserCopilotHistoryFactory extends Factory{
             'question' => fake()->sentence(),
             'ai_model' => 'gpt-4-mini',
             'ai_description' => fake()->paragraph(),
-            'user_id' => User::factory()->create()->id,
-            'resposne' => fake()->paragraph()// for now
+            'response' => fake()->paragraph()// for now
         ];
     }
 }

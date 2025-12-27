@@ -20,6 +20,7 @@ class UserFactory extends Factory{
             'first_name' => fake()->firstName(),
             'last_name' => fake()->lastName(),
             'email' => fake()->unique()->safeEmail(),
+            'email_verified_at' => fake()->dateTimeBetween('-1 year' , 'now'),
             'password' => static::$password ??= Hash::make('password'),
             'photo_url' => fake()->imageUrl(),
         ];
