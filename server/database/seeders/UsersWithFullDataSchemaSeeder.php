@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Follower;
 use App\Models\PostComment;
 use Illuminate\Database\Seeder;
 use App\Models\User as ModelsUser;
@@ -23,6 +24,14 @@ class UserPostSeeder extends Seeder{
             ->has(
                 UserCopilotHistory::factory()
                 ->count(3)
+            )
+            ->has(
+                Follower::factory()
+                ->count(50)
+            )
+            ->has(
+                Follower::factory()
+                ->count(50)
             )
             ->create();
     }

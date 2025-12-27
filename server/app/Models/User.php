@@ -31,9 +31,7 @@ class User extends Authenticatable
         ];
     }
 
-    public function getFullNameAttribute(): string{
-        return "{$this->first_name} {$this->last_name}";
-    }
+    /* RELATIONSHIPS */
 
     public function posts(){
         return $this->hasMany(ModelsUserPost::class);
@@ -41,5 +39,29 @@ class User extends Authenticatable
 
     public function copilotHistory(){
         return $this->hasMany(UserCopilotHistory::class , 'user_id' , 'id');
+    }
+
+    public function followings(){
+        return $this->belongsToMany(
+            User::class,     
+            'followers',    
+            'follower_id',  
+            'followed_id' 
+        );
+    }
+
+    public function followers(){
+        return $this->belongsToMany(
+            User::class,
+            'followers',
+            'followed_id',  
+            'follower_id'  
+        );
+    }
+
+    /* HELPERS */
+
+    public function getFullNameAttribute(): string{
+        return "{$this->first_name} {$this->last_name}";
     }
 }
