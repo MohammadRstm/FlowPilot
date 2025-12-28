@@ -15,11 +15,84 @@ class IngestN8nSchemas extends Command{
     protected $description = 'Extract n8n node schemas from TypeScript and store in Qdrant';
 
     public function handle(){
-        
+        try{
+            /** @var array|null $nodes */
+            $nodes = $this->getNodes();
+
+            foreach($nodes as $node){
+                if ($node['type'] !== 'dir') continue;
+    
+                $this->info("Parsing {$node['name']}");
+    
+                $ts = $this->processNodes($node['name'], $node['url']);
+
+                if (!$ts) continue;
+
+                $schemas = $this->extractSchemas($ts, $node['name']);
+
+                foreach ($schemas as $schema) {
+                    $this->store($schema);
+                }
+            }
+        }catch(\Exception $ex){
+            $this->error("Failed to fetch n8n nodes: " . $ex->getMessage());
+            return;
+        }
+
+    }
+
+    private function processNodes(string $url){
+        $files = $this->getFiles($url);
+
+        $ts = '';
+
+        foreach ($files as $file) {
+            if (str_ends_with($file['name'], '.node.ts')) {
+                /** @var Response $downloadResp */
+                $downloadResp = Http::get($file['download_url']);
+                $ts .= $downloadResp->body();
+            }
+
+            if ($file['type'] === 'dir' && $file['name'] === 'properties') {
+                $this->processProperties($file['url'], $ts);
+            }else{
+                throw new \RuntimeException("Unexpected file structure in node folder");
+            }
+        }      
+    }
+
+    private function processProperties(string $url, string &$ts){
+        $files = $this->getFiles($url);
+
+        foreach ($files as $file) {
+            if (str_ends_with($file['name'], '.ts')) {
+                /** @var Response $downloadResp */
+                $downloadResp = Http::get($file['download_url']);
+                $ts .= $downloadResp->body();
+            }
+        }  
+    }
+
+    private function getFiles(string $url){
         /** @var Response $response */
         $response = Http::withHeaders([
             'User-Agent' => 'Laravel-RAG',
-            'Authorization' => 'token ' . "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"
+            'Authorization' => 'token ' . env('GITHUB_TOKEN' , '')
+        ])->get($url);
+        if(!$response->ok()){
+            $this->error('GitHub API failed. Status: ' . $response->status());
+            $this->error('Response body: ' . $response->body());
+            return;
+        }
+
+        return $response->json();
+    }      
+
+    private function getNodes(){
+        /** @var Response $response */
+        $response = Http::withHeaders([
+            'User-Agent' => 'Laravel-RAG',
+            'Authorization' => 'token ' . env('GITHUB_TOKEN' , '')
         ])->get(
             'https://api.github.com/repos/n8n-io/n8n/contents/packages/nodes-base/nodes'
         );
@@ -27,64 +100,10 @@ class IngestN8nSchemas extends Command{
         if(!$response->ok()){
             $this->error('GitHub API failed. Status: ' . $response->status());
             $this->error('Response body: ' . $response->body());
-            return;
+            throw new \RuntimeException("GitHub API request failed");
         }
 
-        /** @var array|null $nodes */
-        $nodes = $response->json();
-
-        foreach($nodes as $node){
-            if ($node['type'] !== 'dir') continue;
-
-            $this->info("Parsing {$node['name']}");
-
-            /** @var Response $response */
-            $response = Http::withHeaders([
-                'User-Agent' => 'Laravel-RAG',
-                'Authorization' => 'token ' . "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"
-            ])->get($node['url']);
-
-            if(!$response->ok()){
-                $this->error('GitHub API failed. Status: ' . $response->status());
-                $this->error('Response body: ' . $response->body());
-                return;
-            }
-
-            /** @var array|null $files */
-            $files = $response->json();
-
-            $ts = '';
-
-            foreach ($files as $file) {
-                if (str_ends_with($file['name'], '.node.ts')) {
-                    /** @var Response $downloadResp */
-                    $downloadResp = Http::get($file['download_url']);
-                    $ts .= $downloadResp->body();
-                }
-
-                if ($file['type'] === 'dir' && $file['name'] === 'properties') {
-                    /** @var Response $propsResp */
-                    $propsResp = Http::get($file['url']);
-                    /** @var array|null $props */
-                    $props = $propsResp->json();
-                    foreach ($props as $p) {
-                        if (str_ends_with($p['name'], '.ts')) {
-                            /** @var Response $downloadResp2 */
-                            $downloadResp2 = Http::get($p['download_url']);
-                            $ts .= $downloadResp2->body();
-                        }
-                    }
-                }
-            }
-
-            if (!$ts) continue;
-
-            $schemas = $this->extractSchemas($ts, $node['name']);
-
-            foreach ($schemas as $schema) {
-                $this->store($schema);
-            }
-        }
+        return $response->json();
     }
 
     private function extractSchemas(string $ts, string $node){
