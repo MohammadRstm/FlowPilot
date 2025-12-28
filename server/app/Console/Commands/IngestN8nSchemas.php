@@ -4,6 +4,9 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
+use Illuminate\Http\Client\Response;
+
 
 class IngestN8nSchemas extends Command{
 
@@ -11,10 +14,11 @@ class IngestN8nSchemas extends Command{
     protected $description = 'Extract n8n node schemas from TypeScript and store in Qdrant';
 
     public function handle(){
+        
         /** @var Response $response */
         $response = Http::withHeaders([
             'User-Agent' => 'Laravel-RAG',
-            'Authorization' => 'token ' . env('GITHUB_TOKEN')
+            'Authorization' => 'token ' . "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"
         ])->get(
             'https://api.github.com/repos/n8n-io/n8n/contents/packages/nodes-base/nodes'
         );
@@ -25,27 +29,48 @@ class IngestN8nSchemas extends Command{
             return;
         }
 
+        /** @var array|null $nodes */
         $nodes = $response->json();
-        
-        foreach ($nodes as $node) {
+
+        foreach($nodes as $node){
             if ($node['type'] !== 'dir') continue;
 
             $this->info("Parsing {$node['name']}");
 
-            $files = Http::get($node['url'])->json();
+            /** @var Response $response */
+            $response = Http::withHeaders([
+                'User-Agent' => 'Laravel-RAG',
+                'Authorization' => 'token ' . "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"
+            ])->get($node['url']);
+
+            if(!$response->ok()){
+                $this->error('GitHub API failed. Status: ' . $response->status());
+                $this->error('Response body: ' . $response->body());
+                return;
+            }
+
+            /** @var array|null $files */
+            $files = $response->json();
 
             $ts = '';
 
             foreach ($files as $file) {
                 if (str_ends_with($file['name'], '.node.ts')) {
-                    $ts .= Http::get($file['download_url'])->body();
+                    /** @var Response $downloadResp */
+                    $downloadResp = Http::get($file['download_url']);
+                    $ts .= $downloadResp->body();
                 }
 
                 if ($file['type'] === 'dir' && $file['name'] === 'properties') {
-                    $props = Http::get($file['url'])->json();
+                    /** @var Response $propsResp */
+                    $propsResp = Http::get($file['url']);
+                    /** @var array|null $props */
+                    $props = $propsResp->json();
                     foreach ($props as $p) {
                         if (str_ends_with($p['name'], '.ts')) {
-                            $ts .= Http::get($p['download_url'])->body();
+                            /** @var Response $downloadResp2 */
+                            $downloadResp2 = Http::get($p['download_url']);
+                            $ts .= $downloadResp2->body();
                         }
                     }
                 }
@@ -110,24 +135,84 @@ class IngestN8nSchemas extends Command{
             collect($schema['fields'])->pluck('name')->join(' ')
         ]);
 
-        $vector = $this->embed($text);
+        // generate vectors
+        $denseVector  = $this->embed($text);
+        $sparseVector = $this->buildSparseVector($text);
 
-        Http::put(env('QDRANT_CLUSTER_ENDPOINT') . '/collections/n8n_node_schemas/points', [
-            "points" => [[
-                "id" => uniqid(),
-                "vector" => $vector,
-                "payload" => $schema
-            ]]
-        ]);
+        $endpoint = rtrim("https://b66de96f-2a18-4cc1-9551-72590c427f65.europe-west3-0.gcp.cloud.qdrant.io", '/');
+        $apiKey   = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.cjPdIUH1DBKGMScZ5RgZ1Xv-zESkjGMS3H8acC_8D_c";
+
+        $id = (string) Str::uuid();
+
+        /** @var Response $response */
+        $response = Http::withHeaders([
+            'api-key' => $apiKey
+        ])->put(
+            $endpoint . '/collections/n8n_node_schemas/points?wait=true',
+            [
+                "points" => [[
+                    "id" => $id,
+                    "vector" => [
+                        "dense-vector" => $denseVector,
+                        "text-sparse"  => $sparseVector
+                    ],
+                    "payload" => $schema
+                ]]
+            ]
+        );
+
+        if (!$response->ok()) {
+            $this->error("Qdrant insert failed: " . $response->body());
+        }
     }
 
-    private function embed(string $text){
-        $r = Http::withToken(env('OPENAI_API_KEY'))
+    private function buildSparseVector(string $text): array{
+        $text = strtolower($text);
+        $text = preg_replace('/([a-z])([A-Z])/', '$1 $2', $text);
+
+        $tokens = preg_split('/[^a-z0-9]+/i', $text);
+
+        $freqs = [];
+
+        foreach ($tokens as $token) {
+            if (strlen($token) < 2) continue;
+            $freqs[$token] = ($freqs[$token] ?? 0) + 1;
+        }
+
+        $indices = [];
+        $values  = [];
+
+        foreach ($freqs as $token => $count) {
+            $indices[] = crc32($token);
+            $values[]  = (float) $count; // raw TF (idf handled by Qdrant)
+        }
+
+        return [
+            'indices' => $indices,
+            'values'  => $values,
+        ];
+    }
+
+    private function embed(string $text): array{
+        /** @var Response $response */
+        $response = Http::withToken("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")
+            ->timeout(60)
             ->post('https://api.openai.com/v1/embeddings', [
                 "model" => "text-embedding-3-large",
                 "input" => $text
             ]);
 
-        return $r['data'][0]['embedding'];
+        if (!$response->ok()) {
+            throw new \RuntimeException("OpenAI embedding failed: " . $response->body());
+        }
+
+        $vector = $response->json('data.0.embedding');
+
+        if (count($vector) !== 3072) {
+            throw new \RuntimeException("Embedding size mismatch: " . count($vector));
+        }
+
+        return $vector;
     }
+
 }
