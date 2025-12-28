@@ -11,10 +11,22 @@ class IngestN8nSchemas extends Command{
     protected $description = 'Extract n8n node schemas from TypeScript and store in Qdrant';
 
     public function handle(){
-        $nodes = Http::get(
+        /** @var Response $response */
+        $response = Http::withHeaders([
+            'User-Agent' => 'Laravel-RAG',
+            'Authorization' => 'token ' . env('GITHUB_TOKEN')
+        ])->get(
             'https://api.github.com/repos/n8n-io/n8n/contents/packages/nodes-base/nodes'
-        )->json();
+        );
 
+        if(!$response->ok()){
+            $this->error('GitHub API failed. Status: ' . $response->status());
+            $this->error('Response body: ' . $response->body());
+            return;
+        }
+
+        $nodes = $response->json();
+        
         foreach ($nodes as $node) {
             if ($node['type'] !== 'dir') continue;
 
