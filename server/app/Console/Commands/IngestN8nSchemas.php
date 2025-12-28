@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Services\IngestionService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -136,8 +137,8 @@ class IngestN8nSchemas extends Command{
         ]);
 
         // generate vectors
-        $denseVector  = $this->embed($text);
-        $sparseVector = $this->buildSparseVector($text);
+        $denseVector  = IngestionService::embed($text);
+        $sparseVector = IngestionService::buildSparseVector($text);
 
         $endpoint = rtrim("https://b66de96f-2a18-4cc1-9551-72590c427f65.europe-west3-0.gcp.cloud.qdrant.io", '/');
         $apiKey   = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.cjPdIUH1DBKGMScZ5RgZ1Xv-zESkjGMS3H8acC_8D_c";
@@ -164,55 +165,6 @@ class IngestN8nSchemas extends Command{
         if (!$response->ok()) {
             $this->error("Qdrant insert failed: " . $response->body());
         }
-    }
-
-    private function buildSparseVector(string $text): array{
-        $text = strtolower($text);
-        $text = preg_replace('/([a-z])([A-Z])/', '$1 $2', $text);
-
-        $tokens = preg_split('/[^a-z0-9]+/i', $text);
-
-        $freqs = [];
-
-        foreach ($tokens as $token) {
-            if (strlen($token) < 2) continue;
-            $freqs[$token] = ($freqs[$token] ?? 0) + 1;
-        }
-
-        $indices = [];
-        $values  = [];
-
-        foreach ($freqs as $token => $count) {
-            $indices[] = crc32($token);
-            $values[]  = (float) $count; // raw TF (idf handled by Qdrant)
-        }
-
-        return [
-            'indices' => $indices,
-            'values'  => $values,
-        ];
-    }
-
-    private function embed(string $text): array{
-        /** @var Response $response */
-        $response = Http::withToken("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")
-            ->timeout(60)
-            ->post('https://api.openai.com/v1/embeddings', [
-                "model" => "text-embedding-3-large",
-                "input" => $text
-            ]);
-
-        if (!$response->ok()) {
-            throw new \RuntimeException("OpenAI embedding failed: " . $response->body());
-        }
-
-        $vector = $response->json('data.0.embedding');
-
-        if (count($vector) !== 3072) {
-            throw new \RuntimeException("Embedding size mismatch: " . count($vector));
-        }
-
-        return $vector;
     }
 
 }

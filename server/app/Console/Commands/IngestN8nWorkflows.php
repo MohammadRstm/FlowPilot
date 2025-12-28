@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Services\IngestionService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -49,8 +50,8 @@ class IngestN8nWorkflows extends Command{
             $embeddingText = $this->buildEmbeddingText($payload);
 
             try {
-                $denseVector = $this->embed($embeddingText);
-                $sparseVector = $this->buildSparseVector($embeddingText);
+                $denseVector = IngestionService::embed($embeddingText);
+                $sparseVector = IngestionService::buildSparseVector($embeddingText);
 
                 $this->store($denseVector, $sparseVector, $payload);
             } catch (\Exception $ex) {
@@ -137,52 +138,4 @@ class IngestN8nWorkflows extends Command{
         );
     }
 
-    private function buildSparseVector(string $text): array{
-        $text = strtolower($text);
-        $text = preg_replace('/([a-z])([A-Z])/', '$1 $2', $text);
-
-        $tokens = preg_split('/[^a-z0-9]+/i', $text);
-
-        $freqs = [];
-
-        foreach ($tokens as $token) {
-            if (strlen($token) < 2) continue;
-            $freqs[$token] = ($freqs[$token] ?? 0) + 1;
-        }
-
-        $indices = [];
-        $values  = [];
-
-        foreach ($freqs as $token => $count) {
-            $indices[] = crc32($token);
-            $values[]  = (float) $count; // raw TF (idf handled by Qdrant)
-        }
-
-        return [
-            'indices' => $indices,
-            'values'  => $values,
-        ];
-    }
-
-    private function embed(string $text): array{
-        /** @var Response $response */
-        $response = Http::withToken(env('OPENAI_API_KEY', ''))
-            ->timeout(60)
-            ->post('https://api.openai.com/v1/embeddings', [
-                "model" => "text-embedding-3-large",
-                "input" => $text
-            ]);
-
-        if (!$response->ok()) {
-            throw new \RuntimeException("OpenAI embedding failed: " . $response->body());
-        }
-
-        $vector = $response->json('data.0.embedding');
-
-        if (count($vector) !== 3072) {
-            throw new \RuntimeException("Embedding size mismatch: " . count($vector));
-        }
-
-        return $vector;
-    }
 }
