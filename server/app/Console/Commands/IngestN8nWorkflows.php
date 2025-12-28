@@ -7,8 +7,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Http\Client\Response;
 
-class IngestN8nWorkflows extends Command
-{
+class IngestN8nWorkflows extends Command{
     protected $signature = 'app:ingest-n8n-workflows';
     protected $description = 'Ingest production n8n workflows into Qdrant';
 
