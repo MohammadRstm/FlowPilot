@@ -94,7 +94,7 @@ class IngestN8nSchemas extends Command{
             'User-Agent' => 'Laravel-RAG',
             'Authorization' => 'token ' . env('GITHUB_TOKEN' , '')
         ])->get(
-            'https://api.github.com/repos/n8n-io/n8n/contents/packages/nodes-base/nodes'
+            env('GITHUB_REPO_NODES_API', '')
         );
 
         if(!$response->ok()){
