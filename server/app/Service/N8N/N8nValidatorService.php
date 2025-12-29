@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service;
+namespace App\Service\N8N;
 
 use Illuminate\Support\Facades\Http;
 
