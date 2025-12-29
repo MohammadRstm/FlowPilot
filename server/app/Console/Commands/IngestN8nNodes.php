@@ -55,8 +55,6 @@ class IngestN8nNodes extends Command{
         return null;
     }
 
-
-
     private function getFiles(string $url){
         /** @var Response $filesResponse */
         $filesResponse = Http::withHeaders([
@@ -66,8 +64,6 @@ class IngestN8nNodes extends Command{
 
         return $filesResponse->json();
     }
-        
-
 
     private function getFolders(){
         /** @var Response $response */
@@ -87,7 +83,6 @@ class IngestN8nNodes extends Command{
 
         return $response->json();
     }
-
 
     private function buildPayload(array $data): array{
         return [
@@ -118,7 +113,7 @@ class IngestN8nNodes extends Command{
         // Sparse vector
         $sparseVector = IngestionService::buildSparseVector($text);
 
-        $endpoint = rtrim(env('QDRANT_CLUSTER_ENDPOINT', 'https://b66de96f-2a18-4cc1-9551-72590c427f65.europe-west3-0.gcp.cloud.qdrant.io'), '/');
+        $endpoint = rtrim(env('QDRANT_CLUSTER_ENDPOINT', ''), '/');
         $apiKey = env('QDRANT_API_KEY');
 
         $id = (string) Str::uuid();
