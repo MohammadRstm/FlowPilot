@@ -5,6 +5,7 @@ namespace App\Service\Copilot;
 use App\Service\N8N\CredentialsInjecterService;
 use App\Service\N8N\N8nRunner;
 use App\Service\N8N\N8nValidatorService;
+use Illuminate\Support\Facades\Log;
 
 class GetAnswer{
     // Orchestrater
@@ -12,35 +13,84 @@ class GetAnswer{
 
         $analysis = AnalyzeIntent::analyze($question);
         $points = GetPoints::execute($analysis);
-        $flows = RankingFlows::rank($analysis, $points);
+        $totalPoints = RankingFlows::rank($analysis, $points);
 
-        $json = LLMService::generateAnswer($question, $flows);
-        $workflow = json_decode($json, true);
-
-        // Inject credentials
-        $workflow = CredentialsInjecterService::inject($workflow, $user);
-
-        // Step 1: Structural validation
-        $validation = N8nValidatorService::validate($workflow);
-
-        if (!$validation["valid"]) {
-            $json = LLMService::repairWorkflow(
-                json_encode($workflow),
-                json_encode($validation["errors"])
-            );
-            $workflow = json_decode($json, true);
+        $json = LLMService::generateAnswer($question, $totalPoints);
+        /** @var array|string|false $workflowDecoded */
+        $workflowDecoded = json_decode($json, true);
+        if (!is_array($workflowDecoded)) {
+            Log::error('LLM returned invalid JSON', ['json' => $json]);
+            return $json;
         }
 
-        // Step 2: Runtime simulation
-        $run = N8nRunner::run($workflow);
-
-        if (!$run["success"]) {
-            $json = LLMService::repairWorkflow(
-                json_encode($workflow),
-                json_encode($run["errors"])
-            );
+        /** @var array $workflow */
+        $workflow = $workflowDecoded;
+        
+        if($user["n8n_url"] && $user["n8n_api_key"]){// if user has his account connected validate + run workflow
+          $json = self::validateWorkflow($workflow , $user);
         }
 
         return $json;
+    }
+
+    private static function validateWorkflow($workflow , $user){
+        // inject credentials
+        $workflow = CredentialsInjecterService::inject($workflow, $user);
+
+        $validation = N8nValidatorService::validate($workflow , $user);
+
+        self::handleValidationErrors($validation , $workflow);
+
+        $run = N8nRunner::run($workflow , $user);
+
+        self::handleRunErrors($run , $workflow);
+    }
+
+    private static function handleValidationErrors($validation , &$workflow){
+        if(!$validation["valid"]){
+            $validationErrors = $validation["errors"] ?? [];
+            if(!is_array($validationErrors)){
+                $validationErrors = [$validationErrors];
+            }
+
+            $json = LLMService::repairWorkflow(
+                json_encode($workflow),
+                $validationErrors
+            );
+
+            /** @var array|string|false $repairedDecoded */
+            $repairedDecoded = json_decode($json, true);
+            if (!is_array($repairedDecoded)) {
+                Log::error('RepairWorkflow returned invalid JSON', ['json' => $json]);
+                return $json;
+            }
+
+            /** @var array $workflow */
+            $workflow = $repairedDecoded;
+        }
+    }
+
+    private static function handleRunErrors($run , &$workflow){
+        if (!$run["success"]) {
+            $runErrors = $run["errors"] ?? [];
+            if(!is_array($runErrors)){
+                $runErrors = [$runErrors];
+            }
+
+            $json = LLMService::repairWorkflow(
+                json_encode($workflow),
+                $runErrors
+            );
+
+            /** @var array|string|false $repairedDecoded */
+            $repairedDecoded = json_decode($json, true);
+            if (!is_array($repairedDecoded)) {
+                Log::error('RepairWorkflow returned invalid JSON', ['json' => $json]);
+                return $json;
+            }
+
+            /** @var array $workflow */
+            $workflow = $repairedDecoded;
+        }
     }
 }

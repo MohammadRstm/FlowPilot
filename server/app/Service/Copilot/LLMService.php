@@ -3,12 +3,14 @@
 namespace App\Service\Copilot;
 
 use Illuminate\Support\Facades\Http;
+use Laravel\Prompts\Prompt;
+use Illuminate\Http\Client\Response;
 
-class LLMService
-{
+class LLMService{
 
     public static function raw(string $prompt): string{
-        $response = Http::withToken(env("OPENAI_KEY"))
+        /** @var Response $response */
+        $response = Http::withToken(env("OPENAI_API_KEY"))
             ->timeout(60)
             ->post("https://api.openai.com/v1/chat/completions", [
                 "model" => "gpt-4o",
@@ -36,15 +38,16 @@ class LLMService
 
         $context = self::buildContext($topFlows);
 
-        $prompt = self::buildPrompt($question, $context);
+        $prompt = Prompts::getWorkflowGenerationPrompt($question, $context);
 
-        $response = Http::withToken(env("OPENAI_KEY"))
+        /** @var Response $response */
+        $response = Http::withToken(env("OPENAI_API_KEY"))
             ->timeout(90)
             ->post("https://api.openai.com/v1/chat/completions", [
                 "model" => "gpt-4o",
                 "temperature" => 0.2,
                 "messages" => [
-                    ["role" => "system", "content" => self::systemPrompt()],
+                    ["role" => "system", "content" => Prompts::getWorkflowGenerationSystemPrompt()],
                     ["role" => "user", "content" => $prompt]
                 ]
             ]);
@@ -66,58 +69,11 @@ class LLMService
         return $out;
     }
 
-    private static function buildPrompt(string $question, string $context){
-        return <<<PROMPT
-            USER GOAL:
-            $question
-
-            You are given real n8n workflows below.
-
-            Your task:
-            1. Understand the user's goal
-            2. Compare the workflows
-            3. Decide which one best matches
-            4. Modify or merge them if needed
-            5. Return ONE final n8n workflow JSON
-
-            RULES:
-            - Use only nodes that appear in the provided workflows
-            - Keep credentials names unchanged
-            - Maintain valid n8n format
-            - Ensure triggers exist
-            - Ensure connections are correct
-            - Include error handling if missing
-
-            WORKFLOWS:
-            $context
-
-            OUTPUT:
-            Return ONLY a valid n8n JSON.
-            No explanations.
-            No markdown.
-            PROMPT;
-    }
-
     public static function repairWorkflow(string $badJson, array $errors){
-        $prompt = <<<PROMPT
-        The n8n workflow below FAILED during execution.
+        $prompt = Prompts::getRepairPrompt($badJson, json_encode($errors));
 
-        ERRORS:
-        $errors
-
-        JSON:
-        $badJson
-
-        Fix it so that:
-        - All nodes run
-        - All inputs exist
-        - Credentials are preserved
-        - Flow is valid
-
-        Return only JSON.
-        PROMPT;
-
-        $response = Http::withToken(env("OPENAI_KEY"))
+        /** @var Response $response */
+        $response = Http::withToken(env("OPENAI_API_KEY"))
             ->post("https://api.openai.com/v1/chat/completions", [
                 "model" => "gpt-4o",
                 "temperature" => 0,
@@ -126,12 +82,8 @@ class LLMService
                     ["role"=>"user","content"=>$prompt]
                 ]
             ]);
-
+        
         return $response->json("choices.0.message.content");
     }
-
-
-
-
 
 }

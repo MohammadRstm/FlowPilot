@@ -3,26 +3,36 @@
 namespace App\Service\N8N;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\Response;
 
 class N8nRunner{
     
-    public static function run(array $workflow, array $mockData = []) {
+    public static function run(array $workflow,array $user): array {
 
-        $payload = [
-            "workflowData" => $workflow,
-            "runData" => [
-                "trigger" => [
-                    [
-                        "json" => $mockData ?: ["test" => true]
-                    ]
-                ]
-            ],
-            "startNodes" => null
+        $mockData = MockDataGenerator::fromWorkflow($workflow);
+
+        $payload = self::generatePayload($workflow, $mockData);       
+        /** @var array|null $data */
+        $results = self::getResults($user , $payload);
+
+        if (!empty($results["error"])) {
+            return [
+                "success" => false,
+                "errors" => $results["error"]
+            ];
+        }
+
+        return [
+            "success" => true,
+            "output" => $results
         ];
+    }
 
-        $response = Http::withToken(env("N8N_API_KEY"))
+    private static function getResults($user , $payload){
+         /** @var Response $response */
+        $response = Http::withToken($user["n8n_api_key"])
             ->timeout(60)
-            ->post(env("N8N_URL") . "/rest/workflows/run", $payload);
+            ->post($user["n8n_url"] . "/rest/workflows/run", $payload);
 
         if (!$response->ok()) {
             return [
@@ -31,18 +41,21 @@ class N8nRunner{
             ];
         }
 
-        $data = $response->json();
+        return $response->json();
 
-        if (!empty($data["error"])) {
-            return [
-                "success" => false,
-                "errors" => $data["error"]
-            ];
-        }
+    }
 
+    private static function generatePayload(array $workflow, array $mockData = []): array{
         return [
-            "success" => true,
-            "output" => $data
+            "workflowData" => $workflow,    
+            "runData" => [
+                "trigger" => [
+                    [
+                        "json" => $mockData ?: ["test" => true]
+                    ]
+                ]
+            ],
+            "startNodes" => null
         ];
     }
 }

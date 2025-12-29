@@ -3,12 +3,24 @@
 namespace App\Service\N8N;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\Response;
 
 class N8nValidatorService{
-    public static function validate(array $workflow): array {
-        $url = env("N8N_URL") . "/rest/workflows/validate";
+    public static function validate(array $workflow , array $user): array {
+        $url = $user["n8n_url"] . "/rest/workflows/validate";
+      
+        /** @var array|null $errorsJson */
+        $errorsJson = self::getErrors($user, $workflow, $url);
 
-        $response = Http::withToken(env("N8N_API_KEY"))
+        return [
+            "valid" => false,
+            "errors" => $errorsJson
+        ];
+    }
+
+    private static function getErrors($user, $workflow, $url){
+        /** @var Response $response */
+        $response = Http::withToken($user["n8n_api_key"])
             ->post($url, $workflow);
 
         if ($response->ok()) {
@@ -18,9 +30,7 @@ class N8nValidatorService{
             ];
         }
 
-        return [
-            "valid" => false,
-            "errors" => $response->json()
-        ];
+        return $response->json();
+
     }
 }

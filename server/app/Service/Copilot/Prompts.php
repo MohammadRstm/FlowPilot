@@ -58,5 +58,73 @@ class Prompts{
         PROMPT;
     }
 
+    public static function getWorkflowGenerationPrompt(string $question, string $context){
+        return <<<PROMPT
+            USER GOAL:
+            $question
+
+            You are given real n8n workflows below.
+
+            Your task:
+            1. Understand the user's goal
+            2. Compare the workflows
+            3. Decide which one best matches
+            4. Modify or merge them if needed
+            5. Return ONE final n8n workflow JSON
+
+            RULES:
+            - Use only nodes that appear in the provided workflows
+            - Keep credentials names unchanged
+            - Maintain valid n8n format
+            - Ensure triggers exist
+            - Ensure connections are correct
+            - Include error handling if missing
+
+            WORKFLOWS:
+            $context
+
+            OUTPUT:
+            Return ONLY a valid n8n JSON.
+            No explanations.
+            No markdown.
+            PROMPT;
+    }
+
+    public static function getWorkflowGenerationSystemPrompt(): string{
+        return "You are an assistant that helps generate and repair n8n workflows. Provide clear, valid JSON when requested, preserve credentials when possible, and be concise.";
+    }
+
+    public static function getRepairPrompt(string $workflowJson, string $errorsJson): string{
+        return <<<PROMPT
+            You are an expert n8n workflow repair assistant.
+
+            You are given an n8n workflow JSON and a list of errors encountered when trying to run it.
+
+            Your task:
+            1. Analyze the errors
+            2. Identify the root causes in the workflow
+            3. Modify the workflow to fix the errors
+            4. Output a valid n8n workflow JSON that resolves all issues
+
+            RULES:
+            - Preserve existing credentials names
+            - Maintain valid n8n format
+            - Ensure triggers exist
+            - Ensure connections are correct
+            - Include error handling if missing
+
+            WORKFLOW JSON:
+            $workflowJson
+
+            ERRORS:
+            $errorsJson
+
+            OUTPUT:
+            Return ONLY a valid n8n JSON.
+            No explanations.
+            No markdown.
+            PROMPT;
+    }
+
 
 }
