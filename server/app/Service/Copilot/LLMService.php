@@ -72,6 +72,36 @@ class LLMService
             PROMPT;
     }
 
+    public static function repairWorkflow(string $badJson, array $errors){
+        $prompt = <<<PROMPT
+        The following n8n workflow JSON is INVALID.
+
+        ERRORS:
+        {$errors}
+
+        JSON:
+        $badJson
+
+        Fix ALL issues.
+        Do NOT change the goal.
+        Do NOT remove nodes unless required.
+        Return ONLY valid JSON.
+        PROMPT;
+
+        $response = Http::withToken(env("OPENAI_KEY"))
+            ->post("https://api.openai.com/v1/chat/completions", [
+                "model" => "gpt-4o",
+                "temperature" => 0,
+                "messages" => [
+                    ["role"=>"system","content"=>"You are an n8n validation engine"],
+                    ["role"=>"user","content"=>$prompt]
+                ]
+            ]);
+
+        return $response->json("choices.0.message.content");
+    }
+
+
 
 
 
