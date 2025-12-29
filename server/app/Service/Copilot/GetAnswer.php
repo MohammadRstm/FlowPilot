@@ -2,11 +2,13 @@
 
 namespace App\Service\Copilot;
 
+use App\Service\N8N\CredentialsInjecterService;
 use App\Service\N8N\N8nRunner;
 use App\Service\N8N\N8nValidatorService;
 
 class GetAnswer{
-    public static function execute($question){
+    // Orchestrater
+    public static function execute($question , $user = null){
 
         $analysis = AnalyzeIntent::analyze($question);
         $points = GetPoints::execute($analysis);
@@ -14,6 +16,9 @@ class GetAnswer{
 
         $json = LLMService::generateAnswer($question, $flows);
         $workflow = json_decode($json, true);
+
+        // Inject credentials
+        $workflow = CredentialsInjecterService::inject($workflow, $user);
 
         // Step 1: Structural validation
         $validation = N8nValidatorService::validate($workflow);

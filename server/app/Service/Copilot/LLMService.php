@@ -74,18 +74,21 @@ class LLMService
 
     public static function repairWorkflow(string $badJson, array $errors){
         $prompt = <<<PROMPT
-        The following n8n workflow JSON is INVALID.
+        The n8n workflow below FAILED during execution.
 
         ERRORS:
-        {$errors}
+        $errors
 
         JSON:
         $badJson
 
-        Fix ALL issues.
-        Do NOT change the goal.
-        Do NOT remove nodes unless required.
-        Return ONLY valid JSON.
+        Fix it so that:
+        - All nodes run
+        - All inputs exist
+        - Credentials are preserved
+        - Flow is valid
+
+        Return only JSON.
         PROMPT;
 
         $response = Http::withToken(env("OPENAI_KEY"))
