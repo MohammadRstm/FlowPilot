@@ -5,20 +5,34 @@ namespace App\Service\Copilot;
 class Prompts{
 
     public static function getAnalysisPrompt($question){
-        return <<<PROMPT
-            You are an intent extraction engine for an n8n workflow copilot.
+       return <<<PROMPT
+        You are a JSON extraction engine for an n8n workflow copilot.
 
-            Extract the following fields:
-            - intent: one sentence describing what the user wants
-            - nodes: list of services or nodes needed (e.g. Stripe, Slack, Notion, Gmail)
-            - category: one of ["automation","integration","sync","data","ai","marketing","devops","finance"]
-            - min_nodes: minimum number of nodes needed
+        You must output a JSON object that strictly follows this schema:
 
-            User question:
-            "$question"
+        {
+        "intent": string,              // one concise sentence describing what the user wants
+        "nodes": string[],             // list of services or nodes (capitalized, no spaces around words)
+        "category": "automation" | "integration" | "sync" | "data" | "ai" | "marketing" | "devops" | "finance",
+        "min_nodes": number            // integer >= 1
+        }
 
-            Return ONLY valid JSON. No markdown. No explanation.
-            PROMPT;
+        Rules:
+        - "intent" must be a full sentence.
+        - "nodes" must only contain names of services or n8n nodes (e.g. "Slack", "Stripe", "Notion", "Gmail", "Acuity").
+        - If no specific service is mentioned, infer the most likely ones.
+        - "min_nodes" must be realistic based on the intent.
+        - Never return null values.
+        - Never return empty arrays.
+        - Do not include any keys outside the schema.
+        - Do not include comments.
+        - Do not include markdown.
+
+        User question:
+        "$question"
+
+        Return only valid JSON.
+        PROMPT;
     }
 
     public static function getAnswerPrompt(){

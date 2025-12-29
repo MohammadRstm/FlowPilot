@@ -6,6 +6,32 @@ use Illuminate\Support\Facades\Http;
 
 class LLMService
 {
+
+    public static function raw(string $prompt): string{
+        $response = Http::withToken(env("OPENAI_KEY"))
+            ->timeout(60)
+            ->post("https://api.openai.com/v1/chat/completions", [
+                "model" => "gpt-4o",
+                "temperature" => 0,
+                "messages" => [
+                    [
+                        "role" => "system",
+                        "content" => "You are a JSON API. You must return valid JSON and nothing else."
+                    ],
+                    [
+                        "role" => "user",
+                        "content" => $prompt
+                    ]
+                ]
+            ]);
+
+        if (!$response->ok()) {
+            throw new \RuntimeException("LLM failed: " . $response->body());
+        }
+
+        return trim($response->json("choices.0.message.content"));
+    }
+
     public static function generateAnswer(string $question, array $topFlows) {
 
         $context = self::buildContext($topFlows);

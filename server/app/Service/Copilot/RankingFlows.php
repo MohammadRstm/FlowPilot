@@ -4,44 +4,104 @@ namespace App\Service\Copilot;
 
 class RankingFlows{
 
-    public static function rank(array $analysis, array $qdrantResults): array {
+    public static function rank(array $analysis, array $points): array {
+        $workflowScores = self::rankWorkflows($analysis, $points["workflows"]);
+
+        $best = $workflowScores[0] ?? null;
+        
+        // decide whether to reuse existing workflow or build new one
+        if ($best && $best["score"] > 0.55) {
+            return [
+                "mode" => "reuse",
+                "confidence" => $best["score"],
+                "workflows" => array_slice($workflowScores, 0, 5)
+            ];
+        }
+        // no workflow is good enough, give LLM building tools to build a new one
+        return [
+            "mode" => "build",
+            "confidence" => $best["score"] ?? 0,
+            "nodes" => self::rankNodes($analysis, $points["nodes"]),
+            "schemas" => self::rankSchemas($analysis, $points["schemas"])
+        ];
+    }
+
+    private static function rankWorkflows(array $analysis, array $hits): array {
         $scored = [];
 
-        foreach ($qdrantResults as $hit) {
-            $payload = $hit["payload"];
+        foreach ($hits as $hit) {
+            $p = $hit["payload"];
 
-            $score = self::scoreWorkflow($analysis, $hit["score"], $payload);
+            $score =
+                ($hit["score"] * 0.4) +
+                (self::nodeMatchScore($analysis["nodes"], $p["nodes_used"]) * 0.3) +
+                (self::intentScore($analysis["intent"], $p["description"] ?? "") * 0.2) +
+                (self::complexityScore($analysis["min_nodes"], $p["node_count"]) * 0.1);
 
             $scored[] = [
-                "score" => $score,
-                "workflow" => $payload["workflow"],
-                "nodes" => $payload["nodes_used"],
-                "node_count" => $payload["node_count"],
-                "raw" => $payload["raw"]
+                "score" => round($score, 4),
+                "workflow" => $p["workflow"],
+                "nodes" => $p["nodes_used"],
+                "raw" => $p["raw"]
             ];
         }
 
         usort($scored, fn($a,$b) => $b["score"] <=> $a["score"]);
 
-        return array_slice($scored, 0, 5);
+        return $scored;
     }
 
-    private static function scoreWorkflow(array $analysis, float $vectorScore, array $payload): float {
-        $score = 0;
+    private static function rankNodes(array $analysis, array $hits): array {
+        $ranked = [];
 
-        // 1. Qdrant semantic similarity (40%)
-        $score += $vectorScore * 0.4;
+        foreach ($hits as $hit) {
+            $p = $hit["payload"];
 
-        // 2. Node overlap (30%)
-        $score += self::nodeMatchScore($analysis["nodes"], $payload["nodes_used"]) * 0.3;
+            $score = $hit["score"];
 
-        // 3. Intent match (20%)
-        $score += self::intentScore($analysis["intent"], $payload["nodes_used"]) * 0.2;
+            if (in_array(strtolower($p["key"]), array_map("strtolower",$analysis["nodes"]))) {
+                $score += 0.5; // strong boost for explicitly requested nodes
+            }
 
-        // 4. Complexity fit (10%)
-        $score += self::complexityScore($analysis["complexity"], $payload["node_count"]) * 0.1;
+            $ranked[] = [
+                "score" => round($score, 4),
+                "node" => $p["node"],
+                "key" => $p["key"],
+                "categories" => $p["categories"],
+                "docs" => $p["docs"],
+                "credentials" => $p["credentials"]
+            ];
+        }
 
-        return round($score, 4);
+        usort($ranked, fn($a,$b) => $b["score"] <=> $a["score"]);
+
+        return array_slice($ranked, 0, 15);
+    }
+
+    private static function rankSchemas(array $analysis, array $hits): array {
+        $ranked = [];
+
+        foreach ($hits as $hit) {
+            $p = $hit["payload"];
+
+            $score = $hit["score"];
+
+            if (in_array(strtolower($p["node"]), array_map("strtolower",$analysis["nodes"]))) {
+                $score += 0.4;
+            }
+
+            $ranked[] = [
+                "score" => round($score, 4),
+                "node" => $p["node"],
+                "resource" => $p["resource"],
+                "operation" => $p["operation"],
+                "fields" => $p["fields"]
+            ];
+        }
+
+        usort($ranked, fn($a,$b) => $b["score"] <=> $a["score"]);
+
+        return array_slice($ranked, 0, 30);
     }
 
     private static function nodeMatchScore(array $wanted, array $has): float {
@@ -61,16 +121,13 @@ class RankingFlows{
         return 0.4;
     }
 
-    private static function complexityScore(string $complexity, int $count): float {
-        return match($complexity){
-            "simple" => $count <= 5 ? 1 : 0.3,
-            "medium" => $count <= 12 ? 1 : 0.6,
-            "complex" => $count >= 8 ? 1 : 0.7,
-            default => 0.5
-        };
+   private static function complexityScore(int $minRequired, int $actual): float {
+        if ($actual < $minRequired) {
+            return 0.0;
+        }
+
+        $ratio = $minRequired / $actual;
+
+        return max(0.3, min(1.0, $ratio));
     }
-
-
-
-
 }

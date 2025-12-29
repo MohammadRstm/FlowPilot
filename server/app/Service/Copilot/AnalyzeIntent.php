@@ -5,19 +5,16 @@ namespace App\Service\Copilot;
 use Exception;
 
 class AnalyzeIntent{
+    // Orchestrater
     public static function analyze(string $question): array {
         $prompt = Prompts::getAnalysisPrompt($question);
-        $raw = self::callLLM($prompt);
+        $raw = LLMService::raw($prompt);
         $parsed = self::parseResponse($raw);
         $parsed["nodes"] = self::normalizeNodes($parsed["nodes"] ?? []);
-        $parsed["filters"] = self::buildFilters($parsed);
+        $parsed["filters"] = self::buildFilters($parsed);// create filters for point retrieval
         $parsed["embedding_query"] = self::buildEmbeddingQuery($question, $parsed);
 
         return $parsed;
-    }
-
-    private static function callLLM(string $prompt): string {
-        return LLMService::raw($prompt);
     }
 
     private static function parseResponse(string $raw): array {
@@ -38,7 +35,7 @@ class AnalyzeIntent{
 
     private static function normalizeNodes(array $nodes): array {
         return array_values(array_unique(array_map(function($n){
-            return ucfirst(strtolower(trim($n)));
+            return ucfirst(strtolower(trim($n)));// slack , Slack, SLACK all map to Slack
         }, $nodes)));
     }
 
