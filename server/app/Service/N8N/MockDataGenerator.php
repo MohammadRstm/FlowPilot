@@ -2,11 +2,19 @@
 
 namespace App\Service\N8N;
 
+use Illuminate\Support\Facades\Http;
+
 class MockDataGenerator{
 
     public static function fromWorkflow(array $workflow): array{
-        $paths = self::extractJsonPaths($workflow);
-        return self::buildMockObject($paths);
+        $usage = self::extractJsonPaths($workflow);
+        $inferred = self::inferVariableTypes($usage);
+
+        $nodes = self::extractNodes($workflow);
+        $schemas = self::loadSchemas($nodes);
+        $schemaMap = self::buildSchemaFieldMap($schemas);
+
+        return self::buildMockObject($inferred, $schemaMap);
     }
 
 
@@ -18,8 +26,8 @@ class MockDataGenerator{
 
             preg_match_all('/\{\{\s*\$json((?:\[[^\]]+\])+)\\s*\}\}/', $value, $matches);
 
-            foreach ($matches[1] as $rawPath) {
-                $found[] = self::normalizePath($rawPath);
+            foreach ($matches[1] as $rawPath => $value) {
+                $found[self::normalizePath($rawPath)][] = $value;
             }
         });
 
@@ -41,30 +49,53 @@ class MockDataGenerator{
         return implode('.', $m[1]);
     }
 
-    private static function buildMockObject(array $paths): array{
+    private static function buildMockObject(array $inferred, array $schemaMap): array{
         $root = [];
 
-        foreach ($paths as $path) {
-            $segments = explode('.', $path);
-            self::setNestedValue($root, $segments);
+        foreach ($inferred as $path => $type) {
+            $key = last(explode('.', $path));
+
+            if (isset($schemaMap[$key])) {
+                $type = self::mapSchemaType($schemaMap[$key]);
+            }
+
+            self::setTypedValue($root, explode('.', $path), $type);
         }
 
-        return $root ?: ["test" => true];
+        return $root;
     }
 
-    private static function setNestedValue(array &$arr, array $segments){
+    private static function mapSchemaType(string $n8nType): string{
+        return match ($n8nType) {
+            'number' => 'number',
+            'boolean' => 'boolean',
+            'options' => 'string',
+            'string' => 'string',
+            'collection' => 'object',
+            default => 'string'
+        };
+    }
+
+    private static function setTypedValue(array &$arr, array $segments, string $type){
         $current = &$arr;
 
-        foreach ($segments as $i => $segment) {
+        foreach ($segments as $i => $seg) {
             if ($i === count($segments) - 1) {
-                $current[$segment] = self::fakeValue($segment);
+                $current[$seg] = self::fakeByType($type, $seg);
             } else {
-                if (!isset($current[$segment])) {
-                    $current[$segment] = [];
-                }
-                $current = &$current[$segment];
+                if (!isset($current[$seg])) $current[$seg] = [];
+                $current = &$current[$seg];
             }
         }
+    }
+
+    private static function fakeByType(string $type, string $key){
+        return match ($type) {
+            'number' => rand(10, 100),
+            'boolean' => true,
+            'date' => date("Y-m-d H:i:s"),
+            default => self::fakeValue($key)
+        };
     }
 
     private static function fakeValue(string $key){
@@ -83,10 +114,88 @@ class MockDataGenerator{
         };
     }
 
+    private static function inferType(string $expr): string{
+        $e = strtolower($expr);
 
+        return match (true) {
+            str_contains($e, '*'),
+            str_contains($e, '/'),
+            str_contains($e, '+'),
+            str_contains($e, '-'),
+            str_contains($e, '.length') => 'number',
 
+            str_contains($e, '=== true'),
+            str_contains($e, '=== false'),
+            str_contains($e, '&&'),
+            str_contains($e, '||') => 'boolean',
 
+            str_contains($e, 'todate'),
+            str_contains($e, 'new date') => 'date',
 
+            str_contains($e, '"'),
+            str_contains($e, "'") => 'string',
 
+            default => 'string'
+        };
+    }
+
+    private static function inferVariableTypes(array $usageMap): array{
+        $types = [];
+
+        foreach ($usageMap as $path => $expressions) {
+            $counts = [];
+
+            foreach ($expressions as $expr) {
+                $t = self::inferType($expr);
+                $counts[$t] = ($counts[$t] ?? 0) + 1;
+            }
+
+            arsort($counts);
+            $types[$path] = array_key_first($counts);
+        }
+
+        return $types;
+    }
+
+    private static function extractNodes(array $workflow): array{
+        return collect($workflow["nodes"] ?? [])
+            ->map(fn($n) => explode(".", $n["type"])[2] ?? null)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private static function loadSchemas(array $nodes): array{
+        $endpoint = env("QDRANT_URL")."/collections/n8n_schemas/points/scroll";
+
+        $response = Http::post($endpoint, [
+            "limit" => 1000,
+            "filter" => [
+                "must" => [
+                    [
+                        "key" => "node",
+                        "match" => ["any" => $nodes]
+                    ]
+                ]
+            ]
+        ]);
+
+        return collect($response->json("result.points"))
+            ->pluck("payload")
+            ->all();
+    }
+
+    private static function buildSchemaFieldMap(array $schemas): array{
+        $map = [];
+
+        foreach ($schemas as $schema) {
+            foreach ($schema["fields"] ?? [] as $field) {
+                $map[$field["name"]] = $field["type"];
+            }
+        }
+
+        return $map;
+    }
 
 }
