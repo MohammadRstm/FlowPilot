@@ -11,10 +11,11 @@ use Illuminate\Http\Request;
 class UserController extends Controller{
     public function ask(CopilotPayload $req){
         try{
+            // test run without validation
             $user = [
                 "id" => 1,
-                "n8n_url" => "",
-                "n8n_api_key" => ""
+                "n8n_url" => null,
+                "n8n_api_key" => null
             ];
             $answer = UserService::getCopilotAnswer($req["question"], $user);
             return $this->successResponse($answer ?? []);
