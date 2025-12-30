@@ -11,6 +11,14 @@ class N8nRunner{
 
         $mockData = MockDataGenerator::fromWorkflow($workflow);
 
+        if ($mockData === null) {
+            return [
+                'success' => true,
+                'output' => null,
+                'warning' => 'Workflow has a complex trigger and cannot be run with mock data. It is runnable with real trigger events.'
+            ];
+        }
+
         $payload = self::generatePayload($workflow, $mockData);       
         /** @var array|null $data */
         $results = self::getResults($user , $payload);

@@ -6,7 +6,17 @@ use Illuminate\Support\Facades\Http;
 
 class MockDataGenerator{
 
-    public static function fromWorkflow(array $workflow): array{
+    public static function fromWorkflow(array $workflow): array|null {
+
+        $nodes = $workflow['nodes'] ?? [];
+    
+        foreach ($nodes as $node) {
+            if (self::isComplexTrigger($node)) {
+                // Detected a complex trigger, skip mock data generation
+                return null;
+            }
+        }
+
         $usage = self::extractJsonPaths($workflow);
         $inferred = self::inferVariableTypes($usage);
 
@@ -16,7 +26,6 @@ class MockDataGenerator{
 
         return self::buildMockObject($inferred, $schemaMap);
     }
-
 
     private static function extractJsonPaths(array $workflow): array{
         $found = [];
@@ -197,5 +206,19 @@ class MockDataGenerator{
 
         return $map;
     }
+
+    private static function isComplexTrigger(array $node): bool {
+        $complexTriggers = [
+            'n8n-nodes-base.googleDrive',
+            'n8n-nodes-base.slack',
+            'n8n-nodes-base.email',
+            'n8n-nodes-base.dropbox',
+            'n8n-nodes-base.webhook'
+            // Add more as needed
+        ];
+
+        return in_array($node['type'], $complexTriggers);
+    }
+
 
 }

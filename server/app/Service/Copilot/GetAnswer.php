@@ -42,8 +42,9 @@ class GetAnswer{
         self::handleValidationErrors($validation , $workflow);
 
         $run = N8nRunner::run($workflow , $user);
-
-        self::handleRunErrors($run , $workflow);
+        if($run["output"]){// silently ignore incapable runs
+            self::handleRunErrors($run , $workflow);
+        }
     }
 
     private static function handleValidationErrors($validation , &$workflow){
