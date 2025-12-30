@@ -45,6 +45,8 @@ class GetAnswer{
         if($run["output"]){// silently ignore incapable runs
             self::handleRunErrors($run , $workflow);
         }
+        // return final workflow JSON string
+        return json_encode($workflow);
     }
 
     private static function handleValidationErrors($validation , &$workflow){

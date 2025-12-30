@@ -7,7 +7,6 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Http\Client\Response;
-use Illuminate\Validation\Rules\In;
 
 class IngestN8nNodes extends Command{
     protected $signature = 'app:ingest-n8n-nodes';

@@ -8,14 +8,7 @@ class MockDataGenerator{
 
     public static function fromWorkflow(array $workflow): array|null {
 
-        $nodes = $workflow['nodes'] ?? [];
-    
-        foreach ($nodes as $node) {
-            if (self::isComplexTrigger($node)) {
-                // Detected a complex trigger, skip mock data generation
-                return null;
-            }
-        }
+        $isComplex = self::detectComplexTriggers($workflow);
 
         $usage = self::extractJsonPaths($workflow);
         $inferred = self::inferVariableTypes($usage);
@@ -25,6 +18,20 @@ class MockDataGenerator{
         $schemaMap = self::buildSchemaFieldMap($schemas);
 
         return self::buildMockObject($inferred, $schemaMap);
+    }
+
+    private static function detectComplexTriggers(array $workflow): bool {
+        foreach ($workflow['nodes'] ?? [] as $node) {
+            if ($node['type'] === 'n8n-nodes-base.start') {
+                continue; // Skip the start node
+            }
+
+            if (self::isComplexTrigger($node)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static function extractJsonPaths(array $workflow): array{

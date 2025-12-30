@@ -113,7 +113,7 @@ class RankingFlows{
     }
 
     private static function intentScore(string $intent, array $nodes): float {
-        $hasTrigger = collect($nodes)->some(fn($n) => str_contains(strtolower($n), "trigger"));
+        $hasTrigger = collect($nodes)->contains(fn($n) => str_contains(strtolower($n), "trigger"));
 
         if ($intent === "triggered" && $hasTrigger) return 1;
         if ($intent === "batch" && !$hasTrigger) return 1;
@@ -122,7 +122,7 @@ class RankingFlows{
     }
 
    private static function complexityScore(int $minRequired, int $actual): float {
-        if ($actual < $minRequired) {
+        if ($actual < $minRequired || $actual === 0) {
             return 0.0;
         }
 

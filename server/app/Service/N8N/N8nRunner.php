@@ -20,23 +20,30 @@ class N8nRunner{
         }
 
         $payload = self::generatePayload($workflow, $mockData);       
-        /** @var array|null $data */
+        /** @var array $results */
         $results = self::getResults($user , $payload);
 
-        if (!empty($results["error"])) {
+        if (isset($results['success']) && $results['success'] === false) {
             return [
-                "success" => false,
-                "errors" => $results["error"]
+                'success' => false,
+                'errors' => $results['errors'] ?? $results['error'] ?? $results
+            ];
+        }
+
+        if (isset($results['error']) || isset($results['errors'])) {
+            return [
+                'success' => false,
+                'errors' => $results['errors'] ?? $results['error'] ?? $results
             ];
         }
 
         return [
-            "success" => true,
-            "output" => $results
+            'success' => true,
+            'output' => $results
         ];
     }
 
-    private static function getResults($user , $payload){
+    private static function getResults($user , $payload): array{
          /** @var Response $response */
         $response = Http::withToken($user["n8n_api_key"])
             ->timeout(60)
@@ -49,7 +56,10 @@ class N8nRunner{
             ];
         }
 
-        return $response->json();
+        /** @var array|null $json */
+        $json = $response->json();
+
+        return $json ?? [];
 
     }
 

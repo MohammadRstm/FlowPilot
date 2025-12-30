@@ -80,7 +80,7 @@ class GetPoints{
     }
 
     private static function query(string $collection, array $dense, array $sparse, array $filters, int $limit): array {
-        $endpoint = rtrim(env("QDRANT_URL"), '/');
+        $endpoint = rtrim(env("QDRANT_CLUSTER_ENDPOINT", ''), '/');
 
         /** @var \Illuminate\Http\Client\Response $response */
         $response = Http::withHeaders([

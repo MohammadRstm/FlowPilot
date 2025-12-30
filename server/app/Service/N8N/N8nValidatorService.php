@@ -12,9 +12,13 @@ class N8nValidatorService{
         /** @var array|null $errorsJson */
         $errorsJson = self::getErrors($user, $workflow, $url);
 
+        if (is_array($errorsJson) && array_key_exists('valid', $errorsJson)) {
+            return $errorsJson;
+        }
+
         return [
-            "valid" => false,
-            "errors" => $errorsJson
+            'valid' => false,
+            'errors' => $errorsJson
         ];
     }
 

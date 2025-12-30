@@ -41,24 +41,30 @@ class IngestN8nSchemas extends Command{
 
     }
 
-    private function processNodes(string $url){
+    private function processNodes(string $nodeName, string $url): string{
         $files = $this->getFiles($url);
+
+        if (!is_array($files)) return '';
 
         $ts = '';
 
         foreach ($files as $file) {
+            if (!is_array($file) || empty($file['name'])) continue;
+
             if (str_ends_with($file['name'], '.node.ts')) {
                 /** @var Response $downloadResp */
                 $downloadResp = Http::get($file['download_url']);
-                $ts .= $downloadResp->body();
+                if ($downloadResp->ok()) {
+                    $ts .= $downloadResp->body();
+                }
             }
 
             if ($file['type'] === 'dir' && $file['name'] === 'properties') {
                 $this->processProperties($file['url'], $ts);
-            }else{
-                throw new \RuntimeException("Unexpected file structure in node folder");
             }
-        }      
+        }
+
+        return $ts;
     }
 
     private function processProperties(string $url, string &$ts){
