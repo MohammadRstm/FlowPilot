@@ -81,9 +81,12 @@ class GetPoints{
         return [
             "should" => [
                 [
-                    "key" => "node",
+                    "key" => "node_normalized",
                     "match" => [
-                        "any" => array_map("strtolower", $analysis["nodes"])
+                        'any' => array_map(
+                            fn ($n) => preg_replace('/[^a-z0-9]/', '', strtolower($n)),
+                            $analysis['nodes']
+                        )
                     ]
                 ]
             ]
