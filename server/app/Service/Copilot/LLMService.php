@@ -3,8 +3,8 @@
 namespace App\Service\Copilot;
 
 use Illuminate\Support\Facades\Http;
-use Laravel\Prompts\Prompt;
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Log;
 
 class LLMService{
 
@@ -36,6 +36,8 @@ class LLMService{
 
     public static function generateAnswer(string $question, array $topFlows) {
 
+        Log::debug('Generating answer with LLM', ['question' => $question, 'topFlows' => $topFlows]);
+
         $context = self::buildContext($topFlows);
 
         $prompt = Prompts::getWorkflowGenerationPrompt($question, $context);
@@ -57,13 +59,14 @@ class LLMService{
 
     private static function buildContext(array $flows): string {
         $out = "";
-
+        $counter = 1;
         foreach ($flows as $i => $flow) {
-            $out .= "\n--- Workflow " . ($i+1) . " ---\n";
+            $out .= "\n--- Workflow " . $counter . " ---\n";
             $out .= "Name: {$flow['workflow']}\n";
             $out .= "Nodes: " . implode(", ", $flow["nodes"]) . "\n";
             $out .= "Node Count: {$flow['node_count']}\n";
             $out .= "JSON:\n" . json_encode($flow["raw"], JSON_PRETTY_PRINT) . "\n";
+            $counter++;
         }
 
         return $out;

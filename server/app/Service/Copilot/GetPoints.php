@@ -5,6 +5,7 @@ namespace App\Service\Copilot;
 use App\Console\Commands\Services\IngestionService;
 use Exception;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class GetPoints{
 
@@ -12,11 +13,15 @@ class GetPoints{
         $dense  = IngestionService::embed($analysis["embedding_query"]);
         $sparse = IngestionService::buildSparseVector($analysis["embedding_query"]);
 
-        return [
+        $results =  [
             "workflows" => self::searchWorkflows($dense, $sparse, $analysis),
             "nodes"     => self::searchNodes($dense, $sparse, $analysis),
             "schemas"   => self::searchSchemas($dense, $sparse, $analysis),
         ];
+
+        Log::debug('Retrieved points from Qdrant', ['length_of_results_workflows' => count($results["workflows"]), 'length_of_results_nodes' => count($results["nodes"]), 'length_of_results_schemas' => count($results["schemas"])]);
+        Log::info("Nodes retrieved: " . implode(", ", array_map(fn($n) => $n['payload']['node'] ?? 'unknown', $results["nodes"])));
+        return $results;
     }
 
     private static function searchWorkflows(array $dense, array $sparse, array $analysis): array {
@@ -40,19 +45,25 @@ class GetPoints{
     }
 
     private static function buildNodeFilters(array $analysis): array {
-        $must = [];
-
-        if (!empty($analysis["nodes"])) {
-            $must[] = [
-                "key" => "key",
-                "match" => [
-                    "any" => array_map("strtolower", $analysis["nodes"])
-                ]
-            ];
+        if (empty($analysis["nodes"])) {
+            return [];
         }
 
-        return ["must" => $must];
+        return [
+            "should" => [
+                [
+                    "key" => "key_normalized",
+                    "match" => [
+                        "any" => array_map(
+                            fn ($n) => preg_replace('/[^a-z0-9]/', '', strtolower($n)),
+                            $analysis["nodes"]
+                        )
+                    ]
+                ]
+            ]
+        ];
     }
+
 
     private static function searchSchemas(array $dense, array $sparse, array $analysis): array {
         return self::query(
@@ -68,7 +79,7 @@ class GetPoints{
         if (empty($analysis["nodes"])) return [];
 
         return [
-            "must" => [
+            "should" => [
                 [
                     "key" => "node",
                     "match" => [

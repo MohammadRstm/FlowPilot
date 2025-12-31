@@ -19,7 +19,7 @@ class Prompts{
 
         Rules:
         - "intent" must be a full sentence.
-        - "nodes" must only contain names of services or n8n nodes (e.g. "Slack", "Stripe", "Notion", "Gmail", "Acuity").
+        - "nodes" must only contain names of services or n8n nodes (e.g. "Slack", "Stripe", "Notion", "EmailSend", "Acuity").
         - If no specific service is mentioned, infer the most likely ones.
         - "min_nodes" must be realistic based on the intent.
         - Never return null values.

@@ -8,138 +8,142 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Http\Client\Response;
 
-class IngestN8nNodes extends Command{
-    protected $signature = 'app:ingest-n8n-nodes';
-    protected $description = 'Ingest n8n node catalog from GitHub into Qdrant';
+class IngestN8nNodes extends Command
+{
+    protected $signature = 'app:ingest-all-n8n-nodes';
+    protected $description = 'Recursively ingest ALL n8n .node.json files into Qdrant';
 
-    public function handle(){
-        $this->info("Fetching n8n node folders...");
-        $folders = $this->getFolders();
-        
-        foreach ($folders as $folder) {
-            if ($folder['type'] !== 'dir') continue;
+    private int $ingested = 0;
+    private int $skipped = 0;
 
-            $this->info("Scanning {$folder['name']}");
+    public function handle()
+    {
+        $root = 'https://api.github.com/repos/n8n-io/n8n/contents/packages/nodes-base/nodes';
 
-            $files = $this->getFiles($folder['url']);
+        $this->info('Starting recursive ingestion of n8n nodes...');
+        $this->crawl($root);
 
-            if (!is_array($files)) {
-                $this->warn("Skipping {$folder['name']}, files not found or invalid response.");
-                continue;
-            }
-
-            $nodeJson = $this->getNodeJson($files);
-
-            if(!$nodeJson){
-                $this->warn("No .node.json found for {$folder['name']}");
-                continue;
-            }
-
-            $data = Http::get($nodeJson)->json();
-            if(!$data) continue;
-
-            $payload = $this->buildPayload($data);
-            $this->storeInQdrant($payload);
-        }
-
-        $this->info("n8n node catalog ingestion completed.");
+        $this->newLine();
+        $this->info("Ingestion complete.");
+        $this->info("Ingested: {$this->ingested}");
+        $this->info("Skipped: {$this->skipped}");
     }
 
-    private function getNodeJson(array $files): ?string{
-        foreach ($files as $file) {
-            if ($file['type'] === 'file' && str_ends_with($file['name'], '.node.json')) {
-                return $file['download_url'];
-            }
-        }
-        return null;
-    }
-
-    private function getFiles(string $url){
-        /** @var Response $filesResponse */
-        $filesResponse = Http::withHeaders([
-            'User-Agent' => 'Laravel-RAG',
-            'Authorization' => 'token ' . env('GITHUB_TOKEN')
-        ])->get($url);
-
-        return $filesResponse->json();
-    }
-
-    private function getFolders(){
+    /**
+     * Recursively crawl GitHub directories
+     */
+    private function crawl(string $url): void
+    {
         /** @var Response $response */
         $response = Http::withHeaders([
-            'User-Agent' => 'Laravel-RAG',
-            'Authorization' => 'token ' . env('GITHUB_TOKEN')
-        ])->timeout(30)->get(env('GITHUB_REPO_NODES_API', ''));
+            'User-Agent'    => 'Laravel-RAG',
+            'Authorization' => 'token ' . env('GITHUB_TOKEN'),
+        ])->timeout(30)->get($url);
 
-        if(!$response->ok()){
-            $this->error('GitHub API failed. Status: ' . $response->status());
-            $this->error('Response body: ' . $response->body());
-            throw new \RuntimeException("Failed to fetch n8n node folders from GitHub");
-        }
-
-        $this->info('X-RateLimit-Limit: ' . $response->header('X-RateLimit-Limit'));
-        $this->info('X-RateLimit-Remaining: ' . $response->header('X-RateLimit-Remaining'));
-
-        return $response->json();
-    }
-
-    private function buildPayload(array $data): array{
-        return [
-            "id" => $data['node'],
-            "node" => $data['node'],
-            "key" => str_replace('n8n-nodes-base.', '', $data['node']),
-            "categories" => $data['categories'] ?? [],
-            "docs" => $data['resources']['primaryDocumentation'][0]['url'] ?? null,
-            "credentials" => $data['resources']['credentialDocumentation'][0]['url'] ?? null,
-            "codex" => $data['codexVersion'] ?? null,
-        ];
-    }
-
-   private function storeInQdrant(array $node){
-        $text = implode(' ', [
-            $node['node'],
-            implode(' ', $node['categories']),
-            $node['docs'] ?? ''
-        ]);
-
-        // Dense embedding
-        $denseVector = IngestionService::embed($text);
-        if (count($denseVector) !== 3072) {
-            $this->error("Embedding size mismatch: " . count($denseVector));
+        if (!$response->ok()) {
+            $this->warn("Failed to fetch: {$url}");
             return;
         }
 
-        // Sparse vector
+        $items = $response->json();
+        if (!is_array($items)) {
+            return;
+        }
+
+        foreach ($items as $item) {
+            if ($item['type'] === 'dir') {
+                // recurse
+                $this->crawl($item['url']);
+                continue;
+            }
+
+            if (
+                $item['type'] === 'file' &&
+                str_ends_with($item['name'], '.node.json')
+            ) {
+                $this->ingestNodeFile($item['download_url']);
+            }
+        }
+    }
+
+    /**
+     * Ingest a single .node.json file
+     */
+    private function ingestNodeFile(string $url): void
+    {
+        $this->line("→ {$url}");
+
+        $data = Http::get($url)->json();
+        if (!$data || empty($data['node'])) {
+            $this->skipped++;
+            return;
+        }
+
+        $payload = $this->buildPayload($data);
+        $this->storeInQdrant($payload);
+
+        $this->ingested++;
+    }
+
+    /**
+     * Payload MUST match your existing schema
+     */
+    private function buildPayload(array $data): array
+    {
+        $node = $data['node'];
+        $key = strtolower(str_replace('n8n-nodes-base.', '', $node));
+
+        return [
+            'node_id'        => $node,
+            'node'           => $node,
+            'key'            => $key,
+            'key_normalized' => preg_replace('/[^a-z0-9]/', '', $key),
+            'categories'     => array_map('strtolower', $data['categories'] ?? []),
+            'docs'           => $data['resources']['primaryDocumentation'][0]['url'] ?? null,
+            'credentials'    => $data['resources']['credentialDocumentation'][0]['url'] ?? null,
+            'codex'          => $data['codexVersion'] ?? null,
+        ];
+    }
+
+    /**
+     * Store node in Qdrant
+     */
+    private function storeInQdrant(array $node): void
+    {
+        $text = implode(' ', [
+            $node['node'],
+            $node['key'],
+            implode(' ', $node['categories']),
+            $node['docs'] ?? '',
+        ]);
+
+        $denseVector = IngestionService::embed($text);
+        if (count($denseVector) !== 3072) {
+            $this->warn('Embedding size mismatch, skipping node.');
+            $this->skipped++;
+            return;
+        }
+
         $sparseVector = IngestionService::buildSparseVector($text);
 
         $endpoint = rtrim(env('QDRANT_CLUSTER_ENDPOINT', ''), '/');
-        $apiKey = env('QDRANT_API_KEY');
 
-        $id = (string) Str::uuid();
-
-        /** @var Response $response */
-        $response = Http::withHeaders([
-            "api-key" => $apiKey
+        Http::withHeaders([
+            'api-key' => env('QDRANT_API_KEY'),
         ])->put(
             $endpoint . '/collections/n8n_catalog/points?wait=true',
             [
-                "points" => [
+                'points' => [
                     [
-                        "id" => $id,
-                        "vector" => [
-                            "dense-vector" => $denseVector,
-                            "text-sparse"  => $sparseVector
+                        'id'     => (string) Str::uuid(),
+                        'vector' => [
+                            'dense-vector' => $denseVector,
+                            'text-sparse'  => $sparseVector,
                         ],
-                        "payload" => $node
-                    ]
-                ]
+                        'payload' => $node,
+                    ],
+                ],
             ]
         );
-
-        $this->info($response->body());
-
-        if (!$response->ok()) {
-            $this->error("Failed storing node {$node['id']}: " . $response->body());
-        }
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Service\Copilot;
 
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 class AnalyzeIntent{
     // Orchestrater
@@ -13,6 +14,8 @@ class AnalyzeIntent{
         $parsed["nodes"] = self::normalizeNodes($parsed["nodes"] ?? []);
         $parsed["filters"] = self::buildFilters($parsed);// create filters for point retrieval
         $parsed["embedding_query"] = self::buildEmbeddingQuery($question, $parsed);
+
+        Log::debug('Analyzed intent', ['analysis' => $parsed]);
 
         return $parsed;
     }
@@ -34,16 +37,21 @@ class AnalyzeIntent{
     }
 
     private static function normalizeNodes(array $nodes): array {
-        return array_values(array_unique(array_map(function($n){
-            return ucfirst(strtolower(trim($n)));// slack , Slack, SLACK all map to Slack
+        return array_values(array_unique(array_map(function ($n) {
+            return preg_replace(
+                '/[^a-z0-9]/',
+                '',
+                strtolower(trim($n))
+            );
         }, $nodes)));
     }
 
-    private static function buildFilters(array $analysis): array {
-        $must = [];
+
+    private static function buildFilters(array $analysis): array {// this is a general filter (used later in n8n_workflows filtering)
+        $should = [];
 
         if (!empty($analysis["nodes"])) {
-            $must[] = [
+            $should[] = [
                 "key" => "nodes_used",
                 "match" => [
                     "any" => $analysis["nodes"]
@@ -52,7 +60,7 @@ class AnalyzeIntent{
         }
 
         if (!empty($analysis["category"])) {
-            $must[] = [
+            $should[] = [
                 "key" => "category",
                 "match" => [
                     "value" => $analysis["category"]
@@ -61,7 +69,7 @@ class AnalyzeIntent{
         }
 
         if (!empty($analysis["min_nodes"])) {
-            $must[] = [
+            $should[] = [
                 "key" => "node_count",
                 "range" => [
                     "gte" => intval($analysis["min_nodes"])
@@ -69,7 +77,7 @@ class AnalyzeIntent{
             ];
         }
 
-        return ["must" => $must];
+        return ["should" => $should];
     }
 
     private static function buildEmbeddingQuery(string $question, array $analysis): string {
