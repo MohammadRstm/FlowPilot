@@ -57,20 +57,39 @@ class LLMService{
         return $response->json("choices.0.message.content");
     }
 
-    private static function buildContext(array $flows): string {
+    private static function buildContext(array $flows): string{
         $out = "";
         $counter = 1;
-        foreach ($flows as $i => $flow) {
-            $out .= "\n--- Workflow " . $counter . " ---\n";
-            $out .= "Name: {$flow['workflow']}\n";
-            $out .= "Nodes: " . implode(", ", $flow["nodes"]) . "\n";
-            $out .= "Node Count: {$flow['node_count']}\n";
-            $out .= "JSON:\n" . json_encode($flow["raw"], JSON_PRETTY_PRINT) . "\n";
+
+        foreach ($flows as $flow) {
+
+            // if this is a Qdrant result, extract payload
+            if (isset($flow["payload"])) {
+                $flow = $flow["payload"];
+            }
+
+            // if it's not an array now, skip it
+            if (!is_array($flow)) {
+                continue;
+            }
+
+            $name  = $flow["workflow"] ?? "Unknown Workflow";
+            $nodes = $flow["nodes_used"] ?? [];
+            $count = $flow["node_count"] ?? count($nodes);
+            $raw   = $flow["raw"] ?? $flow;
+
+            $out .= "\n--- Workflow {$counter} ---\n";
+            $out .= "Name: {$name}\n";
+            $out .= "Nodes: " . implode(", ", $nodes) . "\n";
+            $out .= "Node Count: {$count}\n";
+            $out .= "JSON:\n" . json_encode($raw, JSON_PRETTY_PRINT) . "\n";
+
             $counter++;
         }
 
         return $out;
     }
+
 
     public static function repairWorkflow(string $badJson, array $errors){
         $prompt = Prompts::getRepairPrompt($badJson, json_encode($errors));

@@ -19,8 +19,7 @@ class GetPoints{
             "schemas"   => self::searchSchemas($dense, $sparse, $analysis),
         ];
 
-        Log::debug('Retrieved points from Qdrant', ['length_of_results_workflows' => count($results["workflows"]), 'length_of_results_nodes' => count($results["nodes"]), 'length_of_results_schemas' => count($results["schemas"])]);
-        Log::info("Nodes retrieved: " . implode(", ", array_map(fn($n) => $n['payload']['node'] ?? 'unknown', $results["nodes"])));
+        Log::info('Retrieved points from Qdrant', ['length_of_results_workflows' => count($results["workflows"]), 'length_of_results_nodes' => count($results["nodes"]), 'length_of_results_schemas' => count($results["schemas"])]);
         return $results;
     }
 
@@ -44,25 +43,26 @@ class GetPoints{
         );
     }
 
-    private static function buildNodeFilters(array $analysis): array {
+    private static function buildNodeFilters(array $analysis): array
+    {
         if (empty($analysis["nodes"])) {
             return [];
         }
+
+        $variants = self::expandNodeNames($analysis["nodes"]);
 
         return [
             "should" => [
                 [
                     "key" => "key_normalized",
                     "match" => [
-                        "any" => array_map(
-                            fn ($n) => preg_replace('/[^a-z0-9]/', '', strtolower($n)),
-                            $analysis["nodes"]
-                        )
+                        "any" => $variants
                     ]
                 ]
             ]
         ];
     }
+
 
 
     private static function searchSchemas(array $dense, array $sparse, array $analysis): array {
@@ -75,23 +75,53 @@ class GetPoints{
         );
     }
 
-    private static function buildSchemaFilters(array $analysis): array {
-        if (empty($analysis["nodes"])) return [];
+    private static function buildSchemaFilters(array $analysis): array
+    {
+        if (empty($analysis["nodes"])) {
+            return [];
+        }
+
+        $variants = self::expandNodeNames($analysis["nodes"]);
 
         return [
             "should" => [
                 [
                     "key" => "node_normalized",
                     "match" => [
-                        'any' => array_map(
-                            fn ($n) => preg_replace('/[^a-z0-9]/', '', strtolower($n)),
-                            $analysis['nodes']
-                        )
+                        "any" => $variants
                     ]
                 ]
             ]
         ];
     }
+
+
+    private static function expandNodeNames(array $nodes): array
+    {
+        $expanded = [];
+
+        foreach ($nodes as $node) {
+            $norm = preg_replace('/[^a-z0-9]/', '', strtolower($node));
+
+            if (!$norm) continue;
+
+            // base
+            $expanded[] = $norm;
+
+            // trigger variant
+            if (!str_ends_with($norm, 'trigger')) {
+                $expanded[] = $norm . 'trigger';
+            }
+
+            // non-trigger variant
+            if (str_ends_with($norm, 'trigger')) {
+                $expanded[] = substr($norm, 0, -7); // remove "trigger"
+            }
+        }
+
+        return array_values(array_unique($expanded));
+    }
+
 
     private static function query(string $collection, array $dense, array $sparse, array $filters, int $limit): array {
         $endpoint = rtrim(env("QDRANT_CLUSTER_ENDPOINT", ''), '/');

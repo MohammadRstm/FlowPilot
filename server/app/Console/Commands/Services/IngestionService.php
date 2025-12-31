@@ -36,7 +36,7 @@ class IngestionService{
     public static function embed(string $text): array{
         /** @var Response $response */
         $response = Http::withToken(env('OPENAI_API_KEY', ''))
-            ->timeout(60)
+            ->timeout(1000)
             ->post('https://api.openai.com/v1/embeddings', [
                 "model" => "text-embedding-3-large",
                 "input" => $text

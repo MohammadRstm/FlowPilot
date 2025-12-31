@@ -35,7 +35,7 @@ class RankingFlows{
             $score =
                 ($hit["score"] * 0.4) +
                 (self::nodeMatchScore($analysis["nodes"], $p["nodes_used"]) * 0.3) +
-                (self::intentScore($analysis["intent"], $p["description"] ?? "") * 0.2) +
+                (self::intentScore($analysis["intent"], $p["nodes_uses"] ?? []) * 0.2) +
                 (self::complexityScore($analysis["min_nodes"], $p["node_count"]) * 0.1);
 
             $scored[] = [
