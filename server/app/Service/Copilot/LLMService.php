@@ -46,7 +46,7 @@ class LLMService{
         $response = Http::withToken(env("OPENAI_API_KEY"))
             ->timeout(90)
             ->post("https://api.openai.com/v1/chat/completions", [
-                "model" => "gpt-4o",
+                "model" => "gpt-4.1-mini",
                 "temperature" => 0.2,
                 "messages" => [
                     ["role" => "system", "content" => Prompts::getWorkflowGenerationSystemPrompt()],

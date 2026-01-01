@@ -60,35 +60,60 @@ class Prompts{
 
     public static function getWorkflowGenerationPrompt(string $question, string $context){
         return <<<PROMPT
-            USER GOAL:
-            $question
+        USER GOAL:
+        $question
 
-            You are given real n8n workflows below.
+        You are given real exported n8n workflows below.
 
-            Your task:
-            1. Understand the user's goal
-            2. Compare the workflows
-            3. Decide which one best matches
-            4. Modify or merge them if needed
-            5. Return ONE final n8n workflow JSON
+        Your task:
+        1. Understand the user's goal
+        2. Compare the workflows
+        3. Select, merge or modify them
+        4. Output ONE fully importable n8n workflow
 
-            RULES:
-            - Use only nodes that appear in the provided workflows
-            - Keep credentials names unchanged
-            - Maintain valid n8n format
-            - Ensure triggers exist
-            - Ensure connections are correct
-            - Include error handling if missing
+        =====================
+        CRITICAL FORMAT RULES
+        =====================
 
-            WORKFLOWS:
-            $context
+        You MUST output a full n8n workflow object.
 
-            OUTPUT:
-            Return ONLY a valid n8n JSON.
-            No explanations.
-            No markdown.
-            PROMPT;
+        The JSON MUST have this exact top-level structure:
+
+        {
+        "name": "Auto Generated Workflow",
+        "nodes": [ ... ],
+        "connections": { ... },
+        "settings": {},
+        "staticData": null,
+        "meta": {
+            "instanceId": "auto-generated"
+        }
+        }
+
+        Rules:
+        - "nodes" must be an array of n8n nodes
+        - "connections" must match node names exactly
+        - Triggers must exist
+        - Use only nodes that appear in the provided workflows
+        - Keep credentials names EXACTLY as in the examples
+        - DO NOT omit settings, staticData, or meta
+        - Do NOT output only nodes or only connections
+        - Do NOT wrap JSON in markdown
+        - Do NOT add any explanation
+        - Output JSON only
+
+        =====================
+        WORKFLOWS/NODES/SCHEMA
+        =====================
+        $context
+
+        =====================
+        OUTPUT
+        =====================
+        Return ONLY the final JSON object described above.
+        PROMPT;
     }
+
 
     public static function getWorkflowGenerationSystemPrompt(): string{
         return "You are an assistant that helps generate and repair n8n workflows. Provide clear, valid JSON when requested, preserve credentials when possible, and be concise.";

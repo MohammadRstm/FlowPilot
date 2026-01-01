@@ -25,7 +25,9 @@ class GetAnswer{
 
         /** @var array $workflow */
         $workflow = $workflowDecoded;
-        
+
+        // analyze output workflow with user's intent (sanity check)
+                
         if($user["n8n_url"] && $user["n8n_api_key"]){// if user has his account connected validate + run workflow
           $json = self::validateWorkflow($workflow , $user);
         }
