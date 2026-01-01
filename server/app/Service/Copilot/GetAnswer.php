@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 class GetAnswer{
     // Orchestrater
     public static function execute($question , $user = null){
+        set_time_limit(300); // 5 minutes max
 
         $analysis = AnalyzeIntent::analyze($question);
         $points = GetPoints::execute($analysis);
@@ -27,7 +28,9 @@ class GetAnswer{
         $workflow = $workflowDecoded;
 
         // analyze output workflow with user's intent (sanity check)
-                
+        $validateWorkflowService = new ValidateFlowLogicService();
+        $workflow = $validateWorkflowService->execute($workflow , $question);
+
         if($user["n8n_url"] && $user["n8n_api_key"]){// if user has his account connected validate + run workflow
           $json = self::validateWorkflow($workflow , $user);
         }
@@ -51,6 +54,7 @@ class GetAnswer{
         return json_encode($workflow);
     }
 
+ 
     private static function handleValidationErrors($validation , &$workflow){
         if(!$validation["valid"]){
             $validationErrors = $validation["errors"] ?? [];

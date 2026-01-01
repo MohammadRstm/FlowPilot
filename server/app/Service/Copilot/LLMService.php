@@ -53,8 +53,11 @@ class LLMService{
                     ["role" => "user", "content" => $prompt]
                 ]
             ]);
+        
+        $resultedFlow = $response->json("choices.0.message.content");
+        Log::debug('Generated answer from LLM', ['resultedFlow' => $resultedFlow]);
 
-        return $response->json("choices.0.message.content");
+        return $resultedFlow;
     }
 
     private static function buildContext(array $flows): string{
@@ -90,14 +93,13 @@ class LLMService{
         return $out;
     }
 
-
     public static function repairWorkflow(string $badJson, array $errors){
         $prompt = Prompts::getRepairPrompt($badJson, json_encode($errors));
 
         /** @var Response $response */
         $response = Http::withToken(env("OPENAI_API_KEY"))
             ->post("https://api.openai.com/v1/chat/completions", [
-                "model" => "gpt-4o",
+                "model" => "gpt-4.1-mini",
                 "temperature" => 0,
                 "messages" => [
                     ["role"=>"system","content"=>"You are an n8n validation engine"],
@@ -105,7 +107,35 @@ class LLMService{
                 ]
             ]);
         
-        return $response->json("choices.0.message.content");
+        $repairedFlow = $response->json("choices.0.message.content");
+        Log::alert('Repaired workflow from LLM', ['repairedFlow' => $repairedFlow]);
+        
+        return $repairedFlow;
+    }
+
+    public static function judgeResults(array $workflow, string $question){
+        $prompt = Prompts::getJudgementPrompt($workflow, $question);
+
+        /** @var Response $response */
+        $response = Http::withToken(env("OPENAI_API_KEY"))
+            ->post("https://api.openai.com/v1/chat/completions", [
+                "model" => "gpt-4.1-mini",
+                "temperature" => 0,
+                "messages" => [
+                    ["role"=>"system","content"=>"You are an n8n analysis engine"],
+                    ["role"=>"user","content"=>$prompt]
+                ]
+            ]);
+        
+        $content = $response->json("choices.0.message.content");
+
+        $decoded = json_decode($content, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \RuntimeException("Failed to decode judgement response: " . json_last_error_msg());
+        }
+
+        return $decoded;
     }
 
 }
