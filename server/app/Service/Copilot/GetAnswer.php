@@ -50,6 +50,9 @@ class GetAnswer{
         // analyze output workflow with user's intent (sanity check)
         $validateWorkflowService = new ValidateFlowLogicService();
         $workflow = $validateWorkflowService->execute($workflow , $question , $totalPoints);
+        // we are here now
+        $validateWorkflowDataInjection = new ValidateFlowDataInjection();
+        $workflow = $validateWorkflowDataInjection->execute($workflow , $question , $totalPoints);
 
         return $json;
     }

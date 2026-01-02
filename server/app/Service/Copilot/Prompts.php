@@ -297,7 +297,6 @@ class Prompts{
         PROMPT;
     }
 
-
     public static function getRepairWorkflowLogic(string $badJson, string $errorsJson , string $totalPoints): string{
         return <<<PROMPT
         You are an expert n8n workflow engineer and automated repair system.
@@ -319,7 +318,7 @@ class Prompts{
         FAILURES (MUST FIX ALL)
         ────────────────────────────────────────────
         $errorsJson
-        
+
         ────────────────────────────────────────────
         WHAT YOU CAN USE
         ────────────────────────────────────────────
@@ -401,66 +400,294 @@ class Prompts{
         PROMPT;
     }
 
-    public static function getDataFlowValidatorPrompt(){
+    public static function getCompleteDataFlowValidationPrompt(array $workflow , string $question , array $totalPoints){
+        $encodedWorkflow = json_encode($workflow);
+        $encodedPoints = json_encode($totalPoints);
+
         return <<<PROMPT
-        You are an expert n8n workflow data-flow auditor.
+        You are an N8N DATA FLOW TYPE CHECKER.
 
-        Your job is to analyze a given n8n workflow JSON and detect ALL data-flow and logic-flow errors.
+        You must validate this workflow as if you were a compiler.
 
-        You do NOT judge whether the workflow matches user intent.
-        You ONLY judge whether data flows correctly between nodes.
+        Your job is to prove whether data used in every node actually exists, is correctly typed, and is produced by an upstream connected node.
 
-        A workflow is INVALID if:
-        • A node reads fields that are never produced upstream
-        • A node executes without any usable input data
-        • A branch (IF, Switch, Filter) is not wired correctly
-        • The wrong output branch is connected
-        • A node expects a single item but receives an array (or vice-versa)
-        • Required fields are missing
-        • A node runs on empty or null input
-        • Data is not forwarded to the next node
-        • A trigger produces data that is never consumed
-        • A downstream node is disconnected from the data it needs
+        You are NOT allowed to guess.
+        You are NOT allowed to assume.
+        You must prove.
 
-        You must trace execution exactly as n8n would.
+        --------------------------------
+        USER INTENT
+        --------------------------------
+        {$question}
 
+        --------------------------------
+        WORKFLOW
+        --------------------------------
+        {$encodedWorkflow}
+
+        --------------------------------
+        NODE SCHEMAS (AUTHORITATIVE)
+        --------------------------------
+        {$encodedPoints}
+
+        --------------------------------
+        YOUR TASK
+        --------------------------------
+
+        You must perform ALL of the following:
+
+        ### 1.BUILD THE DATA GRAPH
+        For every node in execution order:
+        - List every field it outputs
+        - The type of each field (string, number, boolean, object, array, binary)
+        - Which node produced it
+
+        Use ONLY the node schemas + parameters.
+
+        ---
+
+        ### 2.TRACE EVERY REFERENCE
+        For every expression like:
+        {{\$json.email}}
+        {{\$node["X"].json.id}}
+        {{\$binary.data}}
+
+        You must verify:
+        - Does this field exist?
+        - Is it produced by a connected upstream node?
+        - Is the type correct for the destination field?
+        - Is the path valid?
+
+        If ANY of those fail → ERROR
+
+        ---
+
+        ### 3.ENFORCE SCHEMAS
         For every node:
-        1. Determine what fields it outputs
-        2. Determine what fields the next node expects
-        3. Check whether they match
-        4. Check all branches
-        5. Detect dead branches
-        6. Detect unconsumed data
-        7. Detect invalid mappings
+        - Required fields must exist
+        - Fields must be of correct type
+        - Binary vs JSON must be correct
+        - Enum values must be valid
+        - Expressions must reference real fields
 
-        You must NOT make assumptions.
-        You must only use what is present in the JSON.
+        ---
 
-        If a field is referenced but not guaranteed to exist → error.
-        If a node depends on a branch that is not connected → error.
-        If a node executes without input → error.
+        ### 4.ENFORCE INTENT
+        Check that the actual data path matches the user intent.
 
-        Return ONLY JSON in the following format:
+        Example:
+        If user asked:
+        "Create file from Google Sheet rows"
+
+        Then:
+        Google Sheets must produce row data
+        That data must flow into the Google Drive node
+        The file content must be built from sheet data
+
+        If not → INTENT_MISMATCH
+
+        ---
+
+        ### 5.ABSOLUTELY FORBIDDEN
+        You may NOT:
+        - Assume a field exists
+        - Assume a schema
+        - Assume default values
+        - Assume emails exist
+        - Assume content exists
+
+        If not proven → ERROR
+
+        ### 6.BUILD THE EXECUTION GRAPH
+
+        You must map every possible execution path:
+        - Starting from triggers
+        - Through IF, SWITCH, SPLIT, MERGE, LOOPS
+        - Until termination
+
+        For every node output index:
+        - Verify it is either connected OR explicitly allowed to be empty
+
+        ---
+
+        ### 7.BRANCH COVERAGE
+
+        For every conditional node:
+        - All branches must be handled
+        - True and False must lead to something
+        - No branch may drop data unless user intent explicitly says so
+
+        If any branch leads nowhere → ERROR (DATA_LOSS)
+
+        ---
+
+        ### 8.LOOP SAFETY
+
+        If a loop exists:
+        - Data must either progress toward termination
+        - Or explicitly exit
+
+        Infinite loops or closed cycles without state change → ERROR (INFINITE_LOOP)
+
+        ---
+
+        ### 9.TERMINAL VALIDATION
+
+        For every possible path:
+        Verify:
+        - If intent requires output (file, email, API call), that output happens
+        - No path silently ends without fulfilling intent
+
+        Example:
+        If user requested:
+        "Create files OR send emails"
+        Then:
+        Every path must do one of those.
+
+        If any path does nothing → INTENT_MISMATCH
+
+        ---
+
+        # ERROR FORMAT
+
+        You must return an error if ANY failure exists.
+
+        Each error must be:
 
         {
-        "valid": false,
-        "errors": [
-            {
-            "node": "NodeName",
-            "problem": "Description of what is broken",
-            "type": "missing_field | empty_input | wrong_branch | dead_node | invalid_mapping | array_mismatch | no_connection | execution_order"
-            }
-        ]
+        "error_code": "MISSING_FIELD | INVALID_TYPE | BROKEN_REFERENCE | WRONG_SOURCE | SCHEMA_VIOLATION | INTENT_MISMATCH",
+        "node": "node name",
+        "field": "field or expression",
+        "description": "what is wrong",
+        "suggested_improvement": "exactly what must be fixed"
         }
 
-        If no problems exist return:
+        ---
+
+        # SCORING
+
+        Score is NOT subjective.
+
+        Start at 1.0  
+        Subtract:
+        -0.3 per critical data error  
+        -0.2 per broken reference  
+        -0.2 per schema violation  
+        -0.3 if intent broken  
+
+        Minimum 0.0
+
+        ---
+
+        # OUTPUT (STRICT)
+
+        Return ONLY valid JSON:
 
         {
-        "valid": true,
-        "errors": []
+        "score": <number>,
+        "workflow": <original workflow>,
+        "errors": [ ... ]
         }
+
+        If ANY error exists:
+        score MUST be < 1.0
+
+        No markdown.  
+        No commentary.  
+        No explanations.
+
         PROMPT;
     }
+
+    public static function getRepairWorkflowDataFlowLogic(string $badJson, string $errorsJson, string $totalPointsJson){
+        return <<<PROMPT
+        You are an N8N DATA FLOW REPAIR ENGINE.
+
+        Your ONLY task is to fix data-flow, parameter, and schema errors in an existing n8n workflow.
+
+        You are NOT allowed to:
+        - Change the user intent
+        - Redesign the workflow
+        - Add new nodes
+        - Remove nodes
+        - Change control flow
+        - Change node types
+        - Invent schemas
+        - Add new credentials
+
+        You may ONLY:
+        - Fix broken expressions
+        - Fix missing or wrong fields
+        - Correct invalid paths
+        - Add required parameters that exist in the schema
+        - Fix wrong field types (binary vs json)
+        - Move data into correct fields
+        - Fix broken references between already-connected nodes
+
+        You are repairing a compiler error, not optimizing.
+
+        --------------------------------
+        WORKFLOW (BROKEN)
+        --------------------------------
+        $badJson
+
+        --------------------------------
+        ERRORS (AUTHORITATIVE)
+        --------------------------------
+        $errorsJson
+
+        --------------------------------
+        ALLOWED NODE SCHEMAS
+        --------------------------------
+        $totalPointsJson
+
+        --------------------------------
+        STRICT RULES
+        --------------------------------
+
+        1. You must fix ONLY the errors provided.
+        2. You must NOT fix anything that is not explicitly listed.
+        3. Every error must be resolved in the output.
+        4. If you cannot fix an error because the workflow is structurally impossible, return the original workflow unchanged.
+        5. You must preserve:
+        - Node names
+        - Node IDs
+        - Connections
+        - Trigger logic
+        - Control flow
+
+        6. If a field is missing:
+        - You must fill it using upstream data if available
+        - Otherwise use a placeholder like: "REQUIRED_USER_VALUE"
+
+        7. If a reference is broken:
+        - You must repoint it to a valid upstream field
+        - You must not create fake data
+
+        8. If binary/json mismatches exist:
+        - You must correct the field type without changing the node
+
+        --------------------------------
+        WHAT YOU MUST PRODUCE
+        --------------------------------
+
+        Return ONLY the corrected workflow JSON.
+
+        Do NOT:
+        - Add commentary
+        - Add markdown
+        - Explain anything
+        - Return errors
+        - Return scores
+
+        The output MUST be valid n8n workflow JSON.
+
+        Your goal is to make the workflow pass data-flow validation with score = 1.0.
+
+        PROMPT;
+    }
+
+
 
 
 }

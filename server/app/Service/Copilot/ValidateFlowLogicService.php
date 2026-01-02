@@ -14,7 +14,10 @@ class ValidateFlowLogicService{
 
     private float $scoreThreshold;
     private int $maxRetries;
-    private bool $criticalEverSeen;
+
+    private bool $criticalEverSeen = false;
+    private array $unresolvedCriticalFingerprints = [];
+
 
     public function __construct(){
         $this->seenFingerprints = [];
@@ -29,24 +32,28 @@ class ValidateFlowLogicService{
     public function execute($workflow, $question, $totalPoints, $retries = 0){
 
         $judgement = LLMService::judgeResults($workflow, $question);
-        $dataFlow = LLMService::analyzeDataFlow($question, $workflow, $totalPoints);
 
         Log::debug('Workflow judgement', [
             'attempt' => $retries,
-            'judgement' => $judgement,
-            'dataFlowValid' => $dataFlow['valid']
+            'judgement' => $judgement
         ]);
 
         $this->updateBestWorkflow($workflow, $judgement['score']);
 
+        if ($this->hasCritical($judgement)) {
+            $this->criticalEverSeen = true;
+            $this->unresolvedCriticalFingerprints[] = $this->fingerprintWorkflow($workflow);
+        }
+
         if (
             $judgement['score'] >= $this->scoreThreshold &&
-            $dataFlow['valid'] === true &&
-            !$this->hasCriticalOrMajor($judgement)
+            !$this->hasCriticalOrMajor($judgement) &&
+            !$this->criticalEverSeenUnfixed($workflow)
         ) {
             Log::info("Terminal convergence reached");
             return $this->bestWorkflow ?? $workflow;
         }
+
 
         $fingerprint = $this->fingerprintWorkflow($workflow);
         if ($this->seenFingerprint($fingerprint, $retries)) {
@@ -64,10 +71,25 @@ class ValidateFlowLogicService{
             return $this->bestWorkflow ?? $workflow;
         }
 
-        $repaired = $this->repairWorkflowLogic($workflow, $judgement, $totalPoints, $dataFlow);
+        $repaired = $this->repairWorkflowLogic($workflow, $judgement, $totalPoints);
+
+        $fp = $this->fingerprintWorkflow($repaired);
+        $this->unresolvedCriticalFingerprints = array_filter(
+            $this->unresolvedCriticalFingerprints,
+            fn($old) => $old !== $fp
+        );
+
 
         return $this->execute($repaired, $question, $totalPoints, $retries + 1);
     }
+
+    private function hasCritical(array $judgement): bool {
+        foreach ($judgement['errors'] as $e) {
+            if ($e['severity'] === 'critical') return true;
+        }
+        return false;
+    }
+
 
     private function hasCriticalOrMajor(array $judgement): bool {
         foreach ($judgement['errors'] as $e) {
@@ -75,6 +97,15 @@ class ValidateFlowLogicService{
         }
         return false;
     }
+
+    private function criticalEverSeenUnfixed(array $workflow): bool {
+        if (!$this->criticalEverSeen) return false;
+
+        $fp = $this->fingerprintWorkflow($workflow);
+
+        return in_array($fp, $this->unresolvedCriticalFingerprints, true);
+    }
+
 
     private function updateBestWorkflow(array $workflow, float $score){
         if ($score > $this->bestScore) {
@@ -155,20 +186,10 @@ class ValidateFlowLogicService{
         $this->scoreHistory[] = $judgement['score'];
     }
 
-    private function repairWorkflowLogic($workflow, $judgement, $totalPoints, $dataFlow){
-
-        if (!$dataFlow['valid']) {
-            foreach ($dataFlow['errors'] as $e) {
-                $judgement['errors'][] = [
-                    'message' => "[DATA FLOW] {$e['node']}: {$e['problem']}",
-                    'severity' => 'critical'
-                ];
-            }
-        }
-
+    private function repairWorkflowLogic($workflow, $judgement, $totalPoints){
         $buckets = $this->weightErrors($judgement);
 
-        // 🚫 NEVER FIX MINOR AFTER CORE IS VALID
+        // NEVER FIX MINOR AFTER CORE IS VALID
         if (!empty($buckets['critical'])) {
             $targets = $buckets['critical'];
         }

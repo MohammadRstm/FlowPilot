@@ -37,7 +37,7 @@ class LLMService{
 
     public static function generateAnswer(string $question, array $topFlows) {
 
-        Log::debug('Generating answer with LLM', ['question' => $question, 'topFlows' => $topFlows]);
+        Log::info('Generating answer with LLM');
 
         $context = self::buildContext($topFlows);
 
@@ -56,7 +56,8 @@ class LLMService{
             ]);
         
         $resultedFlow = $response->json("choices.0.message.content");
-        Log::debug('Generated answer from LLM', ['resultedFlow' => $resultedFlow]);
+
+        Log::info('Generated answer from LLM', ['resultedFlow' => $resultedFlow]);
 
         return $resultedFlow;
     }
@@ -156,27 +157,50 @@ class LLMService{
         
         return $repairedFlow;
     }
+    
+    public static function validateDataFlow($workflow , $question , $totalPoints){
+        $prompt = Prompts::getCompleteDataFlowValidationPrompt($workflow , $question , $totalPoints);
 
-    public static function analyzeDataFlow($question ,$workflow , $totalPoints){
-        $prompt = Prompts::getDataFlowValidatorPrompt();
-
-        /** @var Response $response */
-        $response = Http::withToken(env("OPENAI_API_KEY"))
+        /** @var Response response */
+        $response = Http::withToken(env('OPENAI_API_KEY'))
             ->post("https://api.openai.com/v1/chat/completions", [
                 "model" => "gpt-4.1-mini",
                 "temperature" => 0,
                 "messages" => [
-                    ["role"=>"system","content"=>$prompt],
-                    ["role"=>"user","content"=>"USER QUESTION\n\n". $question ."\n\nWorkflow:\n" . json_encode($workflow) . "\n\nTotal Points:\n" . json_encode($totalPoints)]
+                    ["role"=>"system","content"=>"YOU ARE AN EXPERT N8N DATA FLOW VALIDATOR.YOUR MAIN PROITRITY IS TO MAKE SURE DATA FLOW IN THE GIVEN N8N WORKFLOW IS CORRECT AND ADHERS TO THE USER'S INTENT."],
+                    ["role"=>"user","content"=>$prompt]
                 ]
             ]);
+
+        if(!$response->ok()){
+            throw new \RuntimeException("Failed to get data flow validatoin openAI response");
+        }
 
         $content = $response->json("choices.0.message.content");
         $decoded = json_decode($content, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new \RuntimeException("Failed to decode data flow analysis response: " . json_last_error_msg());
         }
-        return $decoded;
+        return $decoded;   
+    }
+
+    public static function repairWorkflowDataFlow(string $badJson , array $errors , array $totalPoints){
+        $prompt = Prompts::getRepairWorkflowDataFlowLogic($badJson, json_encode($errors) , json_encode($totalPoints));
+
+        /** @var Response response */
+        $response = Http::withToken(env("OPENAI_API_KEY"))
+            ->post("https://api.openai.com/v1/chat/completions", [
+                "model" => "gpt-4.1-mini",
+                "temperature" => 0,
+                "messages" => [
+                    ["role"=>"system","content"=>"You are an n8n workflow data flow engine"],
+                    ["role"=>"user","content"=>$prompt]
+                ]
+            ]);
+        
+        $repairedFlow = $response->json("choices.0.message.content");
+        
+        return $repairedFlow;
     }
 
 }
