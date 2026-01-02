@@ -687,7 +687,46 @@ class Prompts{
         PROMPT;
     }
 
+    public static function getWorkflowMetadataPrompt(string $workflowJson, string $userQuestion): string{
+        return <<<PROMPT
+        You are an expert N8N workflow analyst and summarizer.
 
+        Your task is to analyze a generated N8N workflow and the original user question, and produce a JSON object containing the following metadata fields:
 
+        1. "description" - A concise description of what this workflow does.
+        2. "notes" - Any relevant notes or clarifications about the workflow (e.g., assumptions, special behaviors).
+        3. "tags" - A list of relevant keywords describing the workflow (e.g., "Google Sheets", "Email", "File Generation").
+        4. "category" - The high-level category of the workflow (e.g., "Data Processing", "Automation", "Notification", "File Management").
 
+        ---
+
+        INPUT:
+
+        User Question:
+        {$userQuestion}
+
+        Workflow JSON:
+        {$workflowJson}
+
+        ---
+
+        OUTPUT REQUIREMENTS:
+
+        - Return **ONLY valid JSON** in this exact structure:
+
+        {
+            "description": "...",
+            "notes": "...",
+            "tags": ["...", "..."],
+            "category": "..."
+        }
+
+        - Do not include any extra text, commentary, or markdown.
+        - Be concise, but informative.
+        - Ensure all fields are filled; if unsure, use best judgment based on workflow content.
+        - Tags must be short keywords relevant to nodes or actions in the workflow.
+        - Category must reflect the main purpose of the workflow.
+
+        PROMPT;
+    }
 }

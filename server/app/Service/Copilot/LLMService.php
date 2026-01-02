@@ -203,4 +203,31 @@ class LLMService{
         return $repairedFlow;
     }
 
+    public static function generateWorkflowQdrantPayload(string $json , string $question){
+        $prompt = Prompts::getWorkflowMetadataPrompt($json , $question);
+
+        /** @var Response response */
+        $response = Http::withToken(env("OPENAI_API_KEY"))
+            ->post("https://api.openai.com/v1/chat/completions", [
+                "model" => "gpt-4.1-mini",
+                "temperature" => 0,
+                "messages" => [
+                    ["role"=>"system","content"=>"You are an n8n workflow analyzer"],
+                    ["role"=>"user","content"=>$prompt]
+                ]
+            ]);
+        
+       $metaData = trim($response->json("choices.0.message.content"));
+        $metaDataDecoded = json_decode($metaData, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            Log::error('Failed to decode metadata JSON', [
+                'json' => $metaData,
+                'error' => json_last_error_msg()
+            ]);
+            throw new \RuntimeException('Failed to decode workflow metadata JSON: ' . json_last_error_msg());
+        }
+        return $metaDataDecoded;
+    }
+
 }

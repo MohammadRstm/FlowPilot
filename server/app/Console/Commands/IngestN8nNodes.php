@@ -29,11 +29,7 @@ class IngestN8nNodes extends Command
         $this->info("Skipped: {$this->skipped}");
     }
 
-    /**
-     * Recursively crawl GitHub directories
-     */
-    private function crawl(string $url): void
-    {
+    private function crawl(string $url): void{
         /** @var Response $response */
         $response = Http::withHeaders([
             'User-Agent'    => 'Laravel-RAG',
@@ -126,7 +122,12 @@ class IngestN8nNodes extends Command
 
         $sparseVector = IngestionService::buildSparseVector($text);
 
-        $endpoint = rtrim(env('QDRANT_CLUSTER_ENDPOINT', ''), '/');
+       ense-vector' => $denseVector,
+                            'text-sparse'  => $sparseVector,
+                        ],
+                        'payload' => $node,
+                    ],
+                ], $endpoint = rtrim(env('QDRANT_CLUSTER_ENDPOINT', ''), '/');
 
         Http::withHeaders([
             'api-key' => env('QDRANT_API_KEY'),
@@ -137,12 +138,7 @@ class IngestN8nNodes extends Command
                     [
                         'id'     => (string) Str::uuid(),
                         'vector' => [
-                            'dense-vector' => $denseVector,
-                            'text-sparse'  => $sparseVector,
-                        ],
-                        'payload' => $node,
-                    ],
-                ],
+                            'd
             ]
         );
     }
