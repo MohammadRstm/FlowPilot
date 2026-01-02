@@ -2,6 +2,8 @@
 
 namespace App\Service\Copilot;
 
+use Illuminate\Support\Facades\Log;
+
 class RankingFlows{
 
     public static function rank(array $analysis, array $points): array {
@@ -11,19 +13,24 @@ class RankingFlows{
         
         // decide whether to reuse existing workflow or build new one
         if ($best && $best["score"] > 0.55) {
-            return [
+            $result = [
                 "mode" => "reuse",
                 "confidence" => $best["score"],
                 "workflows" => array_slice($workflowScores, 0, 5)
             ];
+            Log::info('Reusing existing workflow', ['best_workflow_score' => $best["score"]]);
+            
+            return $result;
         }
         // no workflow is good enough, give LLM building tools to build a new one
-        return [
+        $results = [
             "mode" => "build",
             "confidence" => $best["score"] ?? 0,
             "nodes" => self::rankNodes($analysis, $points["nodes"]),
             "schemas" => self::rankSchemas($analysis, $points["schemas"])
         ];
+        Log::info('Building new workflow', ['best_existing_workflow_score' => $best["score"] ?? 0]);
+        return $results;
     }
 
     private static function rankWorkflows(array $analysis, array $hits): array {

@@ -29,7 +29,7 @@ class GetAnswer{
 
         // analyze output workflow with user's intent (sanity check)
         $validateWorkflowService = new ValidateFlowLogicService();
-        $workflow = $validateWorkflowService->execute($workflow , $question);
+        $workflow = $validateWorkflowService->execute($workflow , $question , $totalPoints);
 
         if($user["n8n_url"] && $user["n8n_api_key"]){// if user has his account connected validate + run workflow
           $json = self::validateWorkflow($workflow , $user);

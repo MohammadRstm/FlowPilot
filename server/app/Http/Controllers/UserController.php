@@ -15,8 +15,8 @@ class UserController extends Controller{
             // test run without validation
             $user = [
                 "id" => 1,
-                "n8n_url" => null,
-                "n8n_api_key" => null
+                "n8n_url" => "http://localhost:5678",
+                "n8n_api_key" => "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxZWFkOTJjMC05NjFjLTRjOGItODkyNy0xZDQ4MTI1Y2MyNGUiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY3MzEwODUwfQ.lSCP6Qi3PLKWimPxcPURw3fNs2XxG784LP_xGaLl_pg"
             ];
             $answer = UserService::getCopilotAnswer($req["question"], $user);
             return $this->successResponse(["answer" => json_decode($answer)]);

@@ -5,6 +5,7 @@ namespace App\Service\Copilot;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Log;
+use Laravel\Prompts\Prompt;
 
 class LLMService{
 
@@ -108,7 +109,6 @@ class LLMService{
             ]);
         
         $repairedFlow = $response->json("choices.0.message.content");
-        Log::alert('Repaired workflow from LLM', ['repairedFlow' => $repairedFlow]);
         
         return $repairedFlow;
     }
@@ -135,6 +135,47 @@ class LLMService{
             throw new \RuntimeException("Failed to decode judgement response: " . json_last_error_msg());
         }
 
+        return $decoded;
+    }
+
+    public static function repairWorkflowLogic(string $badJson, array $errors , array $totalPoints){
+        $prompt = Prompts::getRepairWorkflowLogic($badJson, json_encode($errors) , json_encode($totalPoints));
+
+        /** @var Response $response */
+        $response = Http::withToken(env("OPENAI_API_KEY"))
+            ->post("https://api.openai.com/v1/chat/completions", [
+                "model" => "gpt-4.1-mini",
+                "temperature" => 0,
+                "messages" => [
+                    ["role"=>"system","content"=>"You are an n8n workflow logic validation engine"],
+                    ["role"=>"user","content"=>$prompt]
+                ]
+            ]);
+        
+        $repairedFlow = $response->json("choices.0.message.content");
+        
+        return $repairedFlow;
+    }
+
+    public static function analyzeDataFlow($question ,$workflow , $totalPoints){
+        $prompt = Prompts::getDataFlowValidatorPrompt();
+
+        /** @var Response $response */
+        $response = Http::withToken(env("OPENAI_API_KEY"))
+            ->post("https://api.openai.com/v1/chat/completions", [
+                "model" => "gpt-4.1-mini",
+                "temperature" => 0,
+                "messages" => [
+                    ["role"=>"system","content"=>$prompt],
+                    ["role"=>"user","content"=>"USER QUESTION\n\n". $question ."\n\nWorkflow:\n" . json_encode($workflow) . "\n\nTotal Points:\n" . json_encode($totalPoints)]
+                ]
+            ]);
+
+        $content = $response->json("choices.0.message.content");
+        $decoded = json_decode($content, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \RuntimeException("Failed to decode data flow analysis response: " . json_last_error_msg());
+        }
         return $decoded;
     }
 

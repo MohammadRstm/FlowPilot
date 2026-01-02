@@ -130,6 +130,10 @@ class Prompts{
             2. Identify the root causes in the workflow
             3. Modify the workflow to fix the errors
             4. Output a valid n8n workflow JSON that resolves all issues
+            5. ONLY fix the listed issues.
+            6. Do NOT change any other logic, nodes, or connections.
+            7. Do NOT refactor or simplify unless explicitly requested.
+
 
             RULES:
             - Preserve existing credentials names
@@ -151,98 +155,312 @@ class Prompts{
             PROMPT;
     }
 
-    public static function getJudgementPrompt(array $workflow, string $userQuestion): string{
+    public static function getJudgementPrompt(array $workflow, string $userQuestion): string {
         $workflowJson = json_encode($workflow, JSON_PRETTY_PRINT);
+
         return <<<PROMPT
-        You are a strict, adversarial evaluator of automation workflows.
+        You are a strict, adversarial evaluator of n8n automation workflows.
 
-        Your job is to determine whether the provided workflow truly and completely fulfills the user's intent.
+        Your job is to determine whether the workflow correctly implements the USER'S INTENT in terms of:
+        - Triggers
+        - Logic
+        - Branching
+        - Data flow
+        - Integrations
+        - Actions
 
-        You are NOT allowed to assume missing steps, infer behavior, or give credit for partial matches.
-        If something is not explicitly implemented in the workflow, it does NOT exist.
+        You are evaluating LOGIC and STRUCTURE — NOT credentials, auth, or user-specific runtime data.
 
-        Your evaluation must be pessimistic:
-        If there is any ambiguity, missing logic, or mismatch, you must count it as an error.
+        ────────────────────────────────────────────
+        CRITICAL SCOPE RULE
+        ────────────────────────────────────────────
 
-        -------------------------
+        You MUST IGNORE all credential, identity, and runtime-binding concerns, including:
+        - OAuth credentials
+        - API keys
+        - Account IDs
+        - User IDs
+        - Slack channel IDs
+        - Email addresses
+        - Webhook URLs
+        - Placeholder credential values
+        - "your-api-key", "your-channel", "user-id", etc
+
+        These are injected later by the system or the end user.
+
+        They are NEVER valid errors.
+
+        DO NOT mention them.
+        DO NOT penalize them.
+        DO NOT include them in errors.
+        DO NOT reduce score for them.
+
+        ────────────────────────────────────────────
         HOW TO EVALUATE
-        -------------------------
+        ────────────────────────────────────────────
 
-        1. Extract all requirements from the user's intent.
-        Each condition, trigger, action, filter, branch, integration, and data flow is a separate requirement.
+        1. Extract all functional requirements from the user's intent.
+        Each trigger, condition, filter, branch, API call, transformation, and output is a requirement.
 
-        2. Verify whether each requirement is explicitly implemented in the workflow:
-        - Correct trigger
-        - Correct services (apps, APIs, databases, etc)
-        - Correct conditional logic
-        - Correct branching behavior
-        - Correct data flow between nodes
-        - Correct outputs (messages, records, actions)
+        2. Verify that each requirement is explicitly implemented in the workflow:
+        - Correct trigger exists
+        - Correct integrations are used
+        - Correct conditional logic exists
+        - Correct branching exists
+        - Correct data flows between nodes
+        - Correct actions are performed
 
         3. Penalize heavily for:
         - Missing triggers
         - Missing filters or conditions
         - Missing branches
-        - Nodes that are present but not wired correctly
-        - Nodes that exist but have default or placeholder configuration
+        - Nodes that exist but are not wired
         - Logic that does not enforce the intent
-        - Overly generic nodes that do not guarantee the requested behavior
+        - Required steps that are absent
+        - Overly generic or noop logic
 
-        4. Do NOT reward:
-        - "Looks about right"
-        - "Probably works"
-        - "The model likely intended"
-        Only what is provable from the JSON counts.
+        4. DO NOT penalize:
+        - Credential placeholders
+        - Hardcoded IDs
+        - Channel names
+        - OAuth bindings
+        - Runtime secrets
+        - User-specific identifiers
 
-        -------------------------
+        Only LOGIC and DATA FLOW matter.
+
+        ────────────────────────────────────────────
         SCORING
-        -------------------------
+        ────────────────────────────────────────────
+
         Score from 0.0 to 1.0
 
-        Use this scale:
         1.0 = Fully and precisely implements every part of the user's intent  
         0.8 = Minor gaps, but core logic is correct  
         0.5 = Partially correct, major logic missing or wrong  
         0.2 = Barely related  
         0.0 = Does not match intent at all  
 
-        If ANY critical requirement is missing, the score MUST be below 0.7.
+        If ANY critical functional requirement is missing, the score MUST be below 0.7.
 
-        -------------------------
+        ────────────────────────────────────────────
+        SEVERITY
+        ────────────────────────────────────────────
+
+        Each error must have a severity:
+
+        - critical → workflow fails the user's intent
+        - major → core logic broken
+        - minor → inefficiency, polish, or safety issue
+
+        Never use severity for credential or identity issues.
+
+        ────────────────────────────────────────────
         OUTPUT FORMAT (STRICT)
-        -------------------------
+        ────────────────────────────────────────────
+
         Return ONLY this JSON object:
 
         {
         "errors": [
-            "Clear description of each missing, incorrect, or unverified requirement"
+            {
+            "message": "error description",
+            "severity": "critical"
+            }
         ],
         "suggested_improvements": [
-            "Concrete changes needed to fix each error"
+            {
+            "message": "improvement description",
+            "severity": "major"
+            }
         ],
-        "score": 0.0-1.0
+        "score": 0.0
         }
 
         No extra text.
         No markdown.
         No explanations.
 
-        -------------------------
+        ────────────────────────────────────────────
         WORKFLOW JSON
-        -------------------------
+        ────────────────────────────────────────────
         $workflowJson
 
-        -------------------------
+        ────────────────────────────────────────────
         USER INTENT
-        -------------------------
+        ────────────────────────────────────────────
         $userQuestion
 
-        -------------------------
+        ────────────────────────────────────────────
         OUTPUT
-        -------------------------
+        ────────────────────────────────────────────
         PROMPT;
     }
 
+
+    public static function getRepairWorkflowLogic(string $badJson, string $errorsJson , string $totalPoints): string{
+        return <<<PROMPT
+        You are an expert n8n workflow engineer and automated repair system.
+
+        Your job is to take a BROKEN workflow and a list of FAILURES, and produce a FIXED workflow
+        that satisfies ALL failures.
+
+        You are not allowed to explain.
+        You are not allowed to output anything except valid JSON.
+
+        This is not a rewrite — this is a targeted repair.
+
+        ────────────────────────────────────────────
+        BROKEN WORKFLOW (GROUND TRUTH)
+        ────────────────────────────────────────────
+        $badJson
+
+        ────────────────────────────────────────────
+        FAILURES (MUST FIX ALL)
+        ────────────────────────────────────────────
+        $errorsJson
+        
+        ────────────────────────────────────────────
+        WHAT YOU CAN USE
+        ────────────────────────────────────────────
+        $totalPoints
+
+        ────────────────────────────────────────────
+        STRICT RULES
+        ────────────────────────────────────────────
+
+        1. You MUST preserve all parts of the workflow that are not related to the failures.
+        Do NOT delete nodes unless a failure explicitly says they are wrong.
+
+        2. You MUST make the MINIMAL number of changes required to satisfy the failures.
+
+        3. You MUST ensure:
+        - All required triggers exist
+        - All required nodes exist
+        - All required branches exist
+        - All required filters exist
+        - All required connections exist
+        - Data flows between nodes correctly -- VERY IMPORTANT
+
+        4. You MUST NOT:
+        - Add placeholder values
+        - Add TODOs
+        - Leave parameters empty
+        - Add generic nodes that do not guarantee the behavior
+
+        5. If a failure says something is missing, you MUST:
+        - Add the correct node
+        - Connect it correctly
+        - Configure it correctly
+
+        6. If a failure says something is wrong, you MUST:
+        - Replace or reconfigure that exact part
+        - Without breaking unrelated logic
+
+        7. The result MUST be a COMPLETE, VALID n8n workflow JSON
+        using the SAME format as the input.
+
+        8. You MUST ensure that every node is reachable from a trigger.
+
+        9. You MUST ensure that no required logic is implied — it must be explicit in JSON.
+
+        ────────────────────────────────────────────
+        MENTAL MODEL (YOU MUST FOLLOW THIS)
+        ────────────────────────────────────────────
+
+        You must behave like a compiler performing a repair pass:
+
+        Step 1: Read the failures.
+        Step 2: For each failure, identify the exact missing or broken node, connection, or parameter.
+        Step 3: Apply ONLY the required structural edits to fix it.
+        Step 4: Revalidate that all failures are now impossible.
+        Step 5: Output the corrected JSON.
+
+        Do NOT guess.
+        Do NOT be creative.
+        Do NOT optimize.
+        Only repair what is required.
+
+        ────────────────────────────────────────────
+        OUTPUT FORMAT
+        ────────────────────────────────────────────
+
+        Return ONLY the corrected workflow JSON.
+
+        No text.
+        No markdown.
+        No comments.
+        No explanations.
+        No trailing commas.
+
+        The output must be directly parsable by json_decode().
+
+        ────────────────────────────────────────────
+        BEGIN REPAIR
+        ────────────────────────────────────────────
+        PROMPT;
+    }
+
+    public static function getDataFlowValidatorPrompt(){
+        return <<<PROMPT
+        You are an expert n8n workflow data-flow auditor.
+
+        Your job is to analyze a given n8n workflow JSON and detect ALL data-flow and logic-flow errors.
+
+        You do NOT judge whether the workflow matches user intent.
+        You ONLY judge whether data flows correctly between nodes.
+
+        A workflow is INVALID if:
+        • A node reads fields that are never produced upstream
+        • A node executes without any usable input data
+        • A branch (IF, Switch, Filter) is not wired correctly
+        • The wrong output branch is connected
+        • A node expects a single item but receives an array (or vice-versa)
+        • Required fields are missing
+        • A node runs on empty or null input
+        • Data is not forwarded to the next node
+        • A trigger produces data that is never consumed
+        • A downstream node is disconnected from the data it needs
+
+        You must trace execution exactly as n8n would.
+
+        For every node:
+        1. Determine what fields it outputs
+        2. Determine what fields the next node expects
+        3. Check whether they match
+        4. Check all branches
+        5. Detect dead branches
+        6. Detect unconsumed data
+        7. Detect invalid mappings
+
+        You must NOT make assumptions.
+        You must only use what is present in the JSON.
+
+        If a field is referenced but not guaranteed to exist → error.
+        If a node depends on a branch that is not connected → error.
+        If a node executes without input → error.
+
+        Return ONLY JSON in the following format:
+
+        {
+        "valid": false,
+        "errors": [
+            {
+            "node": "NodeName",
+            "problem": "Description of what is broken",
+            "type": "missing_field | empty_input | wrong_branch | dead_node | invalid_mapping | array_mismatch | no_connection | execution_order"
+            }
+        ]
+        }
+
+        If no problems exist return:
+
+        {
+        "valid": true,
+        "errors": []
+        }
+        PROMPT;
+    }
 
 
 }
