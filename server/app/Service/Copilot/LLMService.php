@@ -141,7 +141,7 @@ class LLMService{
     public static function repairWorkflowLogic(string $badJson, array $errors , array $totalPoints){
         $prompt = Prompts::getRepairWorkflowLogic($badJson, json_encode($errors) , json_encode($totalPoints));
 
-        /** @var Response $response */
+        /** @var Response response */
         $response = Http::withToken(env("OPENAI_API_KEY"))
             ->post("https://api.openai.com/v1/chat/completions", [
                 "model" => "gpt-4.1-mini",

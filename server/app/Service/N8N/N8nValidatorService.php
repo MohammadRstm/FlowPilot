@@ -24,8 +24,10 @@ class N8nValidatorService{
 
     private static function getErrors($user, $workflow, $url){
         /** @var Response $response */
-        $response = Http::withToken($user["n8n_api_key"])
-            ->post($url, $workflow);
+        $response = Http::withHeader([
+            "X-N8N-API-KEY" => $user["n8n_api_key"],
+            "Content-type" => "application/json"
+            ])->post($url, $workflow);
 
         if ($response->ok()) {
             return [

@@ -11,6 +11,7 @@ class CredentialsInjecterService{
     public static function inject(array $workflow, $user): array{
        
         $userCredentials = self::getUserCredentials($workflow , $user);
+        Log::info('Fetched user credentials for injection', ['credentials' => json_encode($userCredentials)]);
 
         // get required credentials for each node & inject
         foreach ($workflow['nodes'] as &$node) {
@@ -35,20 +36,66 @@ class CredentialsInjecterService{
     }
 
     private static function getUserCredentials($workflow , $user){
-         /** @var Response $response */
-        $response = Http::withToken($user["n8n_api_key"])
-            ->timeout(30)
-            ->get(rtrim($user["n8n_url"], '/') . '/rest/credentials');
+        try {
+            /** @var Response response */
+            $response = Http::withHeaders([
+                    'X-N8N-API-KEY' => $user["n8n_api_key"],
+                    'Content-type' => 'application/json'
+                ])
+                ->timeout(30)
+                ->get(rtrim($user["n8n_url"], '/') . '/api/v1/credentials');
+        } catch (\Throwable $e) {
+            Log::error('HTTP request failed fetching user credentials from n8n', [
+                'error' => $e->getMessage(),
+                'user' => $user['id'] ?? null,
+            ]);
 
-        if(!$response->ok()){
+            return $workflow;
+        }
+
+        $status = $response->status();
+        $ok = $response->ok();
+        $body = $response->body();
+
+        Log::info('Response of user credentials from n8n instance', [
+            'status' => $status,
+            'ok' => $ok,
+            'body_preview' => strlen($body) > 200 ? substr($body, 0, 200) . '...[truncated]' : $body,
+            'user' => $user['id'] ?? null,
+        ]);
+
+        if (!$ok) {
+            Log::error('Failed fetching user credentials from n8n', [
+                'status' => $status,
+                'body' => $body,
+                'user' => $user['id'] ?? null,
+            ]);
+
             return $workflow;
         }
 
         /** @var array|null $creds */
-        $creds = $response->json();
-        if (!is_array($creds)) {
+        try {
+            $creds = $response->json();
+        } catch (\Throwable $e) {
+            Log::error('Failed decoding credentials JSON from n8n response', [
+                'error' => $e->getMessage(),
+                'body' => $body,
+                'user' => $user['id'] ?? null,
+            ]);
+
             return $workflow;
         }
+
+        if (!is_array($creds)) {
+            Log::warning('Credentials response is not an array', [
+                'body' => $body,
+                'user' => $user['id'] ?? null,
+            ]);
+
+            return $workflow;
+        }
+
         return collect($creds)->keyBy('type');
     }
 
