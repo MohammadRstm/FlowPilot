@@ -11,7 +11,10 @@ use Illuminate\Support\Str;
 class SaveWorkflow{
 
     public static function save($requestForm){
-        $json = $requestForm["workflow"];
+        $json = json_encode($requestForm->input('workflow'));
+        if(!$json){
+            throw new Exception("Workflow given not correct json");
+        }
         $question = $requestForm["question"];
         
         $payload = self::buildPayload($json , $question);
@@ -70,7 +73,7 @@ class SaveWorkflow{
 }
 
 
-    private function buildEmbeddingText(array $p): string{
+    private static function buildEmbeddingText(array $p): string{
         return implode("\n", [
             $p['workflow'],
             $p['description'],

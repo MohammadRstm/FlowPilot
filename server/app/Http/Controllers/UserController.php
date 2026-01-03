@@ -7,8 +7,6 @@ use App\Http\Requests\ConfirmWorkflowRequest;
 use App\Http\Requests\CopilotPayload;
 use App\Service\UserService;
 use Exception;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller{
     public function ask(CopilotPayload $req){

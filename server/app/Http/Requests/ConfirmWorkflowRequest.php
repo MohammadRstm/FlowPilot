@@ -5,9 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ConfirmWorkflowRequest extends FormRequest{
-    /**
-     * Determine if the user is authorized to make this request.
-     */
+
     public function authorize(): bool
     {
         return true;
@@ -15,8 +13,8 @@ class ConfirmWorkflowRequest extends FormRequest{
 
     public function rules(): array{
         return [
-            "question" => "string",
-            "workflow" => "json",
+            "question" => "required|string",
+            "workflow" => "required|array",
         ];
     }
 }
