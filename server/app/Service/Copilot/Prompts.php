@@ -4,15 +4,29 @@ namespace App\Service\Copilot;
 
 class Prompts{
 
+    private static function returnFormat($userPrompt , $systemPrompt){
+        return [
+            "user" => $userPrompt,
+            "system" => $systemPrompt
+        ];
+    }
+
     public static function getAnalysisIntentAndtiggerPrompt($question){
-        return <<<PROMPT
+        $systemPrompt = <<<SYSTEM
         You are an intent and trigger analysis engine for n8n workflows.
 
-        Extract:
-        - The user's intent
-        - The workflow trigger
+        Your task:
+        - Extract the user's workflow intent
+        - Determine the correct n8n trigger node
 
-        Return a JSON object with ONLY these keys:
+        Hard rules:
+        - Always return valid JSON
+        - Never include markdown
+        - Never include extra keys
+        - The trigger MUST be a valid n8n trigger node
+        - If no trigger is stated or implied, use "ManualTrigger"
+
+        Output schema (must match exactly):
 
         {
         "intent": string,
@@ -20,27 +34,38 @@ class Prompts{
         "trigger_reasoning": string
         }
 
-        Rules:
-        - "intent" must be a full sentence describing the workflow.
-        - "trigger" MUST be one valid n8n trigger node name.
-        - Infer the trigger if implicit.
-        - If no trigger is mentioned or implied, use "ManualTrigger".
-        - "trigger_reasoning" must explain why this trigger was chosen.
-        - Do NOT include any other keys.
-        - Do NOT include markdown.
+        The "intent" must be a full descriptive sentence.
+        The "trigger_reasoning" must explain why the trigger was chosen.
+        SYSTEM;
 
+        $userPrompt = <<<USER
         User question:
         "$question"
-        PROMPT;
+        USER;
+
+        return self::returnFormat($userPrompt , $systemPrompt);
     }
 
     public static function getAnalysisNodeExtractionPrompt($intent , $question){
-        return <<<PROMPT
-        You are a node extraction engine for n8n workflows.
 
-        Given the user intent and question, identify required nodes.
+        $systemPrompt = <<<SYSTEM
+        You are an n8n workflow node extraction engine.
 
-        Return ONLY this JSON schema:
+        Your task:
+        - Identify ONLY the nodes required to fulfill the intent
+
+        Hard rules:
+        - Do NOT include trigger nodes
+        - Do NOT include optional or optimization nodes
+        - Avoid logic nodes (If, Merge, Switch) unless conditions are explicitly required
+        - Do NOT include duplicates
+        - Do NOT include markdown
+
+        Confidence rules:
+        - "explicit": user directly mentions the node
+        - "inferred": node is strictly necessary for correctness
+
+        Output schema (must match exactly):
 
         {
         "nodes": [
@@ -50,32 +75,37 @@ class Prompts{
             }
         ]
         }
+        SYSTEM;
 
-        Rules:
-        - Include ONLY nodes that are required to fulfill the intent.
-        - Mark a node as "explicit" ONLY if the user directly mentions it.
-        - Mark a node as "inferred" ONLY if it is strictly necessary.
-        - Do NOT include trigger nodes.
-        - Do NOT include optional optimization nodes.
-        - Avoid logic nodes ("If", "Merge") unless conditions are explicitly stated.
-        - Do NOT include duplicates.
-        - Do NOT include markdown.
-
+        $userPrompt = <<<USER
         User intent:
         "$intent"
 
         User question:
         "$question"
-        PROMPT;
+        USER;
+
+        return self::returnFormat($userPrompt , $systemPrompt);       
     }
 
     public static function getAnalysisValidationAndPruningPrompt($trigger , $nodes_json){
-        return <<<PROMPT
-        You are a workflow validation engine.
 
-        Given the trigger and extracted nodes, validate and correct the workflow structure.
+        $systemPrompt = <<<SYSTEM
+        You are an n8n workflow validation and pruning engine.
 
-        Return ONLY this JSON schema:
+        Your task:
+        - Validate the workflow structure
+        - Ensure it can function end-to-end
+
+        Hard rules:
+        - The trigger MUST be included
+        - Remove inferred nodes that are not strictly required
+        - Add code/function nodes ONLY if required for correctness
+        - Add split in batches/loop nodes ONLY if required for correctness
+        - Do NOT add new service integrations unless unavoidable
+        - Do NOT include markdown
+
+        Output schema (must match exactly):
 
         {
         "nodes": string[],
@@ -83,21 +113,18 @@ class Prompts{
         "category": string
         }
 
-        Rules:
-        - Ensure the trigger node is included.
-        - Remove any inferred nodes that are not strictly required.
-        - Ensure to add code nodes where needed
-        - Ensure the workflow can function end-to-end.
-        - "min_nodes" must reflect the minimum realistic node count.
-        - Do NOT add new nodes unless required for correctness.
-        - Do NOT include markdown.
+        The "min_nodes" must be the minimum realistic count.
+        SYSTEM;
 
+        $userPrompt = <<<USER
         Trigger:
         "$trigger"
 
         Extracted nodes:
         $nodes_json
-        PROMPT;
+        USER;
+
+        return self::returnFormat($userPrompt , $systemPrompt);
     }
 
     public static function getAnswerPrompt(){

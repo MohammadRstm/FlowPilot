@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class LLMService{
 
-    private static function callOpenAI($userPrompt , $systemPrompt){
+    private static function callOpenAI($prompt){
         /** @var Response $response */
         $response = Http::withToken(env("OPENAI_API_KEY"))
                 ->timeout(90)
@@ -17,8 +17,8 @@ class LLMService{
                     "model" => "gpt-4.1-mini",
                     "temperature" => 0,
                     "messages" => [
-                        ["role" => "system", "content" => $systemPrompt],
-                        ["role" => "user", "content" => $userPrompt]
+                        ["role" => "system", "content" => $prompt["system"]],
+                        ["role" => "user", "content" => $prompt["user"]]
                     ]
                 ]);
             
@@ -33,24 +33,21 @@ class LLMService{
     }
 
     public static function intentAnalyzer(string $question){
-        $userPrompt = Prompts::getAnalysisIntentAndtiggerPrompt($question);
-        $systemPrompt = "You are an n8n workflow intent and trigger generator";
+        $prompt = Prompts::getAnalysisIntentAndtiggerPrompt($question);
 
-        return self::callOpenAI($userPrompt , $systemPrompt);
+        return self::callOpenAI($prompt);
     }
 
     public static function nodeAnalyzer(string $question ,string $intent){
-        $userPrompt = Prompts::getAnalysisNodeExtractionPrompt($question , $intent);
-        $systemPrompt = "You are an n8n workflow node analyzer";
+        $prompt = Prompts::getAnalysisNodeExtractionPrompt($question , $intent);
 
-        return self::callOpenAI($userPrompt , $systemPrompt);
+        return self::callOpenAI($prompt);
     }
     
     public static function workflowSchemaValidator(array $intentData , array $nodeData){
-        $userPrompt = Prompts::getAnalysisValidationAndPruningPrompt($intentData["trigger"] , json_encode($nodeData["nodes"]));
-        $systemPrompt = "You are an n8n workflow schema validator";
+        $prompt = Prompts::getAnalysisValidationAndPruningPrompt($intentData["trigger"] , json_encode($nodeData["nodes"]));
 
-        return self::callOpenAI($userPrompt , $systemPrompt);
+        return self::callOpenAI($prompt);
     }
 
     public static function generateAnswer(string $question, array $topFlows) {
