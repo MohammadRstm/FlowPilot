@@ -2,43 +2,58 @@
 
 namespace App\Service\Copilot;
 
+use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Log;
-use Laravel\Prompts\Prompt;
 
 class LLMService{
 
-    public static function raw(string $prompt): string{
+    private static function callOpenAI($userPrompt , $systemPrompt){
         /** @var Response $response */
         $response = Http::withToken(env("OPENAI_API_KEY"))
-            ->timeout(60)
-            ->post("https://api.openai.com/v1/chat/completions", [
-                "model" => "gpt-4o",
-                "temperature" => 0,
-                "messages" => [
-                    [
-                        "role" => "system",
-                        "content" => "You are a JSON API. You must return valid JSON and nothing else."
-                    ],
-                    [
-                        "role" => "user",
-                        "content" => $prompt
+                ->timeout(90)
+                ->post("https://api.openai.com/v1/chat/completions", [
+                    "model" => "gpt-4.1-mini",
+                    "temperature" => 0,
+                    "messages" => [
+                        ["role" => "system", "content" => $systemPrompt],
+                        ["role" => "user", "content" => $userPrompt]
                     ]
-                ]
-            ]);
-
-        if (!$response->ok()) {
-            throw new \RuntimeException("LLM failed: " . $response->body());
+                ]);
+            
+        $results = trim($response->json("choices.0.message.content"));
+        $decoded = json_decode($results , true);
+        if(!is_array($decoded)){
+            Log::error("OPENAI FAILED TO RETURN VALID JSON");
+            throw new Exception("OPENAI FAILED TO RETURN VALID JSON");
         }
 
-        return trim($response->json("choices.0.message.content"));
+        return $decoded;
+    }
+
+    public static function intentAnalyzer(string $question){
+        $userPrompt = Prompts::getAnalysisIntentAndtiggerPrompt($question);
+        $systemPrompt = "You are an n8n workflow intent and trigger generator";
+
+        return self::callOpenAI($userPrompt , $systemPrompt);
+    }
+
+    public static function nodeAnalyzer(string $question ,string $intent){
+        $userPrompt = Prompts::getAnalysisNodeExtractionPrompt($question , $intent);
+        $systemPrompt = "You are an n8n workflow node analyzer";
+
+        return self::callOpenAI($userPrompt , $systemPrompt);
+    }
+    
+    public static function workflowSchemaValidator(array $intentData , array $nodeData){
+        $userPrompt = Prompts::getAnalysisValidationAndPruningPrompt($intentData["trigger"] , json_encode($nodeData["nodes"]));
+        $systemPrompt = "You are an n8n workflow schema validator";
+
+        return self::callOpenAI($userPrompt , $systemPrompt);
     }
 
     public static function generateAnswer(string $question, array $topFlows) {
-
-        Log::info('Generating answer with LLM');
-
         $context = self::buildContext($topFlows);
 
         $prompt = Prompts::getWorkflowGenerationPrompt($question, $context);

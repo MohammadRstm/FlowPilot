@@ -10,17 +10,25 @@ use Illuminate\Support\Facades\Log;
 class GetPoints{
 
     public static function execute(array $analysis): array {
-        $dense  = IngestionService::embed($analysis["embedding_query"]);
-        $sparse = IngestionService::buildSparseVector($analysis["embedding_query"]);
+        $workflowDense = IngestionService::embed(
+           $analysis["embedding_query"]
+        );
 
-        $results =  [
-            "workflows" => self::searchWorkflows($dense, $sparse, $analysis),
-            "nodes"     => self::searchNodes($dense, $sparse, $analysis),
-            "schemas"   => self::searchSchemas($dense, $sparse, $analysis),
+        $nodeDense = IngestionService::embed(
+            self::buildNodeEmbeddingQuery($analysis)
+        );
+
+        $workflowSparse = IngestionService::buildSparseVector($analysis["intent"]);
+        $nodeSparse = IngestionService::buildSparseVector(
+            empty($analysis["nodes"]) ? "" : implode(" ", $analysis["nodes"])
+        );
+
+
+        return [
+            "workflows" => self::searchWorkflows($workflowDense, $workflowSparse, $analysis),
+            "nodes"     => self::searchNodes($nodeDense, $nodeSparse, $analysis),
+            "schemas"   => self::searchSchemas($nodeDense, $nodeSparse, $analysis),
         ];
-
-        Log::info('Retrieved points from Qdrant', ['length_of_results_workflows' => count($results["workflows"]), 'length_of_results_nodes' => count($results["nodes"]), 'length_of_results_schemas' => count($results["schemas"])]);
-        return $results;
     }
 
     private static function searchWorkflows(array $dense, array $sparse, array $analysis): array {
@@ -28,8 +36,8 @@ class GetPoints{
             "n8n_workflows",
             $dense,
             $sparse,
-            $analysis["filters"],
-            30
+            [],
+            50
         );
     }
 
@@ -43,8 +51,7 @@ class GetPoints{
         );
     }
 
-    private static function buildNodeFilters(array $analysis): array
-    {
+    private static function buildNodeFilters(array $analysis): array{
         if (empty($analysis["nodes"])) {
             return [];
         }
@@ -63,8 +70,6 @@ class GetPoints{
         ];
     }
 
-
-
     private static function searchSchemas(array $dense, array $sparse, array $analysis): array {
         return self::query(
             "n8n_node_schemas",
@@ -75,8 +80,7 @@ class GetPoints{
         );
     }
 
-    private static function buildSchemaFilters(array $analysis): array
-    {
+    private static function buildSchemaFilters(array $analysis): array{
         if (empty($analysis["nodes"])) {
             return [];
         }
@@ -95,35 +99,40 @@ class GetPoints{
         ];
     }
 
-
-    private static function expandNodeNames(array $nodes): array
-    {
+    private static function expandNodeNames(array $nodes): array {
         $expanded = [];
 
         foreach ($nodes as $node) {
             $norm = preg_replace('/[^a-z0-9]/', '', strtolower($node));
-
             if (!$norm) continue;
 
-            // base
             $expanded[] = $norm;
 
-            // trigger variant
-            if (!str_ends_with($norm, 'trigger')) {
-                $expanded[] = $norm . 'trigger';
-            }
+            // Common n8n patterns
+            $expanded[] = $norm . "trigger";
+            $expanded[] = $norm . "node";
 
-            // non-trigger variant
-            if (str_ends_with($norm, 'trigger')) {
-                $expanded[] = substr($norm, 0, -7); // remove "trigger"
+            // Service family expansion (simple heuristic)
+            if (str_contains($norm, 'google')) {
+                $expanded[] = 'google';
             }
         }
 
         return array_values(array_unique($expanded));
     }
 
+    private static function buildNodeEmbeddingQuery(array $analysis): string {
+        if (empty($analysis["nodes"])) {
+            return "";
+        }
 
-    private static function query(string $collection, array $dense, array $sparse, array $filters, int $limit): array {
+        return implode(
+            " ",
+            array_map(fn($n) => "n8n node " . $n, $analysis["nodes"])
+        );
+    }
+
+    private static function query(string $collection, array $dense, array $sparse, ?array $filters, int $limit): array {
         $endpoint = rtrim(env("QDRANT_CLUSTER_ENDPOINT", ''), '/');
 
         /** @var \Illuminate\Http\Client\Response $response */
@@ -140,9 +149,12 @@ class GetPoints{
                 "name" => "text-sparse",
                 "vector" => $sparse
             ],
-            "filter" => $filters,
             "score_threshold" => 0.1
         ]);
+
+        if (!empty($filters)) {
+            $payload["filter"] = $filters;
+        }
 
         if (!$response->ok()) {
             throw new \Exception("Qdrant search failed for $collection: " . $response->body());

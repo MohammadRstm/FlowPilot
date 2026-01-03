@@ -4,34 +4,99 @@ namespace App\Service\Copilot;
 
 class Prompts{
 
-    public static function getAnalysisPrompt($question){
-       return <<<PROMPT
-        You are a JSON extraction engine for an n8n workflow copilot.
+    public static function getAnalysisIntentAndtiggerPrompt($question){
+        return <<<PROMPT
+        You are an intent and trigger analysis engine for n8n workflows.
 
-        You must output a JSON object that strictly follows this schema:
+        Extract:
+        - The user's intent
+        - The workflow trigger
+
+        Return a JSON object with ONLY these keys:
 
         {
-        "intent": string,              // one concise sentence describing what the user wants
-        "nodes": string[],             // list of services or nodes (capitalized, no spaces around words)
-        "category": "automation" | "integration" | "sync" | "data" | "ai" | "marketing" | "devops" | "finance",
-        "min_nodes": number            // integer >= 1
+        "intent": string,
+        "trigger": string,
+        "trigger_reasoning": string
         }
 
         Rules:
-        - "intent" must be a full sentence.
-        - "nodes" must only contain names of services or n8n nodes (e.g. "Slack", "Stripe", "Notion", "EmailSend", "Acuity").
-        - If no specific service is mentioned, infer the most likely ones.
-        - "min_nodes" must be realistic based on the intent.
-        - Never return null values.
-        - Never return empty arrays.
-        - Do not include any keys outside the schema.
-        - Do not include comments.
-        - Do not include markdown.
+        - "intent" must be a full sentence describing the workflow.
+        - "trigger" MUST be one valid n8n trigger node name.
+        - Infer the trigger if implicit.
+        - If no trigger is mentioned or implied, use "ManualTrigger".
+        - "trigger_reasoning" must explain why this trigger was chosen.
+        - Do NOT include any other keys.
+        - Do NOT include markdown.
 
         User question:
         "$question"
+        PROMPT;
+    }
 
-        Return only valid JSON.
+    public static function getAnalysisNodeExtractionPrompt($intent , $question){
+        return <<<PROMPT
+        You are a node extraction engine for n8n workflows.
+
+        Given the user intent and question, identify required nodes.
+
+        Return ONLY this JSON schema:
+
+        {
+        "nodes": [
+            {
+            "name": string,
+            "confidence": "explicit" | "inferred"
+            }
+        ]
+        }
+
+        Rules:
+        - Include ONLY nodes that are required to fulfill the intent.
+        - Mark a node as "explicit" ONLY if the user directly mentions it.
+        - Mark a node as "inferred" ONLY if it is strictly necessary.
+        - Do NOT include trigger nodes.
+        - Do NOT include optional optimization nodes.
+        - Avoid logic nodes ("If", "Merge") unless conditions are explicitly stated.
+        - Do NOT include duplicates.
+        - Do NOT include markdown.
+
+        User intent:
+        "$intent"
+
+        User question:
+        "$question"
+        PROMPT;
+    }
+
+    public static function getAnalysisValidationAndPruningPrompt($trigger , $nodes_json){
+        return <<<PROMPT
+        You are a workflow validation engine.
+
+        Given the trigger and extracted nodes, validate and correct the workflow structure.
+
+        Return ONLY this JSON schema:
+
+        {
+        "nodes": string[],
+        "min_nodes": number,
+        "category": string
+        }
+
+        Rules:
+        - Ensure the trigger node is included.
+        - Remove any inferred nodes that are not strictly required.
+        - Ensure to add code nodes where needed
+        - Ensure the workflow can function end-to-end.
+        - "min_nodes" must reflect the minimum realistic node count.
+        - Do NOT add new nodes unless required for correctness.
+        - Do NOT include markdown.
+
+        Trigger:
+        "$trigger"
+
+        Extracted nodes:
+        $nodes_json
         PROMPT;
     }
 

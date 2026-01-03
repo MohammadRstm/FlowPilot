@@ -6,34 +6,25 @@ use Exception;
 use Illuminate\Support\Facades\Log;
 
 class AnalyzeIntent{
+
     // Orchestrater
     public static function analyze(string $question): array {
-        $prompt = Prompts::getAnalysisPrompt($question);
-        $raw = LLMService::raw($prompt);
-        $parsed = self::parseResponse($raw);
-        $parsed["nodes"] = self::normalizeNodes($parsed["nodes"] ?? []);
-        $parsed["filters"] = self::buildFilters($parsed);// create filters for point retrieval
-        $parsed["embedding_query"] = self::buildEmbeddingQuery($question, $parsed);
+        $intentData = LLMService::intentAnalyzer($question);
+        Log::debug("intent data" , ["intent data" => $intentData]);
+        $nodeData = LLMService::nodeAnalyzer($question, $intentData["intent"]);
+        Log::debug("node Data " , ["node data" => $nodeData]);
+        $final = LLMService::workflowSchemaValidator($intentData, $nodeData);
+        Log::debug("final Data " , ["final" => $final]);
 
-        Log::debug('Analyzed intent', ['analysis' => $parsed]);
+        $final["intent"] = $intentData["intent"];
+        $final["trigger"] = $intentData["trigger"];
+        $final["nodes"] = self::normalizeNodes($final["nodes"]);
+        $final["embedding_query"] = self::buildWorkflowEmbeddingQuery($final, $question);
 
-        return $parsed;
-    }
+        Log::info("Intent" , ["intent" => $final["intent"]]);
+        Log::info("embedding_query" , ["embedding" => $final["embedding_query"]]);
 
-    private static function parseResponse(string $raw): array {
-        $json = trim($raw);
-
-        // Remove code blocks if present
-        $json = preg_replace('/```(json)?/', '', $json);
-        $json = trim($json);
-
-        $data = json_decode($json, true);
-
-        if (!$data) {
-            throw new Exception("Invalid LLM response: " . $raw);
-        }
-
-        return $data;
+        return $final;
     }
 
     private static function normalizeNodes(array $nodes): array {
@@ -47,40 +38,22 @@ class AnalyzeIntent{
     }
 
 
-    private static function buildFilters(array $analysis): array {// this is a general filter (used later in n8n_workflows filtering)
-        $should = [];
+    private static function buildWorkflowEmbeddingQuery(array $analysis, string $question): string {
+        $parts = [];
+
+        $parts[] = $analysis["intent"];
+
+        if (!empty($analysis["trigger"])) {
+            $parts[] = "Triggered by " . $analysis["trigger"];
+        }
 
         if (!empty($analysis["nodes"])) {
-            $should[] = [
-                "key" => "nodes_used",
-                "match" => [
-                    "any" => $analysis["nodes"]
-                ]
-            ];
+            $parts[] = "Uses services: " . implode(", ", $analysis["nodes"]);
         }
 
-        if (!empty($analysis["category"])) {
-            $should[] = [
-                "key" => "category",
-                "match" => [
-                    "value" => $analysis["category"]
-                ]
-            ];
-        }
+        $parts[] = $question;
 
-        if (!empty($analysis["min_nodes"])) {
-            $should[] = [
-                "key" => "node_count",
-                "range" => [
-                    "gte" => intval($analysis["min_nodes"])
-                ]
-            ];
-        }
-
-        return ["should" => $should];
+        return implode(". ", $parts);
     }
 
-    private static function buildEmbeddingQuery(string $question, array $analysis): string {
-        return $analysis["intent"] . " | " . $question;
-    }
 }

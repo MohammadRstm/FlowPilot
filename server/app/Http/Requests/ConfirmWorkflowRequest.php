@@ -16,7 +16,7 @@ class ConfirmWorkflowRequest extends FormRequest{
     public function rules(): array{
         return [
             "question" => "string",
-            "workflow" => "string",
+            "workflow" => "json",
         ];
     }
 }
