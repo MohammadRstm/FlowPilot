@@ -147,25 +147,6 @@ class LLMService{
         return $out;
     }
 
-    public static function repairWorkflow(string $badJson, array $errors){
-        $prompt = Prompts::getRepairPrompt($badJson, json_encode($errors));
-
-        /** @var Response $response */
-        $response = Http::withToken(env("OPENAI_API_KEY"))
-            ->post("https://api.openai.com/v1/chat/completions", [
-                "model" => "gpt-4.1-mini",
-                "temperature" => 0,
-                "messages" => [
-                    ["role"=>"system","content"=>"You are an n8n validation engine"],
-                    ["role"=>"user","content"=>$prompt]
-                ]
-            ]);
-        
-        $repairedFlow = $response->json("choices.0.message.content");
-        
-        return $repairedFlow;
-    }
-
     public static function judgeResults(array $workflow, string $question){
         // functionalities
         $reqPrompt = Prompts::getWorkflowFunctionalitiesPrompt($question);
@@ -203,23 +184,18 @@ class LLMService{
         ];
     }
 
-    public static function repairWorkflowLogic(string $badJson, array $errors , array $totalPoints){
-        $prompt = Prompts::getRepairWorkflowLogic($badJson, json_encode($errors) , json_encode($totalPoints));
+    public static function repairWorkflowLogic(string $question , string $badJson, array $judgement , array $totalPoints){
+        // What is missing 
+        $missingPrompt = Prompts::getWorkflowMissingRequirementsPrompt($question , $badJson , $judgement["matches"]);
+        $missingRequirements = self::callOpenAI($missingPrompt);
 
-        /** @var Response response */
-        $response = Http::withToken(env("OPENAI_API_KEY"))
-            ->post("https://api.openai.com/v1/chat/completions", [
-                "model" => "gpt-4.1-mini",
-                "temperature" => 0,
-                "messages" => [
-                    ["role"=>"system","content"=>"You are an n8n workflow logic validation engine"],
-                    ["role"=>"user","content"=>$prompt]
-                ]
-            ]);
-        
-        $repairedFlow = $response->json("choices.0.message.content");
-        
-        return $repairedFlow;
+        // fixing plan
+        $fixingPlanPrompt = Prompts::getWorkflowFixingPlanPrompt($question , $missingRequirements , $totalPoints , $badJson);
+        $fixingPlan = self::callOpenAI($fixingPlanPrompt);
+
+        // patch workflow
+        $patchPrompt = Prompts::getApplyPatchPrompt($question , $badJson , $fixingPlan , $missingRequirements);
+        return self::callOpenAI($patchPrompt);
     }
     
     public static function validateDataFlow($workflow , $question , $totalPoints){
@@ -247,6 +223,10 @@ class LLMService{
         }
         return $decoded;   
     }
+
+
+
+
 
     public static function repairWorkflowDataFlow(string $badJson , array $errors , array $totalPoints){
         $prompt = Prompts::getRepairWorkflowDataFlowLogic($badJson, json_encode($errors) , json_encode($totalPoints));

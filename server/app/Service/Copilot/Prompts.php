@@ -11,6 +11,8 @@ class Prompts{
         ];
     }
 
+
+    /** ANALYZE USER QUESTION PROMPTS */
     public static function getAnalysisIntentAndtiggerPrompt($question){
         $systemPrompt = <<<SYSTEM
         You are an intent and trigger analysis engine for n8n workflows.
@@ -127,6 +129,8 @@ class Prompts{
         return self::returnFormat($userPrompt , $systemPrompt);
     }
 
+
+    /** WORKFLOW GENERATION PROMPTS */
     public static function getWorkflowBuildingPlanPrompt($question , $context){
         $systemPrompt = <<<SYSTEM
         You are an expert n8n workflow planner.
@@ -280,12 +284,7 @@ class Prompts{
         return self::returnFormat($userPrompt , $systemPrompt);
     }
 
-
-
-
-
-    
-
+    /** JUDGEMENT PROMPTS */
     public static function getWorkflowFunctionalitiesPrompt($question){
         $systemPrompt = <<<SYSTEM
         You are a workflow requirements extractor.
@@ -437,295 +436,111 @@ class Prompts{
         return self::returnFormat($userPrompt , $systemPrompt);
     }
 
+    /** WORKFLOW LOGIC REPAIR PROMPTS */
+    public static function getWorkflowMissingRequirementsPrompt($question , $workflow , $matches){
+        $decodedMatches = json_encode($matches , JSON_PRETTY_PRINT);
+        $systemPrompt = <<<SYSTEM
+        You are a workflow verification engine.
+        You determine which required behaviors are not implemented.
+        SYSTEM;
 
+        $userPrompt = <<<USER
+        CLIENT INTENT : $question
 
+        CURRENT WORKFLOW: $workflow
 
+        Given these requirement checks:
 
+        $decodedMatches
 
+        Return ONLY the requirements that are not satisfied.
 
-
-
-    public static function getRepairPrompt(string $workflowJson, string $errorsJson): string{
-        return <<<PROMPT
-            You are an expert n8n workflow repair assistant.
-
-            You are given an n8n workflow JSON and a list of errors encountered when trying to run it.
-            (You may be given a list of improvements as well.)
-
-            Your task:
-            1. Analyze the errors
-            2. Identify the root causes in the workflow
-            3. Modify the workflow to fix the errors
-            4. Output a valid n8n workflow JSON that resolves all issues
-            5. ONLY fix the listed issues.
-            6. Do NOT change any other logic, nodes, or connections.
-            7. Do NOT refactor or simplify unless explicitly requested.
-
-
-            RULES:
-            - Preserve existing credentials names
-            - Maintain valid n8n format
-            - Ensure triggers exist
-            - Ensure connections are correct
-            - Include error handling if missing
-
-            WORKFLOW JSON:
-            $workflowJson
-
-            ERRORS:
-            $errorsJson
-
-            OUTPUT:
-            Return ONLY a valid n8n JSON.
-            No explanations.
-            No markdown.
-            PROMPT;
-    }
-
-    public static function getJudgementPrompt(array $workflow, string $userQuestion): string {
-        $workflowJson = json_encode($workflow, JSON_PRETTY_PRINT);
-
-        return <<<PROMPT
-        You are a strict, adversarial evaluator of n8n automation workflows.
-
-        Your job is to determine whether the workflow correctly implements the USER'S INTENT in terms of:
-        - Triggers
-        - Logic
-        - Branching
-        - Data flow
-        - Integrations
-        - Actions
-
-        You are evaluating LOGIC and STRUCTURE — NOT credentials, auth, or user-specific runtime data.
-
-        ────────────────────────────────────────────
-        CRITICAL SCOPE RULE
-        ────────────────────────────────────────────
-
-        You MUST IGNORE all credential, identity, and runtime-binding concerns, including:
-        - OAuth credentials
-        - API keys
-        - Account IDs
-        - User IDs
-        - Slack channel IDs
-        - Email addresses
-        - Webhook URLs
-        - Placeholder credential values
-        - "your-api-key", "your-channel", "user-id", etc
-
-        These are injected later by the system or the end user.
-
-        They are NEVER valid errors.
-
-        DO NOT mention them.
-        DO NOT penalize them.
-        DO NOT include them in errors.
-        DO NOT reduce score for them.
-
-        ────────────────────────────────────────────
-        HOW TO EVALUATE
-        ────────────────────────────────────────────
-
-        1. Extract all functional requirements from the user's intent.
-        Each trigger, condition, filter, branch, API call, transformation, and output is a requirement.
-
-        2. Verify that each requirement is explicitly implemented in the workflow:
-        - Correct trigger exists
-        - Correct integrations are used
-        - Correct conditional logic exists
-        - Correct branching exists
-        - Correct data flows between nodes
-        - Correct actions are performed
-
-        3. Penalize heavily for:
-        - Missing triggers
-        - Missing filters or conditions
-        - Missing branches
-        - Nodes that exist but are not wired
-        - Logic that does not enforce the intent
-        - Required steps that are absent
-        - Overly generic or noop logic
-
-        4. DO NOT penalize:
-        - Credential placeholders
-        - Hardcoded IDs
-        - Channel names
-        - OAuth bindings
-        - Runtime secrets
-        - User-specific identifiers
-
-        Only LOGIC and DATA FLOW matter.
-
-        ────────────────────────────────────────────
-        SCORING
-        ────────────────────────────────────────────
-
-        Score from 0.0 to 1.0
-
-        1.0 = Fully and precisely implements every part of the user's intent  
-        0.8 = Minor gaps, but core logic is correct  
-        0.5 = Partially correct, major logic missing or wrong  
-        0.2 = Barely related  
-        0.0 = Does not match intent at all  
-
-        If ANY critical functional requirement is missing, the score MUST be below 0.7.
-
-        ────────────────────────────────────────────
-        SEVERITY
-        ────────────────────────────────────────────
-
-        Each error must have a severity:
-
-        - critical → workflow fails the user's intent
-        - major → core logic broken
-        - minor → inefficiency, polish, or safety issue
-
-        Never use severity for credential or identity issues.
-
-        ────────────────────────────────────────────
-        OUTPUT FORMAT (STRICT)
-        ────────────────────────────────────────────
-
-        Return ONLY this JSON object:
-
+        Output JSON:
         {
-        "errors": [
+        "missing": [
             {
-            "message": "error description",
-            "severity": "critical"
+            "requirement_id": "R2",
+            "reason": "..."
             }
-        ],
-        "suggested_improvements": [
-            {
-            "message": "improvement description",
-            "severity": "major"
-            }
-        ],
-        "score": 0.0
+        ]
         }
+        USER;
 
-        No extra text.
-        No markdown.
-        No explanations.
-
-        ────────────────────────────────────────────
-        WORKFLOW JSON
-        ────────────────────────────────────────────
-        $workflowJson
-
-        ────────────────────────────────────────────
-        USER INTENT
-        ────────────────────────────────────────────
-        $userQuestion
-
-        ────────────────────────────────────────────
-        OUTPUT
-        ────────────────────────────────────────────
-        PROMPT;
+        return self::returnFormat($userPrompt , $systemPrompt);
     }
 
-    public static function getRepairWorkflowLogic(string $badJson, string $errorsJson , string $totalPoints): string{
-        return <<<PROMPT
-        You are an expert n8n workflow engineer and automated repair system.
+    public static function getWorkflowFixingPlanPrompt($question, $missing , $totalPoints , $workflow){
+        $missing = json_encode($missing , JSON_PRETTY_PRINT);
 
-        Your job is to take a BROKEN workflow and a list of FAILURES, and produce a FIXED workflow
-        that satisfies ALL failures.
+        $totalPoints = json_encode($totalPoints , JSON_PRETTY_PRINT);
+        $systemPrompt = <<<SYSTEM
+        You are an n8n solution architect.
+        You map missing requirements to nodes, connections, and schema operations.
+        SYSTEM;
 
-        You are not allowed to explain.
-        You are not allowed to output anything except valid JSON.
+        $userPrompt = <<<USER
+        Intent: $question
 
-        This is not a rewrite — this is a targeted repair.
+        Missing requirements:
+        $missing
 
-        ────────────────────────────────────────────
-        BROKEN WORKFLOW (GROUND TRUTH)
-        ────────────────────────────────────────────
-        $badJson
-
-        ────────────────────────────────────────────
-        FAILURES (MUST FIX ALL)
-        ────────────────────────────────────────────
-        $errorsJson
-
-        ────────────────────────────────────────────
-        WHAT YOU CAN USE
-        ────────────────────────────────────────────
+        Available building blocks:
         $totalPoints
 
-        ────────────────────────────────────────────
-        STRICT RULES
-        ────────────────────────────────────────────
+        Current worfklow: 
+        $workflow
 
-        1. You MUST preserve all parts of the workflow that are not related to the failures.
-        Do NOT delete nodes unless a failure explicitly says they are wrong.
+        Return JSON:
+        {
+        "patch_plan": [
+            {
+            "requirement_id": "R2",
+            "nodes_to_add": ["IF", "Gmail"],
+            "connections_to_add": [
+                {"from":"Gmail Trigger","to":"IF"}
+            ]
+            }
+        ]
+        }
+        USER;
 
-        2. You MUST make the MINIMAL number of changes required to satisfy the failures.
+        return self::returnFormat($userPrompt , $systemPrompt);
+    }
 
-        3. You MUST ensure:
-        - All required triggers exist
-        - All required nodes exist
-        - All required branches exist
-        - All required filters exist
-        - All required connections exist
-        - Data flows between nodes correctly -- VERY IMPORTANT
+    public static function getApplyPatchPrompt($question , $badJson, $patchPlan , $missingRequirements){
+        $missingRequirements = json_encode($missingRequirements , JSON_PRETTY_PRINT);
+        $systemPrompt = <<<SYSTEM
+        You are an n8n workflow patch engine.
+        You apply structural diffs to workflow JSON.
+        SYSTEM;
 
-        4. You MUST NOT:
-        - Add placeholder values
-        - Add TODOs
-        - Leave parameters empty
-        - Add generic nodes that do not guarantee the behavior
+        $userPrompt = <<<USER
+        Intent: $question
 
-        5. If a failure says something is missing, you MUST:
-        - Add the correct node
-        - Connect it correctly
-        - Configure it correctly
+        Missing Requirements:
+        $missingRequirements
 
-        6. If a failure says something is wrong, you MUST:
-        - Replace or reconfigure that exact part
-        - Without breaking unrelated logic
+        Broken workflow:
+        $badJson
 
-        7. The result MUST be a COMPLETE, VALID n8n workflow JSON
-        using the SAME format as the input.
+        Patch plan:
+        $patchPlan
 
-        8. You MUST ensure that every node is reachable from a trigger.
-
-        9. You MUST ensure that no required logic is implied — it must be explicit in JSON.
-
-        ────────────────────────────────────────────
-        MENTAL MODEL (YOU MUST FOLLOW THIS)
-        ────────────────────────────────────────────
-
-        You must behave like a compiler performing a repair pass:
-
-        Step 1: Read the failures.
-        Step 2: For each failure, identify the exact missing or broken node, connection, or parameter.
-        Step 3: Apply ONLY the required structural edits to fix it.
-        Step 4: Revalidate that all failures are now impossible.
-        Step 5: Output the corrected JSON.
-
-        Do NOT guess.
-        Do NOT be creative.
-        Do NOT optimize.
-        Only repair what is required.
-
-        ────────────────────────────────────────────
-        OUTPUT FORMAT
-        ────────────────────────────────────────────
+        Strict rules:
+        - Do not modify unrelated nodes
+        - Do not delete unless explicitly required
+        - All changes must satisfy the patch plan
+        - All nodes must remain reachable from a trigger
 
         Return ONLY the corrected workflow JSON.
 
-        No text.
-        No markdown.
-        No comments.
-        No explanations.
-        No trailing commas.
+        USER;
 
-        The output must be directly parsable by json_decode().
+        return self::returnFormat($userPrompt , $systemPrompt);
+    }    
 
-        ────────────────────────────────────────────
-        BEGIN REPAIR
-        ────────────────────────────────────────────
-        PROMPT;
-    }
+    
+
 
     public static function getCompleteDataFlowValidationPrompt(array $workflow , string $question , array $totalPoints){
         $encodedWorkflow = json_encode($workflow);
