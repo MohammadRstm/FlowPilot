@@ -127,49 +127,133 @@ class Prompts{
         return self::returnFormat($userPrompt , $systemPrompt);
     }
 
-    public static function getAnswerPrompt(){
-        return  <<<PROMPT
-        You are an expert n8n workflow architect.
+    public static function getWorkflowBuildingPlanPrompt($question , $context){
+        $systemPrompt = <<<SYSTEM
+        You are an expert n8n workflow planner.
 
-        You understand:
-        - Triggers
-        - Credentials
-        - Node connections
-        - Error handling
-        - Webhooks
-        - Production ready automation design
+        Your job is to design workflow execution plans from user goals and example workflows.
 
         You must:
-        1. Analyze the user's goal
-        2. Compare given workflows
-        3. Pick or combine the best
-        4. Output a valid n8n workflow JSON
-        5. Never hallucinate nodes
-        6. Never invent credentials
-        7. Never output explanations inside the JSON
-        PROMPT;
-    }
+        - Identify which nodes are needed
+        - Decide their order
+        - Define how data flows between them
 
-    public static function getWorkflowGenerationPrompt(string $question, string $context){
-        return <<<PROMPT
-        USER GOAL:
+        You DO NOT output n8n JSON.
+        You ONLY output a compact planning JSON that describes structure and flow.
+
+        You must never invent nodes that do not exist in the provided context.
+        SYSTEM;
+
+        $userPrompt = <<<USER
+        user goal:
         $question
 
-        You are given real exported n8n workflows below.
+        AVAILABLE BUILDING BLOCKS (real exported n8n workflows):
+        $context
 
         Your task:
-        1. Understand the user's goal
-        2. Compare the workflows
-        3. Select, merge or modify them
-        4. Output ONE fully importable n8n workflow
+        1. Decide which workflows and nodes are relevant
+        2. Decide which nodes will be used
+        3. Decide the execution order
+        4. Decide what data flows between nodes
 
-        =====================
-        CRITICAL FORMAT RULES
-        =====================
+        Output a JSON plan in this exact format:
 
-        You MUST output a full n8n workflow object.
+        {
+        "nodes": [
+            { "name": "Cron", "role": "trigger", "from": null },
+            { "name": "Google Sheets", "role": "read", "from": "Cron" },
+            { "name": "If", "role": "filter", "from": "Google Sheets" },
+            { "name": "Google Drive", "role": "write", "from": "If.true" },
+            { "name": "Gmail", "role": "send", "from": "If.false" }
+            ....
+        ]
+        }
 
-        The JSON MUST have this exact top-level structure:
+        Rules:
+        - Use only node names that appear in the context
+        - Use logical roles: trigger, read, filter, write, send, transform
+        - The "from" field must reference another node name or a branch like "If.true"
+        - Do NOT output n8n JSON
+        - Do NOT invent nodes
+        - Output JSON only
+        USER;
+
+        return self::returnFormat($userPrompt , $systemPrompt);
+    }
+
+    public static function getPlanRepairPrompt($question , $context , $badPlan , $errors){
+        $systemPrompt = <<<SYSTEM
+        You are an expert n8n workflow planner and validator. 
+        You receive a workflow plan and a list of validation errors.
+        Your job is to fix the plan while strictly following these rules:
+
+        - All nodes must be valid and exist in the context.
+        - All "from" references must exist and connect correctly.
+        - There must be exactly one trigger node.
+        - Do not invent new nodes.
+        - Maintain the logical flow of execution.
+        - Output JSON only. Do NOT output markdown, explanations, or n8n workflow JSON.
+        - Return the corrected plan in the exact same plan format:
+
+        {
+        "nodes": [
+            { "name": "Cron", "role": "trigger", "from": null }
+        ]
+        }
+        SYSTEM;
+
+        $userPrompt = <<<USER
+        The previous plan you produced was invalid.
+
+        BAD PLAN:
+        {json_encode($badPlan, JSON_PRETTY_PRINT)}
+
+        VALIDATION ERRORS:
+        {implode("\n", $errors)}
+
+        user's goal:
+        $question
+
+        AVAILABLE BUILDING BLOCKS:
+        $context
+
+        Please generate a corrected plan following the rules from the system prompt.
+        USER;
+    }
+
+    public static function getWorkflowBuildingPrompt($question , $plan , $context){
+        $systemPrompt = <<<SYSTEM
+        You are an n8n workflow compiler.
+
+        You receive:
+        - A validated execution plan
+        - Real example workflows
+
+        Your job is to convert the plan into a fully importable n8n workflow.
+
+        You must:
+        - Follow the plan exactly
+        - Use only nodes that appear in the context
+        - Preserve credential names from the examples
+        - Produce valid n8n JSON
+
+        You never explain anything.
+        You output JSON only.
+        SYSTEM;
+
+        $userPrompt = <<<USER
+        user's GOAL:
+        $question
+
+        EXECUTION PLAN (must be followed exactly):
+        {json_encode($plan, JSON_PRETTY_PRINT)}
+
+        AVAILABLE REAL WORKFLOWS:
+        $context
+
+        CRITICAL FORMAT:
+        Return a full n8n workflow with this exact top-level structure:
 
         {
         "name": "Auto Generated Workflow",
@@ -183,32 +267,183 @@ class Prompts{
         }
 
         Rules:
-        - "nodes" must be an array of n8n nodes
-        - "connections" must match node names exactly
+        - All nodes must come from the plan
+        - Connections must match the plan flow
         - Triggers must exist
-        - Use only nodes that appear in the provided workflows
-        - Keep credentials names EXACTLY as in the examples
-        - DO NOT omit settings, staticData, or meta
-        - Do NOT output only nodes or only connections
-        - Do NOT wrap JSON in markdown
-        - Do NOT add any explanation
+        - Credential names must match examples
+        - Do not invent nodes
+        - Do not omit fields
+        - Do not output markdown
         - Output JSON only
+        USER;
 
-        =====================
-        WORKFLOWS/NODES/SCHEMA
-        =====================
-        $context
-
-        =====================
-        OUTPUT
-        =====================
-        Return ONLY the final JSON object described above.
-        PROMPT;
+        return self::returnFormat($userPrompt , $systemPrompt);
     }
 
-    public static function getWorkflowGenerationSystemPrompt(): string{
-        return "You are an assistant that helps generate and repair n8n workflows. Provide clear, valid JSON when requested, preserve credentials when possible, and be concise.";
+
+
+
+
+    
+
+    public static function getWorkflowFunctionalitiesPrompt($question){
+        $systemPrompt = <<<SYSTEM
+        You are a workflow requirements extractor.
+        You convert user requests into atomic functional requirements.
+        You do not design workflows.
+        You only list what must exist.
+        SYSTEM;
+
+        $userPrompt = <<<USER
+        Extract all functional requirements implied by this user request.
+
+        Each requirement must be:
+        - Atomic
+        - Testable
+        - Expressed as something that must exist in a workflow
+
+        User request:
+        $question
+
+        Output JSON ONLY:
+        {
+        "requirements": [
+            {
+            "id": "R1",
+            "description": "..."
+            }
+        ]
+        }
+        USER;
+
+        return self::returnFormat($userPrompt , $systemPrompt);
     }
+
+    public static function getWhatWorkflowActuallyDoes($workflow){
+        $encodedWorkflow = json_encode($workflow);
+        $systemPrompt = <<<SYSTEM
+        You are a workflow graph interpreter.
+        You translate n8n workflow JSON into explicit functional capabilities.
+        You do not judge correctness.
+        You only state what the workflow actually does.
+        SYSTEM;
+
+        $userPrompt = <<<USER
+        Given this n8n workflow, list everything it actually does.
+
+        Workflow:
+        $encodedWorkflow
+
+        Output JSON ONLY:
+        {
+        "capabilities": [
+            {
+            "id": "C1",
+            "description": "..."
+            }
+        ]
+        }
+        USER;
+
+        return self::returnFormat($userPrompt , $systemPrompt);
+    }
+
+    public static function getCompareIntentVsWorkflow($requirements , $capabilities){
+        $systemPrompt = <<<SYSTEM
+        You are a requirements verification engine.
+        You compare required behavior to implemented behavior.
+        SYSTEM;
+
+        $userPrompt = <<<USER
+        Match requirements to workflow capabilities.
+
+        Requirements:
+        $requirements
+
+        Capabilities:
+        $capabilities
+
+        Return JSON ONLY:
+        {
+        "matches": [
+            {
+            "requirement_id": "R1",
+            "satisfied": true,
+            "missing_reason": null
+            }
+        ]
+        }
+        USER;
+
+        return self::returnFormat($userPrompt , $systemPrompt);
+    }
+
+    public static function getClassifySevirityPrompt($matches){
+        $systemPrompt = <<<SYSTEM
+        You are a workflow failure classifier.
+        You assign severity to missing requirements.
+        SYSTEM;
+
+        $userPrompt = <<<USER
+        Given these missing or unsatisfied requirements, classify their severity.
+
+        Rules:
+        critical = workflow cannot satisfy the user intent
+        major = core behavior degraded
+        minor = polish or efficiency issue
+
+        Matches:
+        $matches
+
+        Output JSON ONLY:
+        {
+        "errors": [
+            {
+            "requirement_id": "R1",
+            "message": "...",
+            "severity": "critical"
+            }
+        ]
+        }
+        USER;
+
+        return self::returnFormat($userPrompt , $systemPrompt);
+    }
+
+    public static function getWorkflowScore($errors , $requirements){
+        $systemPrompt = <<<SYSTEM
+        You are a scoring engine.
+        You assign a numeric score based on how many critical and major requirements are satisfied.
+        SYSTEM;
+
+        $userPrompt = <<<USER
+        Errors:
+        $errors
+
+        Total requirements: $requirements
+
+        Scoring rules:
+        - Any critical → score < 0.7
+        - All satisfied → 1.0
+        - Minor only → ≥ 0.8
+        - Major present → < 0.8
+
+        Return JSON ONLY:
+        {
+        "score": 0.0
+        }
+        USER;
+
+        return self::returnFormat($userPrompt , $systemPrompt);
+    }
+
+
+
+
+
+
+
+
 
     public static function getRepairPrompt(string $workflowJson, string $errorsJson): string{
         return <<<PROMPT

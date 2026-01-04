@@ -6,6 +6,7 @@ use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Log;
+use Laravel\Prompts\Prompt;
 
 class LLMService{
 
@@ -52,26 +53,65 @@ class LLMService{
 
     public static function generateAnswer(string $question, array $topFlows) {
         $context = self::buildContext($topFlows);
+        $planningPrompt = Prompts::getWorkflowBuildingPlanPrompt($question, $context);
 
-        $prompt = Prompts::getWorkflowGenerationPrompt($question, $context);
+        $allowedNodes = self::extractAllowedNodes($topFlows);
 
-        /** @var Response $response */
-        $response = Http::withToken(env("OPENAI_API_KEY"))
-            ->timeout(90)
-            ->post("https://api.openai.com/v1/chat/completions", [
-                "model" => "gpt-4.1-mini",
-                "temperature" => 0.2,
-                "messages" => [
-                    ["role" => "system", "content" => Prompts::getWorkflowGenerationSystemPrompt()],
-                    ["role" => "user", "content" => $prompt]
-                ]
-            ]);
-        
-        $resultedFlow = $response->json("choices.0.message.content");
+        $maxRetries = 2;
+        $attempt = 0;
 
-        Log::info('Generated answer from LLM', ['resultedFlow' => $resultedFlow]);
+        $plan = null;
+        $validation = null;
 
-        return $resultedFlow;
+        do {
+            $attempt++;
+
+            $plan = self::callOpenAI($planningPrompt);
+            $validation = PlanValidator::validate($plan, $allowedNodes);
+
+            if ($validation["ok"]) {
+                break;
+            }
+
+            Log::warning("Plan attempt {$attempt} failed", $validation["errors"]);
+
+            // Prepare repair prompt for next round
+            $planningPrompt = Prompts::getPlanRepairPrompt(
+                $question,
+                $context,
+                $plan,
+                $validation["errors"]
+            );
+
+        } while ($attempt < $maxRetries);
+
+        if (!$validation["ok"]) {
+            Log::error("Plan failed after retries", $validation["errors"]);
+            throw new Exception("Invalid plan after retries: " . implode(", ", $validation["errors"]));
+        }
+
+        // generate workflow
+        $compilerPrompt = Prompts::getWorkflowBuildingPrompt($question , $plan , $context);
+
+        $workflow = self::callOpenAI($compilerPrompt);
+
+        return $workflow;   
+    }
+
+    public static function extractAllowedNodes(array $topFlows): array {
+        $set = [];
+
+        foreach ($topFlows as $flow) {
+            if (isset($flow["payload"])) {
+                $flow = $flow["payload"];
+            }
+
+            foreach (($flow["nodes_used"] ?? []) as $n) {
+                $set[strtolower($n)] = true;
+            }
+        }
+
+        return array_keys($set);
     }
 
     private static function buildContext(array $flows): string{
@@ -127,28 +167,40 @@ class LLMService{
     }
 
     public static function judgeResults(array $workflow, string $question){
-        $prompt = Prompts::getJudgementPrompt($workflow, $question);
+        // functionalities
+        $reqPrompt = Prompts::getWorkflowFunctionalitiesPrompt($question);
+        $requirements = self::callOpenAI($reqPrompt);
 
-        /** @var Response $response */
-        $response = Http::withToken(env("OPENAI_API_KEY"))
-            ->post("https://api.openai.com/v1/chat/completions", [
-                "model" => "gpt-4.1-mini",
-                "temperature" => 0,
-                "messages" => [
-                    ["role"=>"system","content"=>"You are an n8n analysis engine"],
-                    ["role"=>"user","content"=>$prompt]
-                ]
-            ]);
-        
-        $content = $response->json("choices.0.message.content");
+        // what workflow actually does
+        $capPrompt = Prompts::getWhatWorkflowActuallyDoes($workflow);
+        $capabilities = self::callOpenAI($capPrompt);
 
-        $decoded = json_decode($content, true);
+        // compare intent vs functionality
+        $cmpPrompt = Prompts::getCompareIntentVsWorkflow(
+            json_encode($requirements),
+            json_encode($capabilities)
+        );
+        $matches = self::callOpenAI($cmpPrompt);
 
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \RuntimeException("Failed to decode judgement response: " . json_last_error_msg());
-        }
+        // classify sevirity of errrors
+        $sevPrompt = Prompts::getClassifySevirityPrompt(json_encode($matches));
+        $errors = self::callOpenAI($sevPrompt);
 
-        return $decoded;
+        // get final score
+        $scorePrompt = Prompts::getWorkflowScore(
+            json_encode($errors),
+            count($requirements["requirements"] ?? [])
+        );
+        $score = self::callOpenAI($scorePrompt);
+
+         return [
+            "score" => $score["score"] ?? 0.0,
+            "requirements" => $requirements["requirements"] ?? [],
+            "capabilities" => $capabilities["capabilities"] ?? [],
+            "matches" => $matches["matches"] ?? [],
+            "errors" => $errors["errors"] ?? [],
+            "suggested_improvements" => []
+        ];
     }
 
     public static function repairWorkflowLogic(string $badJson, array $errors , array $totalPoints){

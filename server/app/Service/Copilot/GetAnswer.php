@@ -32,28 +32,19 @@ class GetAnswer{
     public static function execute($question){
         set_time_limit(300); // 5 minutes max
 
-        $analysis = AnalyzeIntent::analyze($question);
-        $points = GetPoints::execute($analysis);
-        $totalPoints = RankingFlows::rank($analysis, $points);
+        $analysis = AnalyzeIntent::analyze($question);// optimized
+        $points = GetPoints::execute($analysis);// optimized --> reuires re-injection
+        $finalPoints = RankingFlows::rank($analysis, $points);// requires testing
 
-        $json = LLMService::generateAnswer($question, $totalPoints);
-        /** @var array|string|false $workflowDecoded */
-        $workflowDecoded = json_decode($json, true);
-        if (!is_array($workflowDecoded)) {
-            Log::error('LLM returned invalid JSON', ['json' => $json]);
-            return $json;
-        }
+        $workflow = LLMService::generateAnswer($question, $finalPoints);// optimized
 
-        /** @var array $workflow */
-        $workflow = $workflowDecoded;
-
-        // analyze output workflow with user's intent (sanity check)
+        // analyze output workflow with user's intent 
         $validateWorkflowService = new ValidateFlowLogicService();
-        $workflow = $validateWorkflowService->execute($workflow , $question , $totalPoints);
+        $workflow = $validateWorkflowService->execute($workflow , $question , $finalPoints);
         // we are here now
         $validateWorkflowDataInjection = new ValidateFlowDataInjection();
-        $workflow = $validateWorkflowDataInjection->execute($workflow , $question , $totalPoints);
+        $workflow = $validateWorkflowDataInjection->execute($workflow , $question , $finalPoints);
 
-        return $json;
+        return $workflow;
     }
 }
