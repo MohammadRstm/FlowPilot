@@ -62,9 +62,7 @@ class IngestN8nNodes extends Command
         }
     }
 
-    /**
-     * Ingest a single .node.json file
-     */
+
     private function ingestNodeFile(string $url): void
     {
         $this->line("→ {$url}");
@@ -81,9 +79,7 @@ class IngestN8nNodes extends Command
         $this->ingested++;
     }
 
-    /**
-     * Payload MUST match your existing schema
-     */
+
     private function buildPayload(array $data): array
     {
         $node = $data['node'];
@@ -101,9 +97,7 @@ class IngestN8nNodes extends Command
         ];
     }
 
-    /**
-     * Store node in Qdrant
-     */
+
     private function storeInQdrant(array $node): void
     {
         $text = implode(' ', [
@@ -122,12 +116,7 @@ class IngestN8nNodes extends Command
 
         $sparseVector = IngestionService::buildSparseVector($text);
 
-       ense-vector' => $denseVector,
-                            'text-sparse'  => $sparseVector,
-                        ],
-                        'payload' => $node,
-                    ],
-                ], $endpoint = rtrim(env('QDRANT_CLUSTER_ENDPOINT', ''), '/');
+        $endpoint = rtrim(env('QDRANT_CLUSTER_ENDPOINT', ''), '/');
 
         Http::withHeaders([
             'api-key' => env('QDRANT_API_KEY'),
@@ -138,7 +127,12 @@ class IngestN8nNodes extends Command
                     [
                         'id'     => (string) Str::uuid(),
                         'vector' => [
-                            'd
+                            'dense-vector' => $denseVector,
+                            'text-sparse'  => $sparseVector,
+                        ],
+                        'payload' => $node,
+                    ],
+                ],
             ]
         );
     }

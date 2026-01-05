@@ -20,9 +20,10 @@ class GetPoints{
 
         $workflowSparse = IngestionService::buildSparseVector($analysis["intent"]);
         $nodeSparse = IngestionService::buildSparseVector(
-            empty($analysis["nodes"]) ? "" : implode(" ", $analysis["nodes"])
+            $analysis["intent"] . " " .
+            implode(" ", $analysis["nodes"] ?? []) . " " .
+            ($analysis["trigger"] ?? "")
         );
-
 
         return [
             "workflows" => self::searchWorkflows($workflowDense, $workflowSparse, $analysis),
@@ -31,7 +32,7 @@ class GetPoints{
         ];
     }
 
-    private static function searchWorkflows(array $dense, array $sparse, array $analysis): array {
+    private static function searchWorkflows(array $dense, array $sparse): array {
         return self::query(
             "n8n_workflows",
             $dense,
@@ -41,214 +42,38 @@ class GetPoints{
         );
     }
 
-    private static function searchNodes(array $dense, array $sparse, array $analysis): array {
+    private static function searchNodes(array $dense, array $sparse): array {
         return self::query(
             "n8n_catalog",
             $dense,
             $sparse,
-            self::buildNodeFilters($analysis),
-            20
+            [],
+            30
         );
     }
 
-    private static function buildNodeFilters(array $analysis): array {
-        if (empty($analysis["nodes"])) {
-            return [];
-        }
-
-        $variants = self::expandNodeNames($analysis["nodes"]);
-        $classified = self::classifyVariants($variants, $analysis);
-
-        $should = [];
-
-        // node name
-        if (!empty($classified["nodes"])) {
-            $should[] = [
-                "key" => "key_normalized",
-                "match" => [ "any" => $classified["nodes"] ]
-            ];
-        }
-
-        // service
-        if (!empty($classified["services"])) {
-            $should[] = [
-                "key" => "service",
-                "match" => [ "any" => $classified["services"] ]
-            ];
-        }
-
-        // operation (read, write, send, trigger)
-        if (!empty($classified["operations"])) {
-            $should[] = [
-                "key" => "operation",
-                "match" => [ "any" => $classified["operations"] ]
-            ];
-        }
-
-        return [ "should" => $should ];
-    }
-
-    private static function searchSchemas(array $dense, array $sparse, array $analysis): array {
+    private static function searchSchemas(array $dense, array $sparse): array {
         return self::query(
             "n8n_node_schemas",
             $dense,
             $sparse,
-            self::buildSchemaFilters($analysis),
+            [],
             50
         );
     }
 
-    private static function buildSchemaFilters(array $analysis): array {
-        if (empty($analysis["nodes"])) {
-            return [];
-        }
-
-        $variants = self::expandNodeNames($analysis["nodes"]);
-        $classified = self::classifyVariants($variants, $analysis);
-
-        $should = [];
-
-        if (!empty($classified["nodes"])) {
-            $should[] = [
-                "key" => "node_normalized",
-                "match" => [ "any" => $classified["nodes"] ]
-            ];
-        }
-
-        if (!empty($classified["services"])) {
-            $should[] = [
-                "key" => "service",
-                "match" => [ "any" => $classified["services"] ]
-            ];
-        }
-
-        if (!empty($classified["operations"])) {
-            $should[] = [
-                "key" => "operation",
-                "match" => [ "any" => $classified["operations"] ]
-            ];
-        }
-
-        return [ "should" => $should ];
-    }
-
-    private static function expandNodeNames(array $nodes): array {
-        $out = [];
-
-        // canonical n8n vocabulary
-        $serviceMap = [
-            "gmail" => ["gmail", "email", "send", "message"],
-            "email" => ["gmail", "email", "smtp"],
-            "google" => ["google", "googleapi"],
-            "sheet" => ["sheet", "sheets", "spreadsheet", "googlesheets"],
-            "drive" => ["drive", "file", "upload", "download", "googledrive"],
-            "cron" => ["cron", "schedule", "time", "trigger"],
-            "webhook" => ["webhook", "http", "endpoint", "trigger"],
-            "slack" => ["slack", "message", "post"],
-            "http" => ["http", "request", "api", "web"]
-        ];
-
-        $functionMap = [
-            "read" => ["read", "get", "fetch", "load"],
-            "write" => ["write", "create", "insert", "add", "append"],
-            "send" => ["send", "email", "notify", "message"],
-            "trigger" => ["trigger", "start", "schedule", "cron"]
-        ];
-
-        foreach ($nodes as $raw) {
-            $n = strtolower(trim($raw));
-            $norm = preg_replace('/[^a-z0-9]/', '', $n);
-
-            if (!$norm) continue;
-
-            // always include raw + normalized
-            $out[] = $n;
-            $out[] = $norm;
-
-            // Detect service family
-            foreach ($serviceMap as $service => $aliases) {
-                foreach ($aliases as $alias) {
-                    if (str_contains($n, $alias)) {
-                        $out[] = $service;
-                        $out[] = "google" . $service;   // google + sheets, google + drive
-                        $out[] = $service . "node";
-                    }
-                }
-            }
-
-            // detect function intent
-            foreach ($functionMap as $fn => $verbs) {
-                foreach ($verbs as $v) {
-                    if (str_contains($n, $v)) {
-                        $out[] = $fn;
-                        $out[] = $fn . "node";
-                        $out[] = $fn . "trigger";
-                    }
-                }
-            }
-        }
-
-        return array_values(array_unique($out));
-    }
-
-    private static function classifyVariants(array $variants, array $analysis): array {
-        $services = [];
-        $nodes = [];
-
-        foreach ($variants as $v) {
-            if (str_starts_with($v, "google")) {
-                $services[] = "google";
-                $nodes[] = $v;
-            }
-            elseif (in_array($v, ["gmail","slack","http","cron","webhook"])) {
-                $services[] = $v;
-                $nodes[] = $v;
-            }
-            else {
-                $nodes[] = $v;
-            }
-        }
-
-        return [
-            "services" => array_values(array_unique($services)),
-            "nodes" => array_values(array_unique($nodes)),
-            "operations" => self::extractOperations($analysis)
-        ];
-    }
-
     private static function buildNodeEmbeddingQuery(array $analysis): string {
-        if (empty($analysis["nodes"])) {
-            return "";
+        $parts = [];
+
+        if (!empty($analysis["trigger"])) {
+            $parts[] = "n8n trigger " . $analysis["trigger"];
         }
 
-        return implode(
-            " ",
-            array_map(fn($n) => "n8n node " . $n, $analysis["nodes"])
-        );
-    }
-
-    private static function extractOperations(array $analysis): array {
-        $text = strtolower(
-            ($analysis["intent"] ?? "") . " " .
-            implode(" ", $analysis["nodes"] ?? [])
-        );
-
-        $ops = [];
-
-        if (preg_match('/read|get|fetch|load|list|lookup/', $text)) {
-            $ops[] = "read";
-        }
-        if (preg_match('/write|create|insert|add|append|save|upload/', $text)) {
-            $ops[] = "write";
-        }
-        if (preg_match('/send|email|notify|message/', $text)) {
-            $ops[] = "send";
-        }
-        if (preg_match('/trigger|schedule|cron|every day|daily|webhook/', $text)) {
-            $ops[] = "trigger";
+        foreach ($analysis["nodes"] ?? [] as $n) {
+            $parts[] = "n8n node " . $n;
         }
 
-        return array_values(array_unique($ops));
+        return implode(" ", $parts);
     }
 
     private static function query(string $collection, array $dense, array $sparse, ?array $filters, int $limit): array {
