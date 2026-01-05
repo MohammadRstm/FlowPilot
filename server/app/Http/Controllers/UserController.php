@@ -12,7 +12,14 @@ class UserController extends Controller{
     public function ask(CopilotPayload $req){
         try{
             $answer = UserService::getCopilotAnswer($req["question"]);
-            return $this->successResponse(["answer" => json_decode($answer)]);
+            if (is_string($answer)) {
+                $decoded = json_decode($answer, true);
+                $response = $decoded === null ? $answer : $decoded;
+            } else {
+                $response = $answer;
+            }
+
+            return $this->successResponse(["answer" => $response]);
         }catch(Exception $ex){
             return $this->errorResponse("Failed to ask copilot" , ["1" => $ex->getMessage()]);
         }

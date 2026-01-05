@@ -21,6 +21,7 @@ class ValidateFlowDataInjection{
 
             $score = (float)($result['score'] ?? 0);
             $errors = $result['errors'] ?? [];
+            $workflow = $result['workflow'] ?? $workflow;
 
             Log::info("Validation score", [
                 'attempt' => $attempt,
@@ -53,20 +54,12 @@ class ValidateFlowDataInjection{
                 'error_count' => count($errors)
             ]);
 
-            $repaired = LLMService::repairWorkflowDataFlow(
+            $workflow = LLMService::repairWorkflowDataFlow(
+                $question,
                 json_encode($workflow, JSON_UNESCAPED_SLASHES),
                 $errors,
                 $totalPoints
             );
-
-            $decodedrepair = json_decode($repaired , true);
-
-            if (!is_array($decodedrepair)) {
-                Log::error("Repair returned invalid JSON, aborting");
-                break;
-            }
-
-            $workflow = $decodedrepair;
         }
 
         Log::info("Validation loop finished", [

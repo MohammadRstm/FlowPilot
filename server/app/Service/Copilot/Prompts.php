@@ -211,10 +211,10 @@ class Prompts{
         The previous plan you produced was invalid.
 
         BAD PLAN:
-        {json_encode($badPlan, JSON_PRETTY_PRINT)}
+        $badPlan
 
         VALIDATION ERRORS:
-        {implode("\n", $errors)}
+        $errors
 
         user's goal:
         $question
@@ -224,6 +224,8 @@ class Prompts{
 
         Please generate a corrected plan following the rules from the system prompt.
         USER;
+
+        return self::returnFormat($userPrompt , $systemPrompt);
     }
 
     public static function getWorkflowBuildingPrompt($question , $plan , $context){
@@ -251,7 +253,7 @@ class Prompts{
         $question
 
         EXECUTION PLAN (must be followed exactly):
-        {json_encode($plan, JSON_PRETTY_PRINT)}
+        $plan
 
         AVAILABLE REAL WORKFLOWS:
         $context
@@ -539,296 +541,265 @@ class Prompts{
         return self::returnFormat($userPrompt , $systemPrompt);
     }    
 
-    
 
+    /** WORKFLOW DATA REPAIR PROMPTS */
+    public static function getDataGraphBuilderPrompt($workflow , $nodeSchemas){
+        $systemPrompt = <<<SYSTEM
+        You are an n8n data graph compiler.
+        You extract concrete output fields from nodes using their schemas.
+        You do not validate correctness.
+        You only list what each node produces.
+        SYSTEM;
 
-    public static function getCompleteDataFlowValidationPrompt(array $workflow , string $question , array $totalPoints){
-        $encodedWorkflow = json_encode($workflow);
-        $encodedPoints = json_encode($totalPoints);
+        $userPrompt= <<<USER
+        Workflow:
+        $workflow
 
-        return <<<PROMPT
-        You are an N8N DATA FLOW TYPE CHECKER.
+        Node schemas:
+        $nodeSchemas
 
-        You must validate this workflow as if you were a compiler.
-
-        Your job is to prove whether data used in every node actually exists, is correctly typed, and is produced by an upstream connected node.
-
-        You are NOT allowed to guess.
-        You are NOT allowed to assume.
-        You must prove.
-
-        --------------------------------
-        USER INTENT
-        --------------------------------
-        {$question}
-
-        --------------------------------
-        WORKFLOW
-        --------------------------------
-        {$encodedWorkflow}
-
-        --------------------------------
-        NODE SCHEMAS (AUTHORITATIVE)
-        --------------------------------
-        {$encodedPoints}
-
-        --------------------------------
-        YOUR TASK
-        --------------------------------
-
-        You must perform ALL of the following:
-
-        ### 1.BUILD THE DATA GRAPH
-        For every node in execution order:
-        - List every field it outputs
-        - The type of each field (string, number, boolean, object, array, binary)
-        - Which node produced it
-
-        Use ONLY the node schemas + parameters.
-
-        ---
-
-        ### 2.TRACE EVERY REFERENCE
-        For every expression like:
-        {{\$json.email}}
-        {{\$node["X"].json.id}}
-        {{\$binary.data}}
-
-        You must verify:
-        - Does this field exist?
-        - Is it produced by a connected upstream node?
-        - Is the type correct for the destination field?
-        - Is the path valid?
-
-        If ANY of those fail → ERROR
-
-        ---
-
-        ### 3.ENFORCE SCHEMAS
-        For every node:
-        - Required fields must exist
-        - Fields must be of correct type
-        - Binary vs JSON must be correct
-        - Enum values must be valid
-        - Expressions must reference real fields
-
-        ---
-
-        ### 4.ENFORCE INTENT
-        Check that the actual data path matches the user intent.
-
-        Example:
-        If user asked:
-        "Create file from Google Sheet rows"
-
-        Then:
-        Google Sheets must produce row data
-        That data must flow into the Google Drive node
-        The file content must be built from sheet data
-
-        If not → INTENT_MISMATCH
-
-        ---
-
-        ### 5.ABSOLUTELY FORBIDDEN
-        You may NOT:
-        - Assume a field exists
-        - Assume a schema
-        - Assume default values
-        - Assume emails exist
-        - Assume content exists
-
-        If not proven → ERROR
-
-        ### 6.BUILD THE EXECUTION GRAPH
-
-        You must map every possible execution path:
-        - Starting from triggers
-        - Through IF, SWITCH, SPLIT, MERGE, LOOPS
-        - Until termination
-
-        For every node output index:
-        - Verify it is either connected OR explicitly allowed to be empty
-
-        ---
-
-        ### 7.BRANCH COVERAGE
-
-        For every conditional node:
-        - All branches must be handled
-        - True and False must lead to something
-        - No branch may drop data unless user intent explicitly says so
-
-        If any branch leads nowhere → ERROR (DATA_LOSS)
-
-        ---
-
-        ### 8.LOOP SAFETY
-
-        If a loop exists:
-        - Data must either progress toward termination
-        - Or explicitly exit
-
-        Infinite loops or closed cycles without state change → ERROR (INFINITE_LOOP)
-
-        ---
-
-        ### 9.TERMINAL VALIDATION
-
-        For every possible path:
-        Verify:
-        - If intent requires output (file, email, API call), that output happens
-        - No path silently ends without fulfilling intent
-
-        Example:
-        If user requested:
-        "Create files OR send emails"
-        Then:
-        Every path must do one of those.
-
-        If any path does nothing → INTENT_MISMATCH
-
-        ---
-
-        # ERROR FORMAT
-
-        You must return an error if ANY failure exists.
-
-        Each error must be:
-
+        Return JSON(example):
         {
-        "error_code": "MISSING_FIELD | INVALID_TYPE | BROKEN_REFERENCE | WRONG_SOURCE | SCHEMA_VIOLATION | INTENT_MISMATCH",
-        "node": "node name",
-        "field": "field or expression",
-        "description": "what is wrong",
-        "suggested_improvement": "exactly what must be fixed"
+        "nodes": [
+            {
+            "node": "Google Sheets",
+            "outputs": [
+                { "path": "json.email", "type": "string" },
+                { "path": "json.id", "type": "number" }
+            ]
+            }
+        ]
         }
+        USER;
 
-        ---
-
-        # SCORING
-
-        Score is NOT subjective.
-
-        Start at 1.0  
-        Subtract:
-        -0.3 per critical data error  
-        -0.2 per broken reference  
-        -0.2 per schema violation  
-        -0.3 if intent broken  
-
-        Minimum 0.0
-
-        ---
-
-        # OUTPUT (STRICT)
-
-        Return ONLY valid JSON:
-
-        {
-        "score": <number>,
-        "workflow": <original workflow>,
-        "errors": [ ... ]
-        }
-
-        If ANY error exists:
-        score MUST be < 1.0
-
-        No markdown.  
-        No commentary.  
-        No explanations.
-
-        PROMPT;
+        return self::returnFormat($userPrompt , $systemPrompt);
     }
 
-    public static function getRepairWorkflowDataFlowLogic(string $badJson, string $errorsJson, string $totalPointsJson){
-        return <<<PROMPT
-        You are an N8N DATA FLOW REPAIR ENGINE.
+    public static function getReferenceResolverPrompt($workflow , $dataGraph){
+        $systemPrompt = <<<SYSTEM
+        You are a reference resolution engine.
+        You verify that all expressions reference real upstream fields.
+        SYSTEM;
+        $userPrompt = <<<USER
+        Workflow:
+        $workflow
 
-        Your ONLY task is to fix data-flow, parameter, and schema errors in an existing n8n workflow.
+        Data graph:
+        $dataGraph
 
-        You are NOT allowed to:
-        - Change the user intent
-        - Redesign the workflow
-        - Add new nodes
-        - Remove nodes
-        - Change control flow
-        - Change node types
-        - Invent schemas
-        - Add new credentials
+        Return JSON:
+        {
+        "references": [
+            {
+            "node": "Gmail",
+            "expression": "{{\$json.email}}",
+            "valid": true,
+            "reason": null
+            }
+        ]
+        }
+        USER;
 
-        You may ONLY:
-        - Fix broken expressions
-        - Fix missing or wrong fields
-        - Correct invalid paths
-        - Add required parameters that exist in the schema
-        - Fix wrong field types (binary vs json)
-        - Move data into correct fields
-        - Fix broken references between already-connected nodes
+        return self::returnFormat($userPrompt , $systemPrompt);
+    }
 
-        You are repairing a compiler error, not optimizing.
+    public static function getSchemaValidatorPrompt($workflow , $dataGraph , $nodeSchemas){
+        $systemPrompt = <<<SYSTEM
+        You are a schema enforcement engine.
+        You verify required fields, types, enums, and binary/json correctness.
+        SYSTEM;
 
-        --------------------------------
-        WORKFLOW (BROKEN)
-        --------------------------------
-        $badJson
+        $userPrompt = <<<USER
+        Workflow:
+        $workflow
 
-        --------------------------------
-        ERRORS (AUTHORITATIVE)
-        --------------------------------
-        $errorsJson
+        Node schemas:
+        $nodeSchemas
 
-        --------------------------------
-        ALLOWED NODE SCHEMAS
-        --------------------------------
-        $totalPointsJson
+        Data graph:
+        $dataGraph
 
-        --------------------------------
-        STRICT RULES
-        --------------------------------
+        Return JSON:
+        {
+        "schema_errors": [
+            {
+            "node": "Gmail",
+            "field": "toEmail",
+            "error": "MISSING_FIELD"
+            }
+        ]
+        }
+        USER;
+        
+        return self::returnFormat($userPrompt , $systemPrompt);
+    }
 
-        1. You must fix ONLY the errors provided.
-        2. You must NOT fix anything that is not explicitly listed.
-        3. Every error must be resolved in the output.
-        4. If you cannot fix an error because the workflow is structurally impossible, return the original workflow unchanged.
-        5. You must preserve:
-        - Node names
-        - Node IDs
-        - Connections
-        - Trigger logic
-        - Control flow
+    public static function getExecutionGraphBuilderPrompt($workflow){
+        $systemPrompt = <<<SYSTEM
+        You are an n8n execution graph analyzer.
+        You enumerate all execution paths through the workflow.
+        SYSTEM;
 
-        6. If a field is missing:
-        - You must fill it using upstream data if available
-        - Otherwise use a placeholder like: "REQUIRED_USER_VALUE"
+        $userPrompt = <<<USER
+        Workflow:
+        $workflow
 
-        7. If a reference is broken:
-        - You must repoint it to a valid upstream field
-        - You must not create fake data
+        Return JSON(example):
+        {
+        "paths": [
+            ["Trigger", "IF", "Gmail"],
+            ["Trigger", "IF", "Slack"]
+        ]
+        }
+        USER;
 
-        8. If binary/json mismatches exist:
-        - You must correct the field type without changing the node
+        return self::returnFormat($userPrompt, $systemPrompt);
+    }
 
-        --------------------------------
-        WHAT YOU MUST PRODUCE
-        --------------------------------
+    public static function getBranchAndLoopSafetyPrompt($paths){
+        $systemPrompt = <<<SYSTEM
+        You are a control-flow verifier.
+        You detect dead branches, data loss, and infinite loops.
+        SYSTEM;
+
+        $userPrompt = <<<USER
+        Execution paths:
+        $paths
+
+        Return JSON(example):
+        {
+        "issues": [
+            {
+            "type": "DATA_LOSS",
+            "path": ["Trigger", "IF", "False"]
+            }
+        ]
+        }
+        USER;
+
+        return self::returnFormat($userPrompt , $systemPrompt);
+    }
+
+    public static function getIntentValidatorPrompt($question , $paths , $dataGraph){
+        $systemPrompt = <<<SYSTEM
+        You are an intent compliance engine.
+        You verify that data flows satisfy the user's request.
+        SYSTEM;
+
+        $userPrompt = <<<USER
+        User intent:
+        $question
+
+        Execution paths:
+        $paths
+
+        Data graph:
+        $dataGraph
+
+        Return JSON(example):
+        {
+        "intent_errors": [
+            {
+            "path": ["Trigger","Google Sheets","End"],
+            "error": "No file created"
+            }
+        ]
+        }
+        USER;
+
+        return self::returnFormat($userPrompt , $systemPrompt);
+    }
+
+    public static function getErrorAggragatorAndScorerPrompt($referenceResults , $schemaErrors , $controlFlowIssues , $intentErrors){
+        $systemPrompt = <<<SYSTEM
+        You are a compiler diagnostics engine.
+        You merge errors and compute a score.
+        SYSTEM;
+
+        $userPrompt = <<<USER
+        Reference results:
+        $referenceResults
+
+        Schema errors:
+        $schemaErrors
+
+        Flow issues:
+        $controlFlowIssues
+
+        Intent errors:
+        $intentErrors
+
+        Return JSON:
+        {
+        "score": 0.6,
+        "errors": [
+            {
+            "error_code": "BROKEN_REFERENCE",
+            "node": "Gmail",
+            "field": "toEmail",
+            "description": "...",
+            "suggested_fix": "Use {{\$node['Sheet'].json.email}}"
+            }
+        ]
+        }
+        USER;
+
+        return self::returnFormat($userPrompt , $systemPrompt);
+    }
+
+    public static function getRepairPlannerPrompt($question , $errors , $nodeSchemas){
+        $systemPrompt = <<<SYSTEM
+        You are a data-flow repair planner.
+        You do not modify workflows.
+        You only decide what must be changed.
+        SYSTEM;
+
+        $userPrompt = <<<USER
+        User intent:
+        $question
+
+        Errors:
+        $errors
+
+        Node schemas:
+        $nodeSchemas
+
+        Return JSON:
+        {
+        "patch_plan": [
+            {
+            "node": "Gmail",
+            "field": "toEmail",
+            "new_value": "{{\$node['Google Sheets'].json.email}}"
+            }
+        ]
+        }
+        USER;
+
+        return self::returnFormat($userPrompt , $systemPrompt);
+    }
+    
+    public static function getPatchApplierPrompt($workflow , $patchPlan){
+        $systemPrompt = <<<SYSTEM
+        You are an n8n patch applier.
+        You apply exact edits without altering structure.
+        SYSTEM;
+
+        $userPrompt = <<<USER
+        Workflow:
+        $workflow
+
+        Patch plan:
+        $patchPlan
 
         Return ONLY the corrected workflow JSON.
+        USER;
 
-        Do NOT:
-        - Add commentary
-        - Add markdown
-        - Explain anything
-        - Return errors
-        - Return scores
-
-        The output MUST be valid n8n workflow JSON.
-
-        Your goal is to make the workflow pass data-flow validation with score = 1.0.
-
-        PROMPT;
+        return self::returnFormat($userPrompt , $systemPrompt);
     }
 
+
+    /** WORKFLOW STORING PROMPT */
     public static function getWorkflowMetadataPrompt(string $workflowJson, string $userQuestion): string{
         return <<<PROMPT
         You are an expert N8N workflow analyst and summarizer.

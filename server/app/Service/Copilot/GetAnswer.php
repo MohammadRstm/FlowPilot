@@ -39,10 +39,10 @@ class GetAnswer{
         $workflow = LLMService::generateAnswer($question, $finalPoints);// optimized
 
         // analyze output workflow with user's intent 
-        $validateWorkflowService = new ValidateFlowLogicService();
+        $validateWorkflowService = new ValidateFlowLogicService();// optimized -> requires prompt sharpening
         $workflow = $validateWorkflowService->execute($workflow , $question , $finalPoints);
-        // we are here now
-        $validateWorkflowDataInjection = new ValidateFlowDataInjection();
+
+        $validateWorkflowDataInjection = new ValidateFlowDataInjection();// we are here now
         $workflow = $validateWorkflowDataInjection->execute($workflow , $question , $finalPoints);
 
         return $workflow;

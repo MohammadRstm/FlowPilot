@@ -10,12 +10,17 @@ use Laravel\Prompts\Prompt;
 
 class LLMService{
 
+    /** USER QUESTION ANALYZER */
     private static function callOpenAI($prompt){
+        if(!$prompt || !$prompt["system"] || !$prompt["user"]) throw new Exception("Invalid prompt received");
+
+        $model = env("OPENAI_MODEL");
+
         /** @var Response $response */
         $response = Http::withToken(env("OPENAI_API_KEY"))
                 ->timeout(90)
                 ->post("https://api.openai.com/v1/chat/completions", [
-                    "model" => "gpt-4.1-mini",
+                    "model" => $model,
                     "temperature" => 0,
                     "messages" => [
                         ["role" => "system", "content" => $prompt["system"]],
@@ -25,12 +30,26 @@ class LLMService{
             
         $results = trim($response->json("choices.0.message.content"));
         $decoded = json_decode($results , true);
-        if(!is_array($decoded)){
-            Log::error("OPENAI FAILED TO RETURN VALID JSON");
-            throw new Exception("OPENAI FAILED TO RETURN VALID JSON");
+
+        if (json_last_error() === JSON_ERROR_NONE && $decoded !== null){
+            return $decoded;
         }
 
-        return $decoded;
+        if(preg_match('/\{.*\}|\[.*\]/s', $results, $m)){// AI may have included some markdown or explanation
+            $candidate = $m[0];
+            $decoded2 = json_decode($candidate, true);
+            if (json_last_error() === JSON_ERROR_NONE && $decoded2 !== null) {
+                Log::warning('LLMService: extracted JSON substring from model output');
+                return $decoded2;
+            }
+        }
+
+        Log::error('LLMService: OpenAI returned non-JSON response', [
+            'model' => $model,
+            'raw' => substr($results, 0, 10000), 
+        ]);
+
+        throw new Exception("LLMService: non-JSON response from model (logged raw content).");
     }
 
     public static function intentAnalyzer(string $question){
@@ -40,11 +59,12 @@ class LLMService{
     }
 
     public static function nodeAnalyzer(string $question ,string $intent){
-        $prompt = Prompts::getAnalysisNodeExtractionPrompt($question , $intent);
+        $prompt = Prompts::getAnalysisNodeExtractionPrompt($intent , $question);
 
         return self::callOpenAI($prompt);
     }
-    
+
+    /** WORKFLOW GENERATION (CORE) */
     public static function workflowSchemaValidator(array $intentData , array $nodeData){
         $prompt = Prompts::getAnalysisValidationAndPruningPrompt($intentData["trigger"] , json_encode($nodeData["nodes"]));
 
@@ -69,7 +89,7 @@ class LLMService{
             $plan = self::callOpenAI($planningPrompt);
             $validation = PlanValidator::validate($plan, $allowedNodes);
 
-            if ($validation["ok"]) {
+            if($validation["ok"]){
                 break;
             }
 
@@ -147,6 +167,7 @@ class LLMService{
         return $out;
     }
 
+    /** WORKFLOW LOGIC VALIDATOR/JUDGER */
     public static function judgeResults(array $workflow, string $question){
         // functionalities
         $reqPrompt = Prompts::getWorkflowFunctionalitiesPrompt($question);
@@ -197,56 +218,88 @@ class LLMService{
         $patchPrompt = Prompts::getApplyPatchPrompt($question , $badJson , $fixingPlan , $missingRequirements);
         return self::callOpenAI($patchPrompt);
     }
-    
+
+    /** WORKFLOW DATA INJECTION/VALIDATION */
     public static function validateDataFlow($workflow , $question , $totalPoints){
-        $prompt = Prompts::getCompleteDataFlowValidationPrompt($workflow , $question , $totalPoints);
+        // create data graph
+        $dataGraph = self::callOpenAI(
+                Prompts::getDataGraphBuilderPrompt(
+                    json_encode($workflow, JSON_UNESCAPED_SLASHES),
+                    json_encode($totalPoints, JSON_UNESCAPED_SLASHES)
+                )
+            );
 
-        /** @var Response response */
-        $response = Http::withToken(env('OPENAI_API_KEY'))
-            ->post("https://api.openai.com/v1/chat/completions", [
-                "model" => "gpt-4.1-mini",
-                "temperature" => 0,
-                "messages" => [
-                    ["role"=>"system","content"=>"YOU ARE AN EXPERT N8N DATA FLOW VALIDATOR.YOUR MAIN PROITRITY IS TO MAKE SURE DATA FLOW IN THE GIVEN N8N WORKFLOW IS CORRECT AND ADHERS TO THE USER'S INTENT."],
-                    ["role"=>"user","content"=>$prompt]
-                ]
-            ]);
+        // resolve references
+        $references = self::callOpenAI(
+            Prompts::getReferenceResolverPrompt(
+                json_encode($workflow, JSON_UNESCAPED_SLASHES),
+                json_encode($dataGraph, JSON_UNESCAPED_SLASHES)
+            )
+        );
 
-        if(!$response->ok()){
-            throw new \RuntimeException("Failed to get data flow validatoin openAI response");
-        }
+        // validate schema
+        $schemaErrors = self::callOpenAI(
+            Prompts::getSchemaValidatorPrompt(
+                json_encode($workflow, JSON_UNESCAPED_SLASHES),
+                json_encode($dataGraph, JSON_UNESCAPED_SLASHES),
+                json_encode($totalPoints, JSON_UNESCAPED_SLASHES)
+            )
+        );
 
-        $content = $response->json("choices.0.message.content");
-        $decoded = json_decode($content, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \RuntimeException("Failed to decode data flow analysis response: " . json_last_error_msg());
-        }
-        return $decoded;   
+        // build execution graph
+        $paths = self::callOpenAI(
+            Prompts::getExecutionGraphBuilderPrompt(
+                json_encode($workflow, JSON_UNESCAPED_SLASHES)
+            )
+        );
+
+        //  branch & loop safety
+        $controlFlowIssues = self::callOpenAI(
+            Prompts::getBranchAndLoopSafetyPrompt(
+                json_encode($paths, JSON_UNESCAPED_SLASHES)
+            )
+        );
+
+        // intent validator
+        $intentErrors = self::callOpenAI(
+            Prompts::getIntentValidatorPrompt(
+                $question,
+                json_encode($paths, JSON_UNESCAPED_SLASHES),
+                json_encode($dataGraph, JSON_UNESCAPED_SLASHES)
+            )
+        );
+
+        // aggregate errors & score
+        return self::callOpenAI(
+            Prompts::getErrorAggragatorAndScorerPrompt(
+                json_encode($references, JSON_UNESCAPED_SLASHES),
+                json_encode($schemaErrors, JSON_UNESCAPED_SLASHES),
+                json_encode($controlFlowIssues, JSON_UNESCAPED_SLASHES),
+                json_encode($intentErrors, JSON_UNESCAPED_SLASHES)
+            )
+        );
     }
 
+    public static function repairWorkflowDataFlow(string $question , string $workflow , array $errors , array $totalPoints){
+        // repair planner
+        $patchPlan = self::callOpenAI(
+            Prompts::getRepairPlannerPrompt(
+                $question,
+                json_encode($errors, JSON_UNESCAPED_SLASHES),
+                json_encode($totalPoints, JSON_UNESCAPED_SLASHES)
+            )
+        );
 
-
-
-
-    public static function repairWorkflowDataFlow(string $badJson , array $errors , array $totalPoints){
-        $prompt = Prompts::getRepairWorkflowDataFlowLogic($badJson, json_encode($errors) , json_encode($totalPoints));
-
-        /** @var Response response */
-        $response = Http::withToken(env("OPENAI_API_KEY"))
-            ->post("https://api.openai.com/v1/chat/completions", [
-                "model" => "gpt-4.1-mini",
-                "temperature" => 0,
-                "messages" => [
-                    ["role"=>"system","content"=>"You are an n8n workflow data flow engine"],
-                    ["role"=>"user","content"=>$prompt]
-                ]
-            ]);
-        
-        $repairedFlow = $response->json("choices.0.message.content");
-        
-        return $repairedFlow;
+        // patch applier
+        return self::callOpenAI(
+            Prompts::getPatchApplierPrompt(
+                json_encode($workflow, JSON_UNESCAPED_SLASHES),
+                json_encode($patchPlan, JSON_UNESCAPED_SLASHES)
+            )
+        );
     }
 
+    /** WORKFLOW SAVOR */
     public static function generateWorkflowQdrantPayload(string $json , string $question){
         $prompt = Prompts::getWorkflowMetadataPrompt($json , $question);
 
@@ -272,6 +325,14 @@ class LLMService{
             throw new \RuntimeException('Failed to decode workflow metadata JSON: ' . json_last_error_msg());
         }
         return $metaDataDecoded;
+    }
+
+    // helper
+    public static function normalizeNodeName(string $name): string {
+        $s = strtolower($name);
+        $s = preg_replace('/[^a-z0-9 ]+/', ' ', $s);
+        $s = preg_replace('/\s+/', ' ', $s);
+        return trim($s);
     }
 
 }

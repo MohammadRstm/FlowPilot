@@ -43,7 +43,7 @@ class RankingFlows{
 
             $nodeMatchScore = self::nodeMatchScore($analysis["nodes"]  , $p["nodes_used"] ?? []);
             $intentScore = self::intentScore($analysis["intent"]  , $p["nodes_used"] ?? []);
-            $complexityScore = self::complexityScore($analysis["min_nodes"]  , $p["nodes_used"] ?? []);
+            $complexityScore = self::complexityScore($analysis["min_nodes"]  , count($p["nodes_used"] ?? []));
 
             $score = 
                 ($hit["score"] * 0.3) +       
@@ -140,7 +140,7 @@ class RankingFlows{
         return count($match) / count($wanted);
     }
 
-
+    // needs modification
     private static function intentScore(string $intent, array $nodes): float {
         $hasTrigger = collect($nodes)->contains(fn($n) => str_contains(strtolower($n), "trigger"));
         return match ($intent) {

@@ -4,7 +4,7 @@ namespace App\Service\Copilot;
 
 class PlanValidator{
 
-   public static function validate(array $plan, array $allowedNodes): array {
+    public static function validate(array $plan, array $allowedNodes): array {
         $errors = [];
         $nodes  = $plan["nodes"] ?? [];
 
@@ -74,11 +74,11 @@ class PlanValidator{
         ];
     }
 
-    private static function hasCycle(array $nodes): bool {
+    public static function hasCycle(array $nodes): bool {
         $graph = [];
 
         foreach ($nodes as $n) {
-            $from = $n["from"];
+            $from = $n["from"] ?? null;
             if (!$from) continue;
 
             $src = explode(".", $from)[0];
@@ -112,9 +112,5 @@ class PlanValidator{
 
         unset($stack[$node]);
         return false;
-    }
-
-
-
-    
+    }    
 }
