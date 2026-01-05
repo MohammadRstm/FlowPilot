@@ -74,40 +74,7 @@ class LLMService{
         $context = self::buildContext($topFlows);
         $planningPrompt = Prompts::getWorkflowBuildingPlanPrompt($question, $context);
 
-        $allowedNodes = self::extractAllowedNodes($topFlows);
-
-        $maxRetries = 2;
-        $attempt = 0;
-
-        $plan = null;
-        $validation = null;
-
-        do {
-            $attempt++;
-
-            $plan = self::callOpenAI($planningPrompt);
-            $validation = PlanValidator::validate($plan, $allowedNodes);
-
-            if($validation["ok"]){
-                break;
-            }
-
-            Log::warning("Plan attempt {$attempt} failed", $validation["errors"]);
-
-            // Prepare repair prompt for next round
-            $planningPrompt = Prompts::getPlanRepairPrompt(
-                $question,
-                $context,
-                $plan,
-                $validation["errors"]
-            );
-
-        } while ($attempt < $maxRetries);
-
-        if (!$validation["ok"]) {
-            Log::error("Plan failed after retries", $validation["errors"]);
-            throw new Exception("Invalid plan after retries: " . implode(", ", $validation["errors"]));
-        }
+        $plan = self::callOpenAI($planningPrompt);
 
         // generate workflow
         $compilerPrompt = Prompts::getWorkflowBuildingPrompt($question , $plan , $context);
@@ -126,7 +93,7 @@ class LLMService{
             }
 
             foreach (($flow["nodes_used"] ?? []) as $n) {
-                $set[strtolower($n)] = true;
+                $set[self::normalizeNodeName($n)] = true;
             }
         }
 

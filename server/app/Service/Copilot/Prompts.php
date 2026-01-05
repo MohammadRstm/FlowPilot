@@ -186,7 +186,7 @@ class Prompts{
         return self::returnFormat($userPrompt , $systemPrompt);
     }
 
-    public static function getPlanRepairPrompt($question , $context , $badPlan , $errors){
+    public static function getPlanRepairPrompt($question , $context , $badPlan){
         $systemPrompt = <<<SYSTEM
         You are an expert n8n workflow planner and validator. 
         You receive a workflow plan and a list of validation errors.
@@ -213,9 +213,6 @@ class Prompts{
         BAD PLAN:
         $badPlan
 
-        VALIDATION ERRORS:
-        $errors
-
         user's goal:
         $question
 
@@ -229,6 +226,9 @@ class Prompts{
     }
 
     public static function getWorkflowBuildingPrompt($question , $plan , $context){
+        $plan = json_encode($plan , JSON_PRETTY_PRINT);
+        $context = json_encode($context , JSON_PRETTY_PRINT);
+        
         $systemPrompt = <<<SYSTEM
         You are an n8n workflow compiler.
 
