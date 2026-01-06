@@ -5,6 +5,8 @@ import dotenv from "dotenv"
 import { ChatOpenAI } from "langchain/chat_models/openai"
 import { DynamicTool } from "langchain/tools"
 import { searchQdrant } from "./tools/qdrant.js"
+import { getNodeSchema } from "./tools/schema.js"
+
 
 // frist agent
 import { initializeAgentExecutorWithOptions } from "langchain/agents"
@@ -21,6 +23,7 @@ const llm = new ChatOpenAI({
     temperature: 0
 })
 
+// QDRANT TOOL
 const qdrantTool = new DynamicTool({
     name: "search_qdrant",
     description: "Searches workflow, node and schema examples from Qdrant",
@@ -29,12 +32,22 @@ const qdrantTool = new DynamicTool({
     }
 })
 
+// SCHEMA TOOL
+const schemaTool = new DynamicTool({
+    name: "get_node_schema",
+    description: "Returns the schema of an n8n node including inputs, outputs, fields and credentials",
+    func: async (node) => {
+        return JSON.stringify(await getNodeSchema(node))
+    }
+})
+
+
 
 app.post("/build-workflow", async (req, res) => {
     const { question, user } = req.body
 
     const executor = await initializeAgentExecutorWithOptions(
-        [qdrantTool],
+        [qdrantTool , schemaTool],
         llm,
         {
             agentType: "openai-functions",
