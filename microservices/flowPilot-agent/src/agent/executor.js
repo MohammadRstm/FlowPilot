@@ -1,19 +1,26 @@
-import { AgentExecutor , createToolCallingAgent  } from "@langchain/classic/agents"
-import { llm } from "../config/llm.js"
+import { ChatOpenAI } from "@langchain/openai"
+import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents"
+import { AGENT_SYSTEM_PROMPT } from "./system.prompt.js"
+import { createTools } from "./tools.js"
 
-export async function createExecutor(tools) {
+export async function createAgentExecutor() {
+  const llm = new ChatOpenAI({
+    apiKey: process.env.OPENAI_KEY,
+    temperature: 0
+  })
 
-  const agent = createToolCallingAgent({
+  const tools = createTools()
+
+  const agent = await createOpenAIFunctionsAgent({
     llm,
     tools,
-    verbose: true
+    systemMessage: AGENT_SYSTEM_PROMPT
   })
 
-  const executor = new AgentExecutor({
+  return new AgentExecutor({
     agent,
     tools,
-    verbose: true
+    verbose: true,
+    maxIterations: 10 // safety net
   })
-
-  return executor
 }
