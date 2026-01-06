@@ -7,6 +7,9 @@ import { DynamicTool } from "langchain/tools"
 import { searchQdrant } from "./tools/qdrant.js"
 import { getNodeSchema } from "./tools/schema.js"
 import { generateWorkflow } from "./tools/generate.js"
+import { validateWorkflow } from "./tools/validate.js"
+import { repairWorkflow } from "./tools/repair.js"
+
 
 
 // frist agent
@@ -51,14 +54,30 @@ const generateTool = new DynamicTool({
     }
 })
 
+// VALIDATION TOOL
+const validateTool = new DynamicTool({
+    name: "validate_workflow",
+    description: "Validates an n8n workflow and returns errors or ok",
+    func: async (workflow) => {
+        return JSON.stringify(await validateWorkflow(workflow))
+    }
+})
 
-
+// REPAIR TOOL
+const repairTool = new DynamicTool({
+    name: "repair_workflow",
+    description: "Repairs a broken workflow based on validation error",
+    func: async (input) => {
+        const { workflow, error } = JSON.parse(input)
+        return JSON.stringify(await repairWorkflow(workflow, error))
+    }
+})
 
 app.post("/build-workflow", async (req, res) => {
     const { question, user } = req.body
 
     const executor = await initializeAgentExecutorWithOptions(
-        [qdrantTool , schemaTool ,  generateTool],
+        [qdrantTool , schemaTool ,  generateTool , validateTool , repairTool],
         llm,
         {
             agentType: "openai-functions",
@@ -67,7 +86,14 @@ app.post("/build-workflow", async (req, res) => {
     )
 
     const result = await executor.run(
-        `Find relevant n8n nodes and workflows for: ${question}`
+        `Build an n8n workflow for: ${question}
+        You must:
+        1) Search Qdrant for relevant nodes
+        2) Get schemas
+        3) Generate workflow
+        4) Validate it
+        5) If validation fails, repair and revalidate
+        Return only the final valid workflow JSON`
     )
 
     res.json({ result })
