@@ -1,5 +1,15 @@
-import { repairWorkflow } from "../tools/repair";
+import { ChatOpenAI } from "@langchain/openai"
+import { buildRepairPrompt } from "../prompts/repair.prompt.js"
 
-export async function repairWorkflow(workflow , errors){
-    return repairWorkflow(workflow , errors);
-} 
+const llm = new ChatOpenAI({
+  apiKey: process.env.OPENAI_KEY,
+  temperature: 0
+})
+
+export async function repairWorkflowService(workflow, error, analysis) {
+  const prompt = buildRepairPrompt({ workflow, error, analysis })
+
+  const res = await llm.invoke(prompt)
+
+  return JSON.parse(res.content)
+}

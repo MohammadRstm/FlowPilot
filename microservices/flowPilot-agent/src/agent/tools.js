@@ -3,8 +3,8 @@ import { DynamicTool } from "@langchain/core/tools"
 
 import { searchQdrantService } from "../services/qdrant.service.js"
 import { getNodeSchemaService } from "../services/schema.service.js"
-import { generateWorkflowService } from "../services/generate.service.js"
-import { validateWorkflowService } from "../services/validate.service.js"
+import { generateWorkflowService } from "../services/generate/generate.service.js"
+import { validateWorkflowService } from "../services/validators/validate.service.js"
 import { repairWorkflowService } from "../services/repair.service.js"
 
 export function createTools() {
@@ -17,17 +17,19 @@ export function createTools() {
     }),
 
     new DynamicTool({
-      name: "get_node_schema",
-      description: "Return the schema of an n8n node",
-      func: async (node) =>
+    name: "get_node_schema",
+    description:
+        "Return the schema of an n8n node including inputs, outputs, fields and credentials",
+    func: async (node) =>
         JSON.stringify(await getNodeSchemaService(node))
     }),
-
+    
     new DynamicTool({
-      name: "generate_workflow",
-      description: "Generate an n8n workflow JSON from context",
-      func: async (context) =>
-        JSON.stringify(await generateWorkflowService(context))
+    name: "generate_workflow",
+    description:
+        "Generate a valid n8n workflow JSON using intent, examples, and schemas",
+    func: async (context) =>
+        JSON.stringify(await generateWorkflowService(JSON.parse(context)))
     }),
 
     new DynamicTool({
