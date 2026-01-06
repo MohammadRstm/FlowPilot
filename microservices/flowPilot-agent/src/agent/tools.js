@@ -1,5 +1,6 @@
 import { DynamicTool } from "@langchain/core/tools"
 
+import
 import { searchQdrantService } from "../services/qdrant.service.js"
 import { getNodeSchemaService } from "../services/schema.service.js"
 import { generateWorkflowService } from "../services/generate.service.js"
@@ -8,11 +9,19 @@ import { repairWorkflowService } from "../services/repair.service.js"
 
 export function createTools() {
   return [
+
+    new DynamicTool({
+    name: "analyze_question",
+    description: "Analyze user's question into intent, trigger, nodes, and embedding query",
+    func: async (question) =>
+        JSON.stringify(await analyzeQuestionService(question))
+    }),
+
     new DynamicTool({
       name: "search_qdrant",
       description: "Search workflow, node and schema examples from Qdrant",
       func: async (query) =>
-        JSON.stringify(await searchQdrantService(query))
+       JSON.stringify(await searchQdrantService(query))
     }),
 
     new DynamicTool({
