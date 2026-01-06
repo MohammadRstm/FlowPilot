@@ -1,5 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai"
-import { buildRepairPrompt } from "../prompts/repair.prompt.js"
+import { buildRepairPrompt } from "../prompts/repair.prompts.js"
+import { log } from "../utils/log.js"
 
 const llm = new ChatOpenAI({
   apiKey: process.env.OPENAI_KEY,
@@ -11,5 +12,8 @@ export async function repairWorkflowService(workflow, error, analysis) {
 
   const res = await llm.invoke(prompt)
 
-  return JSON.parse(res.content)
+  const parsed = JSON.parse(res.content)
+  await log("REPAIR STAGE:", parsed)
+
+  return parsed
 }

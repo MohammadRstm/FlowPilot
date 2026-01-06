@@ -1,5 +1,6 @@
 import fetch from "node-fetch"
 import { normalizeNodeName } from "../utils/normalizeNode.js"
+import { log } from "../utils/log.js"
 
 const QDRANT_URL = process.env.QDRANT_CLUSTER_ENDPOINT
 const QDRANT_KEY = process.env.QDRANT_API_KEY
@@ -41,6 +42,8 @@ export async function getNodeSchemaService(node) {
   if (!data.points?.length) {
     return { error: `No schema found for node: ${node}` }
   }
+
+  await log("SCHEMA STAGE:", data.points.map(p => p.payload))
 
   return data.points.map(p => p.payload)
 }

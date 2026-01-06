@@ -11,3 +11,8 @@ export const env = {
 if (!env.OPENAI_KEY) {
   throw new Error("Missing OPENAI_KEY in environment")
 }
+
+// Embedding model to use for Qdrant/vector operations. Common values:
+// - text-embedding-3-small (1536 dim)
+// - text-embedding-3-large (3072 dim)
+export const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL || "text-embedding-3-large"

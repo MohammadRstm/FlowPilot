@@ -1,6 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai"
 import { AnalysisSchema } from "./analysis.schema.js"
 import { buildAnalysisPrompt } from "./analysis.prompt.js"
+import { log } from "../../utils/log.js"
 
 const llm = new ChatOpenAI({
   apiKey: process.env.OPENAI_KEY,
@@ -23,6 +24,8 @@ export async function analyzeQuestionService(question) {
   }
 
   const validated = AnalysisSchema.parse(parsed)
+
+  await log("ANALYSIS STAGE:", validated)
 
   return validated
 }

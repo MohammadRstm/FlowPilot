@@ -5,21 +5,32 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ConfirmWorkflowRequest;
 use App\Http\Requests\CopilotPayload;
+use App\Service\MicroserviceClient\FlowPilotAgent;
 use App\Service\UserService;
 use Exception;
 
 class UserController extends Controller{
     public function ask(CopilotPayload $req){
         try{
-            $answer = UserService::getCopilotAnswer($req["question"]);
-            if (is_string($answer)) {
-                $decoded = json_decode($answer, true);
-                $response = $decoded === null ? $answer : $decoded;
-            } else {
-                $response = $answer;
-            }
+            // $answer = UserService::getCopilotAnswer($req["question"]);
+            // if (is_string($answer)) {
+            //     $decoded = json_decode($answer, true);
+            //     $response = $decoded === null ? $answer : $decoded;
+            // } else {
+            //     $response = $answer;
+            // }
 
-            return $this->successResponse(["answer" => $response]);
+            // return $this->successResponse(["answer" => $response]);
+
+            // call micro service:
+             $response = FlowPilotAgent::buildWorkflow(
+                $req->input('question')
+            );
+
+            return $this->successResponse([
+                'answer' => $response['result'] ?? $response
+            ]);
+
         }catch(Exception $ex){
             return $this->errorResponse("Failed to ask copilot" , ["1" => $ex->getMessage()]);
         }
