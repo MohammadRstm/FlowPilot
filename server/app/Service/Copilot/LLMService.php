@@ -34,6 +34,8 @@ class LLMService{
             return $decoded;
         }
 
+        Log::error("RAW CONTENT :" ,  ["content" => $results]);
+
         if(preg_match('/\{.*\}|\[.*\]/s', $results, $m)){// AI may have included some markdown or explanation
             $candidate = $m[0];
             $decoded2 = json_decode($candidate, true);

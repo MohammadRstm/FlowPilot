@@ -228,7 +228,7 @@ class Prompts{
     public static function getWorkflowBuildingPrompt($question , $plan , $context){
         $plan = json_encode($plan , JSON_PRETTY_PRINT);
         $context = json_encode($context , JSON_PRETTY_PRINT);
-        
+
         $systemPrompt = <<<SYSTEM
         You are an n8n workflow compiler.
 
@@ -344,6 +344,8 @@ class Prompts{
             }
         ]
         }
+
+        VERY IMPORTANT: ONLY RETURN THE JSON SCHEMA SUPPLIED ABOVE (NO MARKDOWNS , NO EXPLANATION JUST JSON)
         USER;
 
         return self::returnFormat($userPrompt , $systemPrompt);
@@ -473,8 +475,8 @@ class Prompts{
 
     public static function getWorkflowFixingPlanPrompt($question, $missing , $totalPoints , $workflow){
         $missing = json_encode($missing , JSON_PRETTY_PRINT);
-
         $totalPoints = json_encode($totalPoints , JSON_PRETTY_PRINT);
+
         $systemPrompt = <<<SYSTEM
         You are an n8n solution architect.
         You map missing requirements to nodes, connections, and schema operations.
@@ -511,6 +513,8 @@ class Prompts{
 
     public static function getApplyPatchPrompt($question , $badJson, $patchPlan , $missingRequirements){
         $missingRequirements = json_encode($missingRequirements , JSON_PRETTY_PRINT);
+        $patchPlan = json_encode($patchPlan , JSON_PRETTY_PRINT);
+        
         $systemPrompt = <<<SYSTEM
         You are an n8n workflow patch engine.
         You apply structural diffs to workflow JSON.
