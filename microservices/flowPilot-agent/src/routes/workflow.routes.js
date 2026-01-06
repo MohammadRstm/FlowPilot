@@ -1,5 +1,6 @@
 import express from "express"
 import { createExecutor } from "../agent/executor.js"
+import { getExecutorPrompt } from "../prompts/executor.prompt.js"
 
 const router = express.Router()
 
@@ -13,17 +14,7 @@ router.post("/build-workflow", async (req, res) => {
 
     const executor = await createExecutor()
 
-    const prompt = `
-    Build an n8n workflow for: ${question}
-
-    You must:
-    1) Search Qdrant for relevant nodes
-    2) Get schemas
-    3) Generate workflow
-    4) Validate it
-    5) If validation fails, repair and revalidate
-
-    Return only the final valid workflow JSON.`
+    const prompt = getExecutorPrompt(question);
 
     const result = await executor.run(prompt)
 
