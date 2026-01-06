@@ -1,4 +1,4 @@
-import { DynamicTool } from "langchain/tools"
+import { DynamicTool } from "@langchain/core/tools"
 
 import { searchQdrantService } from "../services/qdrant.service.js"
 import { getNodeSchemaService } from "../services/schema.service.js"

@@ -1,4 +1,3 @@
-
 export function getExecutorPrompt(question){
     return `
     Build an n8n workflow for: ${question}

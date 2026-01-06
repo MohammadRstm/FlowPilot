@@ -1,14 +1,19 @@
-import { initializeAgentExecutorWithOptions } from "langchain/agents"
+import { AgentExecutor , createToolCallingAgent  } from "@langchain/classic/agents"
 import { llm } from "../config/llm.js"
-import { createTools } from "./tools.js"
 
-export async function createExecutor() {
-  return initializeAgentExecutorWithOptions(
-    createTools(),
+export async function createExecutor(tools) {
+
+  const agent = createToolCallingAgent({
     llm,
-    {
-      agentType: "openai-functions",
-      verbose: true
-    }
-  )
+    tools,
+    verbose: true
+  })
+
+  const executor = new AgentExecutor({
+    agent,
+    tools,
+    verbose: true
+  })
+
+  return executor
 }

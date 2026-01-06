@@ -1,6 +1,6 @@
-import fetch from "node-fetch"
+import { env } from "../config/env"
 
-const base_url = process.env.MAIN_SERVER_BASE_URL
+const base_url = env.BASE_URL
 
 export async function generateWorkflow(context) {
     const res = await fetch(`${base_url}/workflow/generate`, {

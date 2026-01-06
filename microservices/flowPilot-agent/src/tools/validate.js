@@ -1,7 +1,6 @@
 import fetch from "node-fetch"
 
-const base_url = process.env.MAIN_SERVER_BASE_URL
-
+const base_url = env.BASE_URL
 
 export async function validateWorkflow(workflow) {
     const res = await fetch(`${base_url}/workflow/validate`, {
