@@ -4,11 +4,11 @@ import dotenv from "dotenv"
 
 import { ChatOpenAI } from "langchain/chat_models/openai"
 import { DynamicTool } from "langchain/tools"
-import { searchQdrant } from "../tools/qdrant.js"
-import { getNodeSchema } from "../tools/schema.js"
-import { generateWorkflow } from "../tools/generate.js"
-import { validateWorkflow } from "../tools/validate.js"
-import { repairWorkflow } from "../tools/repair.js"
+import { searchQdrant } from "./tools/qdrant.js"
+import { getNodeSchema } from "./tools/schema.js"
+import { generateWorkflow } from "./tools/generate.js"
+import { validateWorkflow } from "./tools/validate.js"
+import { repairWorkflow } from "./tools/repair.js"
 
 // AI agent
 import { initializeAgentExecutorWithOptions } from "langchain/agents"
