@@ -4,17 +4,14 @@ import dotenv from "dotenv"
 
 import { ChatOpenAI } from "langchain/chat_models/openai"
 import { DynamicTool } from "langchain/tools"
-import { searchQdrant } from "./tools/qdrant.js"
-import { getNodeSchema } from "./tools/schema.js"
-import { generateWorkflow } from "./tools/generate.js"
-import { validateWorkflow } from "./tools/validate.js"
-import { repairWorkflow } from "./tools/repair.js"
+import { searchQdrant } from "../tools/qdrant.js"
+import { getNodeSchema } from "../tools/schema.js"
+import { generateWorkflow } from "../tools/generate.js"
+import { validateWorkflow } from "../tools/validate.js"
+import { repairWorkflow } from "../tools/repair.js"
 
-
-
-// frist agent
+// AI agent
 import { initializeAgentExecutorWithOptions } from "langchain/agents"
-
 
 dotenv.config()
 
@@ -73,6 +70,7 @@ const repairTool = new DynamicTool({
     }
 })
 
+// ENDPOINT
 app.post("/build-workflow", async (req, res) => {
     const { question, user } = req.body
 
@@ -99,6 +97,7 @@ app.post("/build-workflow", async (req, res) => {
     res.json({ result })
 })
 
+// LISTENER
 app.listen(3001, () => {
     console.log("FlowPilot LangChain Agent running on port 3001")
 })
