@@ -1,5 +1,6 @@
 import OpenAI from "openai"
 import { env } from "../config/env"
+import { analyzeQuestionService } from "./analysis/analyze.service"
 
 const openai = new OpenAI({
   apiKey: env.OPENAI_KEY
@@ -56,18 +57,19 @@ async function queryQdrant(collection, denseVector, sparseVector, limit = 50) {
   return data.result
 }
 
-export async function searchQdrantService(analysis) {
-  const workflowDense = await embedText(analysis.embedding_query)
-  const nodeDense = await embedText(buildNodeEmbeddingQuery(analysis))
+export async function searchQdrantService(question) {
+    const analysis = await analyzeQuestionService(question);
+    const workflowDense = await embedText(analysis.embedding_query)
+    const nodeDense = await embedText(buildNodeEmbeddingQuery(analysis))
 
-  const workflowSparse = await embedText(analysis.intent)
-  const nodeSparse = await embedText(
-    `${analysis.intent} ${(analysis.nodes || []).join(" ")} ${analysis.trigger || ""}`
-  )
+    const workflowSparse = await embedText(analysis.intent)
+    const nodeSparse = await embedText(
+        `${analysis.intent} ${(analysis.nodes || []).join(" ")} ${analysis.trigger || ""}`
+    )
 
-  const workflows = await queryQdrant("n8n_workflows", workflowDense, workflowSparse, 50)
-  const nodes = await queryQdrant("n8n_catalog", nodeDense, nodeSparse, 30)
-  const schemas = await queryQdrant("n8n_node_schemas", nodeDense, nodeSparse, 50)
+    const workflows = await queryQdrant("n8n_workflows", workflowDense, workflowSparse, 50)
+    const nodes = await queryQdrant("n8n_catalog", nodeDense, nodeSparse, 30)
+    const schemas = await queryQdrant("n8n_node_schemas", nodeDense, nodeSparse, 50)
 
-  return { workflows, nodes, schemas }
+    return { workflows, nodes, schemas }
 }
