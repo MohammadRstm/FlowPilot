@@ -1,7 +1,9 @@
 import { appendFile, mkdir } from "fs/promises"
-import { dirname } from "path"
+import { dirname, resolve } from "path"
+import { fileURLToPath } from "url"
 
-const LOG_PATH = new URL("../logs/log.log", import.meta.url).pathname
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const LOG_PATH = resolve(__dirname, "..", "logs", "log.log")
 
 export async function log(...parts) {
 	try {

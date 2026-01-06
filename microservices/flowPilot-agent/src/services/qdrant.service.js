@@ -2,6 +2,7 @@ import OpenAI from "openai"
 import { env, EMBEDDING_MODEL } from "../config/env.js"
 import { log } from "../utils/log.js"
 import { analyzeQuestionService } from "./analysis/analyze.service.js"
+import { rankResults } from "./ranking.service.js"
 
 const openai = new OpenAI({
   apiKey: env.OPENAI_KEY
@@ -74,12 +75,26 @@ export async function searchQdrantService(question) {
         `${analysis.intent} ${(analysis.nodes || []).join(" ")} ${analysis.trigger || ""}`
     )
 
-    const workflows = await queryQdrant("n8n_workflows", workflowDense, workflowSparse, 50)
-    const nodes = await queryQdrant("n8n_catalog", nodeDense, nodeSparse, 30)
-    const schemas = await queryQdrant("n8n_node_schemas", nodeDense, nodeSparse, 50)
+    const workflows = await queryQdrant("n8n_workflows", workflowDense, workflowSparse, 10)
+    let nodes = await queryQdrant("n8n_catalog", nodeDense, nodeSparse, 30)
+    const schemas = await queryQdrant("n8n_node_schemas", nodeDense, nodeSparse, 30)
 
-    await log("QDRANT STAGE:", { workflows, nodes, schemas })
+    try {
+      const counts = {
+        workflows: Array.isArray(workflows) ? workflows.length : 0,
+        nodes: Array.isArray(nodes) ? nodes.length : 0,
+        schemas: Array.isArray(schemas) ? schemas.length : 0
+      }
+      await log("QDRANT COUNTS:", counts)
+    } catch (e) {
+      await log("QDRANT COUNTS ERROR:", String(e))
+    }
+    nodes = nodes.map(n => {
+        const { docs, credentials, codex, ...rest } = n.payload || {};
+        return { ...rest };
+    });
 
+    const ranked = rankResults(analysis, { workflows, nodes, schemas });
 
-    return { workflows, nodes, schemas }
+    return ranked
 }

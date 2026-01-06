@@ -12,7 +12,7 @@ export async function getNodeSchemaService(node) {
     with_payload: true,
     limit: 50,
     filter: {
-      must: [
+      should: [
         {
           key: "node_normalized",
           match: { value: normalized }
@@ -39,11 +39,13 @@ export async function getNodeSchemaService(node) {
 
   const data = await res.json()
 
-  if (!data.points?.length) {
-    return { error: `No schema found for node: ${node}` }
-  }
+  const schemas = data.points?.length
+  ? data.points.map(p => p.payload)
+  : [{ node: normalized, fields: [], warning: "schema not found, using fallback" }];
+
 
   await log("SCHEMA STAGE:", data.points.map(p => p.payload))
 
-  return data.points.map(p => p.payload)
+  return schemas
+
 }

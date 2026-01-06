@@ -42,7 +42,7 @@ export async function createExecutor(tools) {
     agent: wrappedAgent,
     tools,
     verbose: true,
-    maxIterations: 2
+    maxIterations: 10
   })
 
   return executor

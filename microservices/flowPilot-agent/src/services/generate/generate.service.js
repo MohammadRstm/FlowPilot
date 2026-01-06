@@ -8,6 +8,8 @@ const llm = new ChatOpenAI({
 })
 
 export async function generateWorkflowService(context) {
+  await log("Entered Generation with this context : " , context);
+  
   const prompt = buildGeneratePrompt(context)
 
   const response = await llm.invoke(prompt)
