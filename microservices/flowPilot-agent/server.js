@@ -6,6 +6,7 @@ import { ChatOpenAI } from "langchain/chat_models/openai"
 import { DynamicTool } from "langchain/tools"
 import { searchQdrant } from "./tools/qdrant.js"
 import { getNodeSchema } from "./tools/schema.js"
+import { generateWorkflow } from "./tools/generate.js"
 
 
 // frist agent
@@ -41,13 +42,23 @@ const schemaTool = new DynamicTool({
     }
 })
 
+// GENERATION TOOL
+const generateTool = new DynamicTool({
+    name: "generate_workflow",
+    description: "Generates an n8n workflow JSON from context including nodes, schemas and intent",
+    func: async (context) => {
+        return JSON.stringify(await generateWorkflow(context))
+    }
+})
+
+
 
 
 app.post("/build-workflow", async (req, res) => {
     const { question, user } = req.body
 
     const executor = await initializeAgentExecutorWithOptions(
-        [qdrantTool , schemaTool],
+        [qdrantTool , schemaTool ,  generateTool],
         llm,
         {
             agentType: "openai-functions",
