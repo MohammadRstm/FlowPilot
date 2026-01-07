@@ -59,9 +59,9 @@ class Prompts{
         Hard rules:
         - Do NOT include trigger nodes
         - Do NOT include optional or optimization nodes
-        - Avoid logic nodes (If, Merge, Switch) unless conditions are explicitly required
         - Do NOT include duplicates
         - Do NOT include markdown
+        - Do NOT inferr imaginary nodes only real n8n nodes
 
         Confidence rules:
         - "explicit": user directly mentions the node
@@ -545,7 +545,6 @@ class Prompts{
         return self::returnFormat($userPrompt , $systemPrompt);
     }    
 
-
     /** WORKFLOW DATA REPAIR PROMPTS */
     public static function getDataGraphBuilderPrompt($workflow , $nodeSchemas){
         $systemPrompt = <<<SYSTEM
@@ -574,6 +573,9 @@ class Prompts{
             }
         ]
         }
+
+        YOU MUST RETURN EXACTLY THIS JSON OBJECT AND NOTHING ELSE.
+        NO MARKDOWN , NO EXPLANATION JUST JSON
         USER;
 
         return self::returnFormat($userPrompt , $systemPrompt);
@@ -602,6 +604,9 @@ class Prompts{
             }
         ]
         }
+
+        YOU MUST RETURN EXACTLY THIS JSON OBJECT AND NOTHING ELSE.
+        NO MARKDOWN , NO EXPLANATION JUST JSON
         USER;
 
         return self::returnFormat($userPrompt , $systemPrompt);
@@ -633,6 +638,9 @@ class Prompts{
             }
         ]
         }
+
+        YOU MUST RETURN EXACTLY THIS JSON OBJECT AND NOTHING ELSE.
+        NO MARKDOWN , NO EXPLANATION JUST JSON
         USER;
         
         return self::returnFormat($userPrompt , $systemPrompt);
@@ -655,6 +663,9 @@ class Prompts{
             ["Trigger", "IF", "Slack"]
         ]
         }
+
+        YOU MUST RETURN EXACTLY THIS JSON OBJECT AND NOTHING ELSE.
+        NO MARKDOWN , NO EXPLANATION JUST JSON
         USER;
 
         return self::returnFormat($userPrompt, $systemPrompt);
@@ -679,6 +690,9 @@ class Prompts{
             }
         ]
         }
+
+        YOU MUST RETURN EXACTLY THIS JSON OBJECT AND NOTHING ELSE.
+        NO MARKDOWN , NO EXPLANATION JUST JSON
         USER;
 
         return self::returnFormat($userPrompt , $systemPrompt);
@@ -709,6 +723,9 @@ class Prompts{
             }
         ]
         }
+
+        YOU MUST RETURN EXACTLY THIS JSON OBJECT AND NOTHING ELSE.
+        NO MARKDOWN , NO EXPLANATION JUST JSON
         USER;
 
         return self::returnFormat($userPrompt , $systemPrompt);
@@ -746,6 +763,9 @@ class Prompts{
             }
         ]
         }
+
+        YOU MUST RETURN EXACTLY THIS JSON OBJECT AND NOTHING ELSE.
+        NO MARKDOWN , NO EXPLANATION JUST JSON
         USER;
 
         return self::returnFormat($userPrompt , $systemPrompt);
@@ -778,6 +798,9 @@ class Prompts{
             }
         ]
         }
+
+        YOU MUST RETURN EXACTLY THIS JSON OBJECT AND NOTHING ELSE.
+        NO MARKDOWN , NO EXPLANATION JUST JSON
         USER;
 
         return self::returnFormat($userPrompt , $systemPrompt);
@@ -787,6 +810,11 @@ class Prompts{
         $systemPrompt = <<<SYSTEM
         You are an n8n patch applier.
         You apply exact edits without altering structure.
+
+        YOU MUST ONLY RETURN VALID JSON.
+        NO MARKDONW.
+        NO EXPLAINING.
+        JUST A WORKING N8N WORKFLOW JSON
         SYSTEM;
 
         $userPrompt = <<<USER
@@ -797,6 +825,64 @@ class Prompts{
         $patchPlan
 
         Return ONLY the corrected workflow JSON.
+        USER;
+
+        return self::returnFormat($userPrompt , $systemPrompt);
+    }
+
+    public static function getSSADataFlowPompt($question , $violations , $symbolTable){
+        $systemPrompt = <<<SYSTEM
+        You are an SSA data-flow binding resolver inside a compiler.
+
+        Rules you MUST follow:
+        - You may ONLY choose bindings that are explicitly listed in "valid_bindings".
+        - You may NOT invent nodes, fields, paths, or expressions.
+        - You may NOT modify workflow structure.
+        - You may NOT suggest new nodes or connections.
+        - Each violation must result in at most ONE patch.
+        - If no valid binding is appropriate, return NO PATCH for that violation.
+
+        Your goal:
+        - Resolve SSA violations by selecting the most semantically relevant binding.
+        - Prefer bindings whose node purpose best matches the user's question.
+        - Prefer bindings closest upstream when relevance is equal.
+
+        You MUST output JSON exactly matching the required schema.
+        Any deviation is a compiler error.
+        SYSTEM;
+
+        $userPrompt = <<<USER
+        User intent:
+        $question
+
+        SSA violations detected in the workflow.
+        Each violation contains a list of legal bindings.
+
+        For each violation:
+        - Choose at most ONE binding from "valid_bindings"
+        - Or choose NONE if no binding makes sense
+
+        Violations:
+        $violations
+
+        Available SSA symbols (for context only, DO NOT invent new ones):
+        $symbolTable
+
+        Produce a patch plan that resolves the violations.
+
+        THE OUTPUT SHCEMA REQUIRED:
+        {
+        "patches": [
+            {
+            "node": "Send Email",
+            "field": "email",
+            "bind_to": "Fetch Users.json.email"
+            }
+        ]
+        }
+
+        YOU MUST ONLY OUTPUT THIS JSON SCHEMA.
+        NO MARKDOWN, NO EXPLANATION JUST JSON.
         USER;
 
         return self::returnFormat($userPrompt , $systemPrompt);

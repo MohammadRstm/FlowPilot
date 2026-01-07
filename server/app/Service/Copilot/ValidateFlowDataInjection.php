@@ -5,67 +5,162 @@ namespace App\Service\Copilot;
 use Illuminate\Support\Facades\Log;
 
 class ValidateFlowDataInjection{
-    private int $maxRetries = 3;
+    private int $maxFixes = 3;
     private float $scoreThreshold = 0.9;
 
-    private float $bestScore = 0.0;
-    private ?array $bestWorkflow = null;
-
     public function execute(array $workflow, string $question, array $totalPoints): array{
-        Log::info("DATA FLOW VALIDATION START");
+        Log::info("SSA DATA FLOW VALIDATION START");
 
-        for ($attempt = 1; $attempt <= $this->maxRetries; $attempt++) {
-            Log::info("VALIDATION PASS #{$attempt}");
+        $ssa = SSAService::buildSymbolTable($workflow);
+        Log::info("BUILT SYMBOL TABLE");
 
-            $result = LLMService::validateDataFlow($workflow, $question, $totalPoints);
+        $executionGraph = SSAService::buildExecutionGraph($workflow);
+        Log::info("EXEXUTION GRAPH BUILT");
 
-            $score = (float)($result['score'] ?? 0);
-            $errors = $result['errors'] ?? [];
-            $workflow = $result['workflow'] ?? $workflow;
+        $uses = SSAService::extractValueUses($workflow);
+        Log::info("EXTRACTED VALUES USED");
 
-            Log::info("Validation score", [
-                'attempt' => $attempt,
-                'score' => $score,
-                'errors' => count($errors),
-                'errors_content' => $errors
+
+        $previousUnresolved = PHP_INT_MAX;
+
+        for ($pass = 1; $pass <= $this->maxFixes; $pass++) {
+            Log::info("SSA VALIDATION PASS #{$pass}");
+
+            $violations = SSAService::validateUses(
+                $uses,
+                $ssa,
+                $executionGraph
+            );
+
+            $unresolved = count($violations);
+
+            Log::info("SSA violations", [
+                'count' => $unresolved,
+                'violations' => $violations
             ]);
 
-            if ($score > $this->bestScore) {
-                $this->bestScore = $score;
-                $this->bestWorkflow = $workflow;
+            $score = 1 - ($unresolved / max(count($uses), 1));
+            Log::info("SSA score", ['score' => $score]);
 
-                Log::info("New best workflow stored", [
-                    'score' => $score
-                ]);
-            }
-
-            if ($score >= $this->scoreThreshold) {
-                Log::info("Workflow accepted — threshold reached");
+            if ($score >= $this->scoreThreshold || $unresolved === 0) {
+                Log::info("SSA validation converged");
                 return $workflow;
             }
 
-            if (empty($errors)) {
-                Log::warning("No explicit errors but score below threshold — stopping");
+            if ($unresolved >= $previousUnresolved) {
+                Log::warning("No SSA progress — aborting repair loop");
                 break;
             }
 
-            Log::info("Attempting repair", [
-                'attempt' => $attempt,
-                'error_count' => count($errors)
-            ]);
+            $previousUnresolved = $unresolved;
 
-            $workflow = LLMService::repairWorkflowDataFlow(
+            $phiPlans = SSAService::planPhiNodes($violations);
+
+            if (!empty($phiPlans)) {
+                Log::info("Applying SSA φ-nodes", ['count' => count($phiPlans)]);
+                $workflow = SSAService::applyPhiNodes($workflow, $phiPlans);
+                $uses = SSAService::extractValueUses($workflow);
+                continue;
+            }
+
+            $patchPlan = LLMService::planSSARebind(
                 $question,
-                json_encode($workflow, JSON_UNESCAPED_SLASHES),
-                $errors,
-                $totalPoints
+                $violations,
+                $ssa
             );
+
+            if (empty($patchPlan['patches'])) {
+                Log::warning("No valid SSA patches proposed");
+                break;
+            }
+
+            $validatedPatches = $this->validatePatchPlan(
+                $patchPlan,
+                $violations
+            );
+
+            if (empty($validatedPatches)) {
+                Log::warning("All SSA patches rejected by validator");
+                break;
+            }
+
+
+            $workflow = SSAService::applyPatches(
+                $workflow,
+                $patchPlan['patches']
+            );
+
+            $uses = SSAService::extractValueUses($workflow);
         }
 
-        Log::info("Validation loop finished", [
-            'bestScore' => $this->bestScore
-        ]);
-
-        return $this->bestWorkflow ?? $workflow;
+        Log::info("SSA validation finished — returning last stable workflow");
+        return $workflow;
     }
+
+    private function validatePatchPlan(
+        array $patchPlan,
+        array $violations
+    ): array {
+        if (!isset($patchPlan['patches']) || !is_array($patchPlan['patches'])) {
+            Log::warning("Invalid patch plan shape");
+            return [];
+        }
+
+        // Build fast lookup of valid bindings by using_node
+        $validBindingsIndex = [];
+
+        foreach ($violations as $violation) {
+            $useNode = $violation['use']['using_node'];
+            $validBindingsIndex[$useNode] = [];
+
+            foreach ($violation['valid_bindings'] as $binding) {
+                $validBindingsIndex[$useNode][] =
+                    $binding['node'] . '.' . $binding['path'];
+            }
+        }
+
+        $validated = [];
+
+        foreach ($patchPlan['patches'] as $patch) {
+            // ---- schema enforcement ----
+            if (
+                !is_array($patch) ||
+                !isset($patch['node'], $patch['field'], $patch['bind_to']) ||
+                !is_string($patch['node']) ||
+                !is_string($patch['field']) ||
+                !is_string($patch['bind_to'])
+            ) {
+                Log::warning("Rejected patch — schema violation", [
+                    'patch' => $patch
+                ]);
+                continue;
+            }
+
+            $node = $patch['node'];
+            $bindTo = $patch['bind_to'];
+
+            // ---- must correspond to a real violation ----
+            if (!isset($validBindingsIndex[$node])) {
+                Log::warning("Rejected patch — no such SSA violation", [
+                    'node' => $node
+                ]);
+                continue;
+            }
+
+            // ---- bind_to must be one of valid_bindings ----
+            if (!in_array($bindTo, $validBindingsIndex[$node], true)) {
+                Log::warning("Rejected patch — illegal SSA binding", [
+                    'bind_to' => $bindTo,
+                    'allowed' => $validBindingsIndex[$node]
+                ]);
+                continue;
+            }
+
+            // ---- patch is safe ----
+            $validated[] = $patch;
+        }
+
+        return $validated;
+    }
+
 }

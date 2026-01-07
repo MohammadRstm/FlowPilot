@@ -267,6 +267,11 @@ class LLMService{
         );
     }
 
+    public static function planSSARebind($question , $violations, $ssaTable){
+        $prompt = Prompts::getSSADataFlowPompt($question , json_encode($violations) , json_encode($ssaTable));
+        return self::callOpenAI($prompt);
+    }
+
     /** WORKFLOW SAVOR */
     public static function generateWorkflowQdrantPayload(string $json , string $question){
         $prompt = Prompts::getWorkflowMetadataPrompt($json , $question);
