@@ -34,7 +34,7 @@ class GetAnswer{
 
         $analysis = AnalyzeIntent::analyze($question);// optimized
         $points = GetPoints::execute($analysis);// optimized --> reuires re-injection
-        $finalPoints = RankingFlows::rank($analysis, $points);// requires testing
+        $finalPoints = RankingFlows::rank($analysis, $points);
 
         $workflow = LLMService::generateAnswer($question, $finalPoints);// optimized
 
@@ -42,8 +42,8 @@ class GetAnswer{
         $validateWorkflowService = new ValidateFlowLogicService();// optimized -> requires prompt sharpening
         $workflow = $validateWorkflowService->execute($workflow , $question , $finalPoints);
 
-        $validateWorkflowDataInjection = new ValidateFlowDataInjection();// we are here now
-        $workflow = $validateWorkflowDataInjection->execute($workflow , $question , $finalPoints);
+        // $validateWorkflowDataInjection = new ValidateFlowDataInjection();// we are here now
+        // $workflow = $validateWorkflowDataInjection->execute($workflow , $question , $finalPoints);
 
         return $workflow;
     }
