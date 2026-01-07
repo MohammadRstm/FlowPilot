@@ -2,7 +2,6 @@
 
 namespace App\Service\Copilot;
 
-use Exception;
 use Illuminate\Support\Facades\Log;
 
 class AnalyzeIntent{

@@ -7,8 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUserRoleRequest;
 use App\Http\Requests\UpdateUserRoleRequest;
 
-class UserRoleController extends Controller
-{
+class UserRoleController extends Controller{
     /**
      * Display a listing of the resource.
      */
