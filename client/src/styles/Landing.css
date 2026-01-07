@@ -1,0 +1,135 @@
+body {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  background: radial-gradient(circle at top, #1a0d00, #050300);
+  color: #fff;
+}
+
+.landing-root {
+  overflow-x: hidden;
+}
+
+/* HERO */
+.hero {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, #ff8c1a30, transparent);
+}
+
+.hero-content {
+  text-align: center;
+}
+
+.hero h1 {
+  font-size: 4rem;
+  color: #ffae42;
+}
+
+.hero p {
+  color: #ffcc80;
+  font-size: 1.3rem;
+}
+
+.cta {
+  margin-top: 30px;
+  padding: 14px 36px;
+  background: linear-gradient(90deg, #ff9b00, #ffb84d);
+  border: none;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Workflow */
+.workflow-showcase {
+  padding: 100px 10%;
+  text-align: center;
+}
+
+.fake-workflow {
+  height: 300px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #222, #111);
+  box-shadow: 0 0 40px #ff9b0020;
+}
+
+/* Chat */
+.chat-section {
+  padding: 100px 10%;
+}
+
+.chat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+}
+
+.chat-card {
+  background: linear-gradient(145deg, #1c1c1c, #0d0d0d);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 0 30px #ff9b0015;
+}
+
+/* Community */
+.community {
+  padding: 120px 0;
+  text-align: center;
+}
+
+.hub {
+  position: relative;
+  width: 400px;
+  height: 400px;
+  margin: 80px auto;
+}
+
+.center {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, #ff9b00, #a35b00);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: bold;
+  left: 140px;
+  top: 140px;
+}
+
+.node {
+  position: absolute;
+  background: #0f0f0f;
+  padding: 12px 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px #ff9b0020;
+}
+
+.node1 { left: 40px; top: 100px; }
+.node2 { right: 20px; top: 140px; }
+.node3 { right: 40px; bottom: 80px; }
+.node4 { left: 60px; bottom: 120px; }
+
+.lines {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+}
+
+.lines path {
+  fill: none;
+  stroke: #ff9b00;
+  stroke-width: 2;
+  stroke-dasharray: 6 8;
+}
+
+/* Footer */
+footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 60px 10%;
+  background: #060300;
+  border-top: 1px solid #ff9b0020;
+}
