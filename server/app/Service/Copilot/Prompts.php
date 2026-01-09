@@ -56,6 +56,7 @@ class Prompts{
         
         Notes:
         - You must define the question field first from all the messages, then from it conclude the rest of the other fields
+        - If you get one message then that message itself is the question
 
         Example output:
         {

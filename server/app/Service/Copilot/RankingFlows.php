@@ -10,14 +10,11 @@ class RankingFlows{
         $workflowScores = self::rankWorkflows($analysis, $points["workflows"]);
 
         $best = $workflowScores[0] ?? null;
-        $second = $workflowScores[1] ?? null;
 
         $shouldReuse =
             $best &&
-            $best["score"] > 0.45 && (
-                !$second || ($best["score"] - $second["score"]) > 0.12
-            );
-        
+            $best["score"] > 0.5;
+            
         $results = [
             "nodes" => self::rankNodes($analysis, $points["nodes"]),
             "schemas" => self::rankSchemas($analysis, $points["schemas"])

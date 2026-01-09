@@ -1,8 +1,7 @@
 import Header from "./components/Header";
 import "../styles/Copilot.css";
-import { useMemo, useState } from "react";
+import { useState , useRef, useEffect } from "react";
 import { useCopilotMutation } from "../hooks/mutations/Copilot/getAnswer.copilot.mutation.hook";
-import type { WorkflowAnswer } from "../api/copilot.api";
 
 
 type GenerationStage =
@@ -13,48 +12,64 @@ type GenerationStage =
   | "done";
 
 export type ChatMessage = {
+  role: "user" | "assistant";
   content: string;
+  fileUrl?: string;
+  fileName?: string;
 };
 
 
 
 export const Copilot = () =>{
     const [question, setQuestion] = useState("");
-    const [workflow, setWorkflow] = useState<WorkflowAnswer | null>(null);
     const [stage, setStage] = useState<GenerationStage>("idle");
-    const [submittedQuestion, setSubmittedQuestion] = useState<string | null>(null);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
 
+    const chatRef = useRef<HTMLDivElement>(null);
 
-    const { mutate, isPending } = useCopilotMutation((answer) => {
-        setWorkflow(answer);
-        setStage("done")
-    });
+    useEffect(() => {
+        chatRef.current?.scrollTo({
+            top: chatRef.current.scrollHeight,
+            behavior: "smooth",
+        });
+    }, [messages]);
 
-    const fileUrl = useMemo(() => {
-        if (!workflow) return null;
+
+
+    const { mutate } = useCopilotMutation((answer) => {
+        setStage("done");
 
         const blob = new Blob(
-        [JSON.stringify(workflow, null, 2)],
-        { type: "application/json" }
+            [JSON.stringify(answer, null, 2)],
+            { type: "application/json" }
         );
 
-        return URL.createObjectURL(blob);
-    }, [workflow]);
+        const url = URL.createObjectURL(blob);
+
+        setMessages((prev) => [
+            ...prev,
+            {
+            role: "assistant",
+            content: "I’ve generated your workflow.",
+            fileUrl: url,
+            fileName: `${answer.name || "workflow"}.json`,
+            },
+        ]);
+    });
+
 
     const handleSubmit = () => {
         if (!question.trim() || stage === "thinking" || stage === "generating" || stage === "finalizing") {
             return;
         }
 
-        const userMessage : ChatMessage = {
-            content : question.trim()
-        }
+        const userMessage: ChatMessage = {
+            role: "user",
+            content: question.trim(),
+        };
 
         setMessages((prev) => [...prev, userMessage]);
-        setSubmittedQuestion(question);
         setStage("thinking");
-        setWorkflow(null);
         setQuestion("")
 
         const lastTenMessages = [...messages, userMessage].slice(-10);
@@ -63,80 +78,83 @@ export const Copilot = () =>{
         mutate(lastTenMessages);
     };
 
+    const getInputPlaceholder = () => {
+        switch (stage) {
+            case "thinking":
+            return "Thinking…";
+            case "generating":
+            return "Generating workflow…";
+            case "finalizing":
+            return "Finalizing…";
+            case "done":
+            return "Ask another question…";
+            default:
+            return "Tell us what you want to build";
+        }
+    };
 
-    return(
-        <>
-        <Header />
-         <section className={`copilot-hero ${stage !== "idle" ? "generating" : ""}`}>
-            <div className="copilot-layout">
-                {/* LEFT: Progress */}
-                {stage !== "idle" && (
-                <div className="generation-progress">
-                    <p className="progress-line">
-                    &gt; {stage === "thinking" && "Thinking"}
-                    {stage === "generating" && "Generating workflow"}
-                    {stage === "finalizing" && "Finalizing"}
-                    {stage === "done" && "Completed"}
-                    </p>
-                </div>
-                )}
 
-                {/* RIGHT: User question */}
-                {submittedQuestion && (
-                <div className="user-question">
-                    <span>You</span>
-                    <p>{submittedQuestion}</p>
-                </div>
+
+    return (
+  <>
+    <Header />
+
+    <section className={`copilot-hero ${stage !== "idle" ? "generating" : ""}`}>
+      {/* Initial state */}
+      {stage === "idle" && (
+        <div className="copilot-content">
+          <h1>What’s On Your Mind</h1>
+
+          <div className="copilot-input-wrapper">
+            <input
+              type="text"
+               placeholder={getInputPlaceholder()}
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Chat area */}
+      {stage !== "idle" && (
+        <div className="chat-container" ref={chatRef}>
+          {messages.map((msg, index) => (
+            <div key={index} className={`chat-message ${msg.role}`}>
+              <div className="bubble">
+                <p>{msg.content}</p>
+
+                {msg.fileUrl && (
+                  <a
+                    href={msg.fileUrl}
+                    download={msg.fileName}
+                    className="file-link"
+                  >
+                    📄 {msg.fileName}
+                  </a>
                 )}
+              </div>
             </div>
+          ))}
+        </div>
+      )}
 
-            {/* CENTER (initial state only) */}
-            {stage === "idle" && (
-                <div className="copilot-content">
-                <h1>What’s On Your Mind</h1>
+      {/* Bottom input */}
+      {stage !== "idle" && (
+        <div className="bottom-input">
+            <input
+                type="text"
+                value={question}
+                placeholder={getInputPlaceholder()}
+                disabled={stage !== "done"}
+                onChange={(e) => setQuestion(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+            />
+        </div>
+      )}
+    </section>
+  </>
+);
 
-                <div className="copilot-input-wrapper">
-                    <input
-                    type="text"
-                    placeholder="Tell us what you want to build"
-                    value={question}
-                    onChange={(e) => setQuestion(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                    />
-                </div>
-                </div>
-            )}
-
-            {/* FILE */}
-            {workflow && fileUrl && (
-                <div className="workflow-file floating">
-                <a
-                    href={fileUrl}
-                    download={`${workflow.name || "workflow"}.json`}
-                >
-                    📄 {workflow.name || "Generated Workflow"}
-                </a>
-                </div>
-            )}
-
-            {/* BOTTOM INPUT */}
-            {stage !== "idle" && (
-                <div className="bottom-input">
-                  <input
-                    type="text"
-                    value={question}
-                    placeholder={
-                        stage === "done"
-                        ? "Ask another question…"
-                        : "Generating workflow…"
-                    }
-                    disabled={stage !== "done"}
-                    onChange={(e) => setQuestion(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                    />
-                </div>
-            )}
-        </section>
-        </>
-    );
 }
