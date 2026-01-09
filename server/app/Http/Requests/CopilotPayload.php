@@ -11,7 +11,8 @@ class CopilotPayload extends FormRequest{
 
     public function rules(): array{
         return [
-            'question' => 'string'
+            'messages' => ['required', 'array', 'min:1', 'max:10'],
+            'messages.*.content' => ['required', 'string'],
         ];
     }
 }

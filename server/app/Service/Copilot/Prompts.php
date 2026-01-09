@@ -13,17 +13,28 @@ class Prompts{
 
 
     /** ANALYZE USER QUESTION PROMPTS */
-    public static function getAnalysisIntentAndtiggerPrompt($question){
+    public static function getAnalysisIntentAndtiggerPrompt(array $messages){
         $systemPrompt = <<<SYSTEM
-        You are an intent and trigger analysis engine for n8n workflows.
+        You are an intent reconciliation and trigger analysis engine for n8n workflows.
 
-        Your task:
-        - Extract the user's workflow intent
-        - Determine the correct n8n trigger node
+        Your responsibilities:
+        - Analyze a multi-message conversation from a single user
+        - Resolve updates, corrections, and overrides
+        - Produce ONE final authoritative workflow request
+        - Extract the workflow intent and appropriate n8n trigger
+
+        Conversation handling rules (CRITICAL):
+        - Messages are ordered from oldest to newest
+        - Newer messages take precedence over older ones
+        - If the user indicates a change, update, correction, or modification, you MUST apply it
+        - If the user explicitly starts a new workflow (e.g. "new workflow", "ignore previous", "start over"),
+        you MUST discard all prior intent and base everything only on messages after that point
+        - If instructions conflict, the most recent instruction wins
 
         Hard rules:
         - Always return valid JSON
         - Never include markdown
+        - Never include explanations outside JSON
         - Never include extra keys
         - The trigger MUST be a valid n8n trigger node
         - If no trigger is stated or implied, use "ManualTrigger"
@@ -31,22 +42,43 @@ class Prompts{
         Output schema (must match exactly):
 
         {
+        "question": string,
         "intent": string,
         "trigger": string,
         "trigger_reasoning": string
         }
 
-        The "intent" must be a full descriptive sentence.
-        The "trigger_reasoning" must explain why the trigger was chosen.
+        Field definitions:
+        - "question": A single, clean, fully-resolved workflow request that incorporates all updates and overrides.
+        - "intent": A descriptive sentence explaining what the user wants the workflow to accomplish.
+        - "trigger": The n8n trigger node that best matches the final request.
+        - "trigger_reasoning": Why this trigger was selected based on the final request.
+        
+        Notes:
+        - You must define the question field first from all the messages, then from it conclude the rest of the other fields
+
+        Example output:
+        {
+            "question": "Create an n8n workflow that listens for new Shopify orders and syncs them to Airtable every hour, including customer email and order total.",
+            "intent": "The user wants to automatically sync Shopify orders into Airtable on a recurring basis.",
+            "trigger": "Cron",
+            "trigger_reasoning": "The workflow runs on a scheduled interval rather than responding to a webhook event."
+        }
+
         SYSTEM;
 
+        $conversation = collect($messages)
+            ->map(fn ($m, $i) => ($i + 1) . '. ' . $m['content'])
+            ->implode("\n");
+
         $userPrompt = <<<USER
-        User question:
-        "$question"
+        User conversation:
+        $conversation
         USER;
 
-        return self::returnFormat($userPrompt , $systemPrompt);
+        return self::returnFormat($userPrompt, $systemPrompt);
     }
+
 
     public static function getAnalysisNodeExtractionPrompt($intent , $question){
 
@@ -293,6 +325,7 @@ class Prompts{
         You convert user requests into atomic functional requirements.
         You do not design workflows.
         You only list what must exist.
+        You must only return the JSON schema provided and only that.
         SYSTEM;
 
         $userPrompt = <<<USER
@@ -315,6 +348,9 @@ class Prompts{
             }
         ]
         }
+
+        YOU MUST ONLY RETURN THE PROVIDED JSON SCHEMA.
+        NO MARKDOWN, NO EXPLANATION. JUST JSON.
         USER;
 
         return self::returnFormat($userPrompt , $systemPrompt);

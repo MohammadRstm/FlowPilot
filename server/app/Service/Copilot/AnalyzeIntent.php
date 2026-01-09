@@ -8,18 +8,19 @@ use Illuminate\Support\Facades\Log;
 class AnalyzeIntent{
 
     // Orchestrater
-    public static function analyze(string $question): array {
+    public static function analyze(array $question): array {
         $intentData = LLMService::intentAnalyzer($question);
         Log::debug("intent data" , ["intent data" => $intentData]);
-        $nodeData = LLMService::nodeAnalyzer($question, $intentData["intent"]);
+        $nodeData = LLMService::nodeAnalyzer($intentData["question"], $intentData["intent"]);
         Log::debug("node Data " , ["node data" => $nodeData]);
         $final = LLMService::workflowSchemaValidator($intentData, $nodeData);
         Log::debug("final Data " , ["final" => $final]);
 
         $final["intent"] = $intentData["intent"];
         $final["trigger"] = $intentData["trigger"];
+        $final["question"] = $intentData["question"];
         $final["nodes"] = self::normalizeNodes($final["nodes"]);
-        $final["embedding_query"] = self::buildWorkflowEmbeddingQuery($final, $question);
+        $final["embedding_query"] = self::buildWorkflowEmbeddingQuery($final, $intentData["question"]);
 
         Log::info("Intent" , ["intent" => $final["intent"]]);
         Log::info("embedding_query" , ["embedding" => $final["embedding_query"]]);

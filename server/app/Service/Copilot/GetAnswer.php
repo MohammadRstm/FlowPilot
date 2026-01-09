@@ -29,10 +29,12 @@ use Illuminate\Support\Facades\Log;
 
 class GetAnswer{
     // Orchestrater
-    public static function execute($question){
+    public static function execute(array $messages){
         set_time_limit(300); // 5 minutes max
 
-        $analysis = AnalyzeIntent::analyze($question);// optimized
+        $analysis = AnalyzeIntent::analyze($messages);// optimized
+        $question = $analysis["question"];
+        
         $points = GetPoints::execute($analysis);// optimized --> reuires re-injection
         $finalPoints = RankingFlows::rank($analysis, $points);
 

@@ -91,6 +91,77 @@
   border-color: rgba(255, 155, 0, 0.6);
 }
 
+/* Layout when generating */
+.copilot-hero.generating {
+  padding-top: 100px;
+}
+
+/* Top layout */
+.copilot-layout {
+  position: absolute;
+  top: 120px;
+  left: 6%;
+  right: 6%;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+/* Progress (left) */
+.generation-progress {
+  font-family: monospace;
+  color: #ff9b00;
+}
+
+.progress-line {
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+/* User question (right) */
+.user-question {
+  max-width: 380px;
+  text-align: right;
+}
+
+.user-question span {
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.user-question p {
+  margin-top: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 12px 16px;
+  border-radius: 12px;
+}
+
+/* Floating file */
+.workflow-file.floating {
+  position: absolute;
+  bottom: 140px;
+  left: 6%;
+}
+
+/* Bottom input */
+.bottom-input {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(900px, 90%);
+}
+
+.bottom-input input {
+  width: 100%;
+  padding: 20px 26px;
+  border-radius: 999px;
+  border: none;
+  background: #1a1a1a;
+  color: #888;
+}
+
+
 
 
 /* Mobile tweaks */

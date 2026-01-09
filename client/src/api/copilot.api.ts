@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { ChatMessage } from "../Pages/Copilot";
 
 export interface WorkflowAnswer {
   name: string;
@@ -11,10 +12,6 @@ export interface WorkflowAnswer {
   };
 }
 
-export interface CopilotRequest {
-  question: string;
-}
-
 
 export interface CopilotResponse {
   message: string;
@@ -23,12 +20,19 @@ export interface CopilotResponse {
   };
 }
 
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+const prefix = 'copilot';
+
+const url = BASE_URL + '/' + prefix;
+
 export const sendCopilotQuestion = async (
-  payload: CopilotRequest
+  payload: ChatMessage[]
 ): Promise<CopilotResponse> => {
   const response = await axios.post<CopilotResponse>(
-    "/api/copilot", 
-    payload
+    `${url}/ask`, 
+    {
+        messages : payload
+    }
   );
 
   return response.data;

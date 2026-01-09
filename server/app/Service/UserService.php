@@ -7,7 +7,7 @@ use App\Service\Copilot\SaveWorkflow;
 
 class UserService{
 
-    public static function getCopilotAnswer($question){
+    public static function getCopilotAnswer(array $question){
         $answer = GetAnswer::execute($question);
         return $answer;
     }

@@ -53,7 +53,7 @@ class LLMService{
         throw new Exception("LLMService: non-JSON response from model (logged raw content).");
     }
 
-    public static function intentAnalyzer(string $question){
+    public static function intentAnalyzer(array $question){
         $prompt = Prompts::getAnalysisIntentAndtiggerPrompt($question);
 
         return self::callOpenAI($prompt);

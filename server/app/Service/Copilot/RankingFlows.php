@@ -39,16 +39,13 @@ class RankingFlows{
 
         foreach ($hits as $hit) {
             $p = $hit["payload"];
-            $hit["score"] = max($hit["score"], 0.3);
-
-            $nodeMatchScore = self::nodeMatchScore($analysis["nodes"]  , $p["nodes_used"] ?? []);
+    
             $intentScore = self::intentScore($analysis["intent"]  , $p["nodes_used"] ?? []);
             $complexityScore = self::complexityScore($analysis["min_nodes"]  , count($p["nodes_used"] ?? []));
 
             $score = 
-                ($hit["score"] * 0.3) +       
-                ($nodeMatchScore * 0.4) +
-                ($intentScore * 0.2) +
+                ($hit["score"] * 0.7) +       
+                // ($intentScore * 0.2) +
                 ($complexityScore * 0.1);
 
 
@@ -61,7 +58,6 @@ class RankingFlows{
 
             Log::debug("Workflow score", [
                 "qdrant" => $hit["score"],
-                "node_match" =>$nodeMatchScore,
                 "intent" => $intentScore,
                 "complexity" => $complexityScore,
                 "final" => $score
@@ -127,18 +123,6 @@ class RankingFlows{
         return array_slice($ranked, 0, 30);
     }
 
-    private static function nodeMatchScore(array $wanted, array $has): float {
-        if (count($wanted) === 0) return 0.5;
-
-        $norm = fn($x) => preg_replace('/[^a-z0-9]/', '', strtolower($x));
-
-        $wanted = array_map($norm, $wanted);
-        $has = array_map($norm, $has);
-
-        $match = array_intersect($wanted, $has);
-
-        return count($match) / count($wanted);
-    }
 
     // needs modification
     private static function intentScore(string $intent, array $nodes): float {
