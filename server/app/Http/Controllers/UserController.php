@@ -7,11 +7,20 @@ use App\Http\Requests\ConfirmWorkflowRequest;
 use App\Http\Requests\CopilotPayload;
 use App\Service\UserService;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller{
     public function ask(CopilotPayload $req){
         try{
-            $answer = UserService::getCopilotAnswer($req["messages"]);
+            $payload = $req->validated();
+            $messages = $payload['messages'];
+            $historyId = $payload['history_id'] ?? null;
+
+            $result = UserService::getCopilotAnswer($messages, $historyId);
+
+            $answer = $result['answer'];
+            $historyId = $result['history_id'];
+
             if (is_string($answer)) {
                 $decoded = json_decode($answer, true);
                 $response = $decoded === null ? $answer : $decoded;
@@ -19,7 +28,10 @@ class UserController extends Controller{
                 $response = $answer;
             }
 
-            return $this->successResponse(["answer" => $response]);
+            return $this->successResponse([
+                'answer' => $response,
+                'historyId' => $historyId,
+            ]);
         }catch(Exception $ex){
             return $this->errorResponse("Failed to ask copilot" , ["1" => $ex->getMessage()]);
         }

@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\UserCopilotHistory;
+use App\Models\Message;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreUserCopilotHistoryRequest;
-use App\Http\Requests\UpdateUserCopilotHistoryRequest;
+use App\Service\UserService;
+use Exception;
 
 class UserCopilotHistoryController extends Controller
 {
@@ -14,23 +15,16 @@ class UserCopilotHistoryController extends Controller
      */
     public function index()
     {
-        //
-    }
+        try {
+            $userId = 1; // TODO: replace with authenticated user id
+            $histories = UserService::getChatHistory($userId);
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreUserCopilotHistoryRequest $request)
-    {
-        //
+            return $this->successResponse([
+                'histories' => $histories,
+            ]);
+        } catch (Exception $ex) {
+            return $this->errorResponse('Failed to fetch histories', ['1' => $ex->getMessage()]);
+        }
     }
 
     /**
@@ -38,23 +32,22 @@ class UserCopilotHistoryController extends Controller
      */
     public function show(UserCopilotHistory $userCopilotHistory)
     {
-        //
-    }
+        try {
+            $userId = 1; // TODO: replace with authenticated user id
+            if ($userCopilotHistory->user_id !== $userId) {
+                return $this->errorResponse('History not found', [], 404);
+            }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(UserCopilotHistory $userCopilotHistory)
-    {
-        //
-    }
+            $userCopilotHistory->load(['messages' => function ($query) {
+                $query->orderBy('created_at');
+            }]);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateUserCopilotHistoryRequest $request, UserCopilotHistory $userCopilotHistory)
-    {
-        //
+            return $this->successResponse([
+                'history' => $userCopilotHistory,
+            ]);
+        } catch (Exception $ex) {
+            return $this->errorResponse('Failed to fetch history', ['1' => $ex->getMessage()]);
+        }
     }
 
     /**
@@ -62,6 +55,21 @@ class UserCopilotHistoryController extends Controller
      */
     public function destroy(UserCopilotHistory $userCopilotHistory)
     {
-        //
+        try {
+            $userId = 1; // TODO: replace with authenticated user id
+            if ($userCopilotHistory->user_id !== $userId) {
+                return $this->errorResponse('History not found', [], 404);
+            }
+
+            // Delete all messages for this history
+            Message::where('history_id', $userCopilotHistory->id)->delete();
+
+            // Delete the history itself
+            $userCopilotHistory->delete();
+
+            return $this->successResponse([], 'History deleted');
+        } catch (Exception $ex) {
+            return $this->errorResponse('Failed to delete history', ['1' => $ex->getMessage()]);
+        }
     }
 }

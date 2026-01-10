@@ -7,8 +7,8 @@ body {
 
 .copilot-hero {
   min-height: calc(100vh - 72px);
-  position: relative;
-
+  height: calc(100vh - 72px);
+  display: flex;
   background: linear-gradient(
     to bottom,
     #000000 0%,
@@ -18,13 +18,10 @@ body {
   );
 }
 
-/* Only center content in idle state */
-.copilot-hero:not(.generating) {
+.copilot-layout-root {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100%;
 }
-
 
 .copilot-content {
   width: 100%;
@@ -81,6 +78,14 @@ body {
   margin-bottom: 24px;
 }
 
+.copilot-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 40px 40px 24px;
+  position: relative;
+}
+
 .workflow-file a {
   display: inline-flex;
   align-items: center;
@@ -104,93 +109,142 @@ body {
   border-color: rgba(255, 155, 0, 0.6);
 }
 
-/* Layout when generating */
-.copilot-hero.generating {
-  padding-top: 100px;
-}
-
-/* Top layout */
-.copilot-layout {
-  position: absolute;
-  top: 120px;
-  left: 6%;
-  right: 6%;
-  display: flex;
-  justify-content: space-between;
-  pointer-events: none;
-}
-
-/* Progress (left) */
-.generation-progress {
-  font-family: monospace;
-  color: #ff9b00;
-}
-
-.progress-line {
-  font-size: 1rem;
-  opacity: 0.9;
-}
-
-/* User question (right) */
-.user-question {
-  max-width: 380px;
-  text-align: right;
-}
-
-.user-question span {
-  font-size: 0.75rem;
-  opacity: 0.6;
-}
-
-.user-question p {
-  margin-top: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  padding: 12px 16px;
-  border-radius: 12px;
-}
-
-/* Floating file */
-.workflow-file.floating {
-  position: absolute;
-  bottom: 140px;
-  left: 6%;
-}
-
 /* Bottom input */
 .bottom-input {
-  position: fixed;
-  bottom: 40px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(900px, 90%);
+  margin-top: auto;
 }
 
-.bottom-input input {
-  width: 100%;
-  padding: 20px 26px;
-  border-radius: 999px;
-  border: none;
-  background: #1a1a1a;
-  color: #888;
+.bottom-input {
+  margin-top: auto;
+  display: flex;
+  align-items: flex-end;
 }
+
+.bottom-input textarea {
+  width: 90%;
+  resize: none;
+  padding: 14px 22px;
+  border-radius: 22px;
+  border: solid black;
+  background: #ffffff;
+  color: #000000;
+
+  font-size: 1rem;
+  line-height: 22px;
+
+  max-height: 66px; /* 3 rows × 22px */
+  overflow-y: hidden;
+
+  transition: height 0.15s ease;
+}
+
 
 .chat-container {
-  position: absolute;
-  top: 0;              
-  left: 50%;
-  transform: translateX(-50%);
-
-  width: min(900px, 90%);
-  bottom: 120px;            /* space for bottom input */
-
+  flex: 1;
   padding: 20px 12px;
-
   overflow-y: auto;
-  margin-bottom: 76px;
-
+  margin-bottom: 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* History sidebar */
+.history-panel {
+  flex: 0 0 30%;
+  max-width: 30%;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #fff;
+  overflow-y: auto;
+  backdrop-filter: blur(12px);
+}
+
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.history-header h2 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.new-chat-button {
+  border: none;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  background: #ff9b00;
+  color: #000;
+  cursor: pointer;
+}
+
+.new-chat-button:hover {
+  background: #ffb733;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.history-item {
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.history-item.active {
+  background: rgba(255, 155, 0, 0.25);
+}
+
+.history-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.history-title {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.history-subtitle {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+.history-delete {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.history-delete:hover {
+  opacity: 1;
+}
+
+.history-empty {
+  font-size: 0.8rem;
+  opacity: 0.75;
 }
 
 /* Hide scrollbar (Chrome, Safari, Edge) */

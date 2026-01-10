@@ -1,17 +1,22 @@
 import { useMutation } from "@tanstack/react-query";
 import { sendCopilotQuestion } from "../../../api/copilot.api";
-import type { WorkflowAnswer } from "../../../api/copilot.api";
+import type { WorkflowAnswer, CopilotResponse } from "../../../api/copilot.api";
 import type { ChatMessage } from "../../../Pages/Copilot";
 
+export interface CopilotMutationPayload {
+  messages: ChatMessage[];
+  historyId?: number | null;
+}
+
 export const useCopilotMutation = (
-  onSuccess?: (answer: WorkflowAnswer) => void
+  onSuccess?: (answer: WorkflowAnswer, historyId: number) => void
 ) => {
-  return useMutation({
-    mutationFn: (question: ChatMessage[]) =>
-      sendCopilotQuestion(question),
+  return useMutation<CopilotResponse, unknown, CopilotMutationPayload>({
+    mutationFn: ({ messages, historyId }) =>
+      sendCopilotQuestion(messages, historyId),
 
     onSuccess: (data) => {
-      onSuccess?.(data.data.answer);
+      onSuccess?.(data.data.answer, data.data.historyId);
     },
   });
 };

@@ -10,21 +10,20 @@ class UserCopilotHistory extends Model{
     
     protected $fillable = [
         'user_id',
-        'question',
-        'response',
-        'ai_description',
-        'ai_model',
     ];
 
     protected function casts():array{
         return [
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
-            'response' => 'array'
         ];
     }
 
     public function user(){
         return $this->belongsTo(User::class);
+    }
+
+    public function messages(){
+        return $this->hasMany(Message::class, 'history_id');
     }
 }

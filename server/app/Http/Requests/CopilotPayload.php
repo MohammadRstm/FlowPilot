@@ -13,6 +13,8 @@ class CopilotPayload extends FormRequest{
         return [
             'messages' => ['required', 'array', 'min:1', 'max:10'],
             'messages.*.content' => ['required', 'string'],
+            'messages.*.role' => ['required', 'string'],
+            'history_id' => ['nullable', 'integer'],
         ];
     }
 }
