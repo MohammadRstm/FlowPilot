@@ -87,3 +87,27 @@ export const fetchCopilotHistories = async (): Promise<CopilotHistory[]> => {
 export const deleteCopilotHistory = async (id: number): Promise<void> => {
   await axios.delete(`${url}/histories/${id}`);
 };
+
+// --- Workflow satisfaction ---
+export interface ConfirmWorkflowPayload {
+  question: string;
+  workflow: WorkflowAnswer;
+}
+
+export interface ConfirmWorkflowResponse {
+  message: string;
+  data: {
+    message: string;
+  };
+}
+
+export const confirmWorkflow = async (
+  payload: ConfirmWorkflowPayload
+): Promise<ConfirmWorkflowResponse> => {
+  const response = await axios.post<ConfirmWorkflowResponse>(
+    `${url}/satisfied`,
+    payload
+  );
+
+  return response.data;
+};

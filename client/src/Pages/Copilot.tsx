@@ -3,7 +3,8 @@ import "../styles/Copilot.css";
 import { useState, useRef, useEffect } from "react";
 import { useCopilotHistoriesQuery } from "../hooks/queries/Copilot/getHistories.copilot.query.hook";
 import { useDeleteCopilotHistoryMutation } from "../hooks/mutations/Copilot/deleteHistory.copilot.mutation.hook";
-import { streamCopilotQuestion, type CopilotHistory } from "../api/copilot.api";
+import { streamCopilotQuestion, type CopilotHistory, type WorkflowAnswer } from "../api/copilot.api";
+import { useConfirmWorkflowMutation } from "../hooks/mutations/Copilot/confirmWorkflow.copilot.mutation.hook";
 
 type GenerationStage =
   | "idle"
@@ -20,6 +21,16 @@ export type ChatMessage = {
   fileUrl?: string;
   fileName?: string;
 };
+
+type FeedbackStatus = "pending" | "thanks" | "sorry";
+
+interface FeedbackState {
+  open: boolean;
+  status: FeedbackStatus;
+  message: string;
+  question: string;
+  workflow: WorkflowAnswer;
+}
 
 const STAGE_LABELS: Record<GenerationStage, string> = {
   idle: "",
@@ -38,11 +49,10 @@ export const Copilot = () => {
   const [currentHistoryId, setCurrentHistoryId] = useState<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const streamRef = useRef<EventSource | null>(null);
-
-
+  const [feedback, setFeedback] = useState<FeedbackState | null>(null);
 
   const [messageStore, setMessageStore] =
-  useState<Record<number | "new", ChatMessage[]>>({});
+    useState<Record<number | "new", ChatMessage[]>>({});
 
   const activeKey = currentHistoryId ?? "new";
   const messages = messageStore[activeKey] ?? [];
@@ -50,6 +60,7 @@ export const Copilot = () => {
   const chatRef = useRef<HTMLDivElement>(null);
   const { data: histories } = useCopilotHistoriesQuery();
   const deleteHistoryMutation = useDeleteCopilotHistoryMutation();
+  const confirmWorkflowMutation = useConfirmWorkflowMutation();
 
   /* Auto-scroll */
   useEffect(() => {
@@ -74,7 +85,7 @@ export const Copilot = () => {
     }
   }, []);
 
-  const runCopilot = (messages: ChatMessage[], historyId: number | null) => {
+  const runCopilot = (messages: ChatMessage[], historyId: number | null, originQuestion: string) => {
   streamRef.current?.close();
 
   const key = historyId ?? "new";
@@ -127,6 +138,15 @@ export const Copilot = () => {
       });
 
       setCurrentHistoryId(newHistoryId);
+
+      // show satisfaction popup for this workflow
+      setFeedback({
+        open: true,
+        status: "pending",
+        message: "Are you satisfied with the generated workflow?",
+        question: originQuestion,
+        workflow: answer,
+      });
     }
   );
 
@@ -188,14 +208,27 @@ const upsertProgressMessage = (
       userMessage,
     ].slice(-10);
 
-    runCopilot(lastTenMessages, currentHistoryId);
+    runCopilot(lastTenMessages, currentHistoryId, userMessage.content);
   };
-const getInputPlaceholder = () => "Thinking…";
 
+  // auto-hide logic for feedback popup
+  useEffect(() => {
+    if (!feedback) return;
 
+    if (feedback.open && feedback.status === "pending") {
+      const t = setTimeout(() => {
+        setFeedback((prev) => (prev ? { ...prev, open: false } : prev));
+      }, 10000);
+      return () => clearTimeout(t);
+    }
 
+    if (!feedback.open) {
+      const t = setTimeout(() => setFeedback(null), 400);
+      return () => clearTimeout(t);
+    }
+  }, [feedback]);
 
-    const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setQuestion(e.target.value);
 
         const el = textareaRef.current;
@@ -326,7 +359,7 @@ const getInputPlaceholder = () => "Thinking…";
                 <div className="copilot-input-wrapper">
                   <input
                     type="text"
-                    placeholder={getInputPlaceholder()}
+                    placeholder="Tell us what you want to build"
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
@@ -365,7 +398,7 @@ const getInputPlaceholder = () => "Thinking…";
                <textarea
                 ref={textareaRef}
                 value={question}
-                placeholder={getInputPlaceholder()}
+                placeholder="Keep them coming"
                 disabled={stage !== "idle" && stage !== "done"}
                 rows={1}
                 onChange={handleTextareaChange}
@@ -383,6 +416,84 @@ const getInputPlaceholder = () => "Thinking…";
             )}
           </div>
         </div>
+
+        {feedback && (
+          <div
+            className={`copilot-feedback ${
+              feedback.open ? "copilot-feedback--visible" : "copilot-feedback--hide"
+            }`}
+          >
+            <div className="copilot-feedback-body">
+              <p>{feedback.message}</p>
+
+              {feedback.status === "pending" && (
+                <div className="copilot-feedback-actions">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // user is satisfied
+                      setFeedback((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              status: "thanks",
+                              message: "Thank you for your response.",
+                            }
+                          : prev
+                      );
+
+                      if (feedback.question && feedback.workflow) {
+                        confirmWorkflowMutation.mutate({
+                          question: feedback.question,
+                          workflow: feedback.workflow,
+                        });
+                      }
+
+                      setTimeout(
+                        () =>
+                          setFeedback((prev) =>
+                            prev && prev.status === "thanks"
+                              ? { ...prev, open: false }
+                              : prev
+                          ),
+                        2000
+                      );
+                    }}
+                  >
+                    Yes
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFeedback((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              status: "sorry",
+                              message: "Sorry to hear that.",
+                            }
+                          : prev
+                      );
+
+                      setTimeout(
+                        () =>
+                          setFeedback((prev) =>
+                            prev && prev.status === "sorry"
+                              ? { ...prev, open: false }
+                              : prev
+                          ),
+                        2000
+                      );
+                    }}
+                  >
+                    No
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </section>
     </>
   );

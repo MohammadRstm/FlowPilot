@@ -309,6 +309,73 @@ body {
 }
 
 
+/* Satisfaction popup */
+.copilot-feedback {
+  position: fixed;
+  top: 96px;              /* below header */
+  right: 32px;
+  max-width: 340px;
+  background: rgba(0, 0, 0, 0.9);
+  color: #ffffff;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 155, 0, 0.4);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+  transform: translateX(120%); /* off-screen to the right */
+  opacity: 0;
+  transition: transform 0.35s ease-out, opacity 0.35s ease-out;
+  z-index: 40;
+  font-size: 0.9rem;
+}
+
+.copilot-feedback--visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.copilot-feedback--hide {
+  transform: translateX(120%); /* slide back out to the right */
+  opacity: 0;
+}
+
+.copilot-feedback-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.copilot-feedback-body p {
+  margin: 0;
+}
+
+.copilot-feedback-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.copilot-feedback-actions button {
+  border: none;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.copilot-feedback-actions button:first-of-type {
+  background: #ff9b00;      /* match primary accent */
+  color: #1a0a02;
+}
+
+.copilot-feedback-actions button:last-of-type {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f9fafb;
+}
+
+.copilot-feedback-actions button:hover {
+  filter: brightness(1.05);
+}
+
 /* Mobile tweaks */
 @media (max-width: 640px) {
   .copilot-hero {
