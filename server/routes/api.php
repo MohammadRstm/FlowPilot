@@ -11,6 +11,7 @@ Route::group(["prefix" => "v0.1"] , function(){
     });
     Route::group(["prefix"=>"copilot"] , function(){
         Route::post("/ask" , [UserController::class, "ask"]);
+        Route::get("/ask-stream" , [UserController::class , "askStream"]);
         Route::post("/satisfied", [UserController::class , "confirmWorkflow"]);
         Route::get('/histories', [UserCopilotHistoryController::class, 'index']);
         Route::get('/histories/{userCopilotHistory}', [UserCopilotHistoryController::class, 'show']);

@@ -1,16 +1,17 @@
 import Header from "./components/Header";
 import "../styles/Copilot.css";
 import { useState, useRef, useEffect } from "react";
-import { useCopilotMutation } from "../hooks/mutations/Copilot/getAnswer.copilot.mutation.hook";
 import { useCopilotHistoriesQuery } from "../hooks/queries/Copilot/getHistories.copilot.query.hook";
 import { useDeleteCopilotHistoryMutation } from "../hooks/mutations/Copilot/deleteHistory.copilot.mutation.hook";
-import type { CopilotHistory } from "../api/copilot.api";
+import { streamCopilotQuestion, type CopilotHistory } from "../api/copilot.api";
 
 type GenerationStage =
   | "idle"
-  | "thinking"
+  | "analyzing"
+  | "retrieving"
+  | "ranking"
   | "generating"
-  | "finalizing"
+  | "validating"
   | "done";
 
 export type ChatMessage = {
@@ -20,11 +21,24 @@ export type ChatMessage = {
   fileName?: string;
 };
 
+const STAGE_LABELS: Record<GenerationStage, string> = {
+  idle: "",
+  analyzing: "🔍 Understanding your request…",
+  retrieving: "📚 Searching relevant workflows…",
+  ranking: "🧠 Evaluating best solution…",
+  generating: "⚙️ Generating workflow…",
+  validating: "✅ Validating workflow logic…",
+  done: "",
+};
+
+
 export const Copilot = () => {
   const [question, setQuestion] = useState("");
   const [stage, setStage] = useState<GenerationStage>("idle");
   const [currentHistoryId, setCurrentHistoryId] = useState<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const streamRef = useRef<EventSource | null>(null);
+
 
 
   const [messageStore, setMessageStore] =
@@ -60,43 +74,96 @@ export const Copilot = () => {
     }
   }, []);
 
-  const { mutate } = useCopilotMutation((answer, historyId) => {
-    setStage("done");
+  const runCopilot = (messages: ChatMessage[], historyId: number | null) => {
+  streamRef.current?.close();
 
-    const blob = new Blob(
+  const key = historyId ?? "new";
+
+  setStage("analyzing");
+  upsertProgressMessage(key, STAGE_LABELS.analyzing);
+
+  const stream = streamCopilotQuestion(
+    messages,
+    historyId,
+    (stage) => {
+      const typedStage = stage as GenerationStage;
+      setStage(typedStage);
+
+      const label = STAGE_LABELS[typedStage];
+      if (label) {
+        upsertProgressMessage(key, label);
+      }
+    },
+    (answer, newHistoryId) => {
+      setStage("done");
+
+      const blob = new Blob(
         [JSON.stringify(answer, null, 2)],
         { type: "application/json" }
-    );
+      );
 
-    const url = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(blob);
 
-    setMessageStore((prev) => {
-        const existingMessages =
-        prev[historyId] ??
-        prev["new"] ??
-        [];
+      setMessageStore((prev) => {
+        const existing = (prev[key] ?? []).filter(
+          (m) => !m.content.startsWith("__progress__")
+        );
 
         const next = {
-        ...prev,
-        [historyId]: [
-            ...existingMessages,
+          ...prev,
+          [newHistoryId]: [
+            ...existing,
             {
-            role: "assistant",
-            content: "I’ve generated your workflow.",
-            fileUrl: url,
-            fileName: `${answer.name || "workflow"}.json`,
+              role: "assistant",
+              content: "I’ve generated your workflow.",
+              fileUrl: url,
+              fileName: `${answer.name || "workflow"}.json`,
             },
-        ],
+          ],
+        };
+
+        delete next["new"];
+        return next;
+      });
+
+      setCurrentHistoryId(newHistoryId);
+    }
+  );
+
+  streamRef.current = stream;
+};
+
+
+
+const upsertProgressMessage = (
+  key: number | "new",
+  content: string
+) => {
+  setMessageStore((prev) => {
+    const msgs = prev[key] ?? [];
+
+    const hasProgress = msgs.some(
+      (m) => m.role === "assistant" && m.content.startsWith("__progress__")
+    );
+
+    const progressMessage: ChatMessage = {
+      role: "assistant",
+      content: `__progress__${content}`,
     };
 
-    // 🔥 remove "new" once migrated
-    delete next["new"];
-
-    return next;
+    return {
+      ...prev,
+      [key]: hasProgress
+        ? msgs.map((m) =>
+            m.content.startsWith("__progress__") ? progressMessage : m
+          )
+        : [...msgs, progressMessage],
+    };
   });
+};
 
-  setCurrentHistoryId(historyId);
-  });
+
+
 
 
   const handleSubmit = () => {
@@ -121,26 +188,11 @@ export const Copilot = () => {
       userMessage,
     ].slice(-10);
 
-    mutate({
-      messages: lastTenMessages,
-      historyId: currentHistoryId,
-    });
+    runCopilot(lastTenMessages, currentHistoryId);
   };
+const getInputPlaceholder = () => "Thinking…";
 
-  const getInputPlaceholder = () => {
-    switch (stage) {
-      case "thinking":
-        return "Thinking…";
-      case "generating":
-        return "Generating workflow…";
-      case "finalizing":
-        return "Finalizing…";
-      case "done":
-        return "Ask another question…";
-      default:
-        return "Tell us what you want to build";
-    }
-  };
+
 
 
     const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -269,7 +321,7 @@ export const Copilot = () => {
           <div className="copilot-main">
             {stage === "idle" && (
               <div className="copilot-content">
-                <h1>What’s On Your Mind</h1>
+                <h1>Where the magic happens</h1>
 
                 <div className="copilot-input-wrapper">
                   <input
@@ -289,7 +341,11 @@ export const Copilot = () => {
                   {messages.map((msg, index) => (
                     <div key={index} className={`chat-message ${msg.role}`}>
                       <div className="bubble">
-                        <p>{msg.content}</p>
+                        <p>
+                        {msg.content.startsWith("__progress__")
+                            ? msg.content.replace("__progress__", "")
+                            : msg.content}
+                        </p>
 
                         {msg.fileUrl && (
                           <a
@@ -306,20 +362,21 @@ export const Copilot = () => {
                 </div>
 
                 <div className="bottom-input">
-                <textarea
-                    ref={textareaRef}
-                    value={question}
-                    placeholder={getInputPlaceholder()}
-                    disabled={stage !== "done"}
-                    rows={1}
-                    onChange={handleTextareaChange}
-                    onKeyDown={(e) => {
+               <textarea
+                ref={textareaRef}
+                value={question}
+                placeholder={getInputPlaceholder()}
+                disabled={stage !== "idle" && stage !== "done"}
+                rows={1}
+                onChange={handleTextareaChange}
+                onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSubmit();
+                    e.preventDefault();
+                    handleSubmit();
                     }
-                    }}
+                }}
                 />
+
                 </div>
 
               </>

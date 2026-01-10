@@ -43,19 +43,33 @@ const prefix = "copilot";
 
 const url = BASE_URL + "/" + prefix;
 
-export const sendCopilotQuestion = async (
+export const streamCopilotQuestion = (
   messages: ChatMessage[],
-  historyId?: number | null
-): Promise<CopilotResponse> => {
-  const response = await axios.post<CopilotResponse>(
-    `${url}/ask`,
-    {
-      messages,
-      history_id: historyId ?? null,
-    }
-  );
-  console.log(response);
-  return response.data;
+  historyId?: number | null,
+  onStage?: (stage: string) => void,
+  onResult?: (answer: WorkflowAnswer, historyId: number) => void
+) => {
+  const params = new URLSearchParams();
+  params.append("messages", JSON.stringify(messages));
+  if (historyId) params.append("history_id", historyId.toString());
+
+  const evt = new EventSource(`${url}/ask-stream?${params}`);
+
+  evt.addEventListener("stage", (e) => {
+    onStage?.(e.data);
+  });
+
+  evt.addEventListener("result", (e) => {
+    const parsed = JSON.parse(e.data);
+    onResult?.(parsed.answer, parsed.history_id);
+    evt.close();
+  });
+
+  evt.onerror = () => {
+    evt.close();
+  };
+
+  return evt;
 };
 
 export interface CopilotHistoriesResponse {

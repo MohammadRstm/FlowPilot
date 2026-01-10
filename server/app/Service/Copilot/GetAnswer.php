@@ -29,17 +29,30 @@ use Illuminate\Support\Facades\Log;
 
 class GetAnswer{
     // Orchestrater
-    public static function execute(array $messages){
+    public static function execute(array $messages , ?callable $onStage = null){
         set_time_limit(300); // 5 minutes max
+
+       if ($onStage) {
+            $onStage("analyzing");
+        }
 
         $analysis = AnalyzeIntent::analyze($messages);// optimized
         $question = $analysis["question"];
-        
+
+        if ($onStage) $onStage("retrieving");
+
         $points = GetPoints::execute($analysis);// optimized --> reuires re-injection
+
+        if ($onStage) $onStage("ranking");
+
         $finalPoints = RankingFlows::rank($analysis, $points);
+
+        if ($onStage) $onStage("generating");
 
         $workflow = LLMService::generateAnswer($question, $finalPoints);// optimized
 
+       if ($onStage) $onStage("validating");
+       
         // analyze output workflow with user's intent 
         $validateWorkflowService = new ValidateFlowLogicService();// optimized -> requires prompt sharpening
         $workflow = $validateWorkflowService->execute($workflow , $question , $finalPoints);

@@ -13,8 +13,7 @@ class UserCopilotHistoryController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
+    public function index(){
         try {
             $userId = 1; // TODO: replace with authenticated user id
             $histories = UserService::getChatHistory($userId);
@@ -30,8 +29,7 @@ class UserCopilotHistoryController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(UserCopilotHistory $userCopilotHistory)
-    {
+    public function show(UserCopilotHistory $userCopilotHistory){
         try {
             $userId = 1; // TODO: replace with authenticated user id
             if ($userCopilotHistory->user_id !== $userId) {
@@ -53,8 +51,7 @@ class UserCopilotHistoryController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(UserCopilotHistory $userCopilotHistory)
-    {
+    public function destroy(UserCopilotHistory $userCopilotHistory){
         try {
             $userId = 1; // TODO: replace with authenticated user id
             if ($userCopilotHistory->user_id !== $userId) {

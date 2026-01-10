@@ -7,6 +7,7 @@ use App\Http\Requests\ConfirmWorkflowRequest;
 use App\Http\Requests\CopilotPayload;
 use App\Service\UserService;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller{
@@ -36,6 +37,42 @@ class UserController extends Controller{
             return $this->errorResponse("Failed to ask copilot" , ["1" => $ex->getMessage()]);
         }
     }
+
+    public function askStream(Request $req){
+        return response()->stream(function () use ($req) {
+
+            $messages = json_decode($req->query('messages'), true);
+            $historyId = $req->query('history_id');
+
+            if (!$messages || !is_array($messages)) {
+                abort(400, "Invalid messages payload");
+            }
+
+
+            $send = function ($stage) {
+                echo "event: stage\n";
+                echo "data: $stage\n\n";
+                ob_flush(); flush();
+            };
+
+            $result = UserService::getCopilotAnswer(
+                $messages,
+                $historyId,
+                fn ($stage) => $send($stage)
+            );
+
+            echo "event: result\n";
+            echo "data: " . json_encode($result) . "\n\n";
+            ob_flush(); flush();
+
+        }, 200, [
+            "Content-Type" => "text/event-stream",
+            "Cache-Control" => "no-cache",
+            "Connection" => "keep-alive",
+            "X-Accel-Buffering" => "no",
+        ]);
+    }
+
     public function confirmWorkflow(ConfirmWorkflowRequest $req){
         try{
             UserService::saveWorkflow($req);
