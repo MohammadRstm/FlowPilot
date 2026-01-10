@@ -1,7 +1,7 @@
 import './App.css'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Landing from './Pages/Landing'
-import { Copilot } from './Pages/Copilot'
+import { Copilot } from './Pages/copilot/Copilot'
 
 function App() {
   return (

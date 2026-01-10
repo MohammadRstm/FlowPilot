@@ -75,7 +75,7 @@ class UserService{
         $lastUserMessage = collect($messages)
             ->reverse()
             ->first(fn ($m) => 
-                (is_array($m) ? $m['role'] : $m->role) === 'user'
+                (is_array($m) ? $m['type'] : $m->type) === 'user'
             );
 
 

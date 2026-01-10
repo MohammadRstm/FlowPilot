@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { ChatMessage } from "../Pages/Copilot";
+import type { ChatMessage } from "../Pages/copilot/Copilot.types";
 
 export interface WorkflowAnswer {
   name: string;
