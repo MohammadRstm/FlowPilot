@@ -24,12 +24,20 @@ class ValidateFlowLogicService{
         $this->maxRetries = 3;
     }
 
-    public function execute($workflow, $question, $totalPoints, $retries = 0){
+    public function execute($workflow, $question, $totalPoints, $trace ,  $retries = 0){
         $judgement = LLMService::judgeResults($workflow , $question);
 
         Log::debug('Workflow judgement', [
             'attempt' => $retries,
             'judgement' => $judgement
+        ]);
+
+        $trace("judgement" , [
+            "retries" => $retries,
+            "capabilities" => $judgement["capabilities"],
+            "requirements" => $judgement["requirements"],
+            "errors" => $judgement["errors"],
+            "matches" => count($judgement["matches"])
         ]);
 
         $this->updateBestWorkflow($workflow, $judgement['score']);
@@ -56,6 +64,10 @@ class ValidateFlowLogicService{
         }
 
         $repaired = $this->repairWorkflowLogic($question , $workflow, $judgement, $totalPoints);
+
+        $trace("repaired_workflow", [
+            "workflow" => $repaired
+        ]);
 
         return $this->execute($repaired, $question, $totalPoints, $retries + 1);
     }

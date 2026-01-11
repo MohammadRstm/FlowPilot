@@ -49,16 +49,21 @@ class UserController extends Controller{
             }
 
 
-            $send = function ($stage) {
-                echo "event: stage\n";
-                echo "data: $stage\n\n";
+            $stream = function (string $event, $data) {
+                if (!is_string($data)) {
+                    $data = json_encode($data);
+                }
+
+                echo "event: $event\n";
+                echo "data: $data\n\n";
                 ob_flush(); flush();
             };
+
 
             $result = UserService::getCopilotAnswer(
                 $messages,
                 $historyId,
-                fn ($stage) => $send($stage)
+                $stream
             );
 
             echo "event: result\n";

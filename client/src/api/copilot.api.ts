@@ -47,6 +47,7 @@ export const streamCopilotQuestion = (
   messages: ChatMessage[],
   historyId?: number | null,
   onStage?: (stage: string) => void,
+  onTrace?: (trace: any) => void,
   onResult?: (answer: WorkflowAnswer, historyId: number) => void
 ) => {
   const params = new URLSearchParams();
@@ -65,12 +66,19 @@ export const streamCopilotQuestion = (
     evt.close();
   });
 
+  evt.addEventListener("trace", (e) => {
+    onTrace?.(JSON.parse(e.data));
+  });
+
   evt.onerror = () => {
     evt.close();
   };
 
   return evt;
 };
+
+
+
 
 export interface CopilotHistoriesResponse {
   message: string;

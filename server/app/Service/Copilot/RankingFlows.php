@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Log;
 
 class RankingFlows{
 
-    public static function rank(array $analysis, array $points): array {
+    public static function rank(array $analysis, array $points , ?callable $stage): array {
         $workflowScores = self::rankWorkflows($analysis, $points["workflows"]);
 
         $best = $workflowScores[0] ?? null;
@@ -14,7 +14,7 @@ class RankingFlows{
         $shouldReuse =
             $best &&
             $best["score"] > 0.5;
-            
+
         $results = [
             "nodes" => self::rankNodes($analysis, $points["nodes"]),
             "schemas" => self::rankSchemas($analysis, $points["schemas"])
@@ -25,6 +25,7 @@ class RankingFlows{
                 "workflows" => array_slice($workflowScores, 0, 5)
             ];
             Log::info('Reusing existing workflow', ['best_workflow_score' => $best["score"]]);
+            $stage("ranking_found_workflow");
             
             return $result;
         }

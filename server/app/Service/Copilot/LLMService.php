@@ -72,11 +72,15 @@ class LLMService{
         return self::callOpenAI($prompt);
     }
 
-    public static function generateAnswer(string $question, array $topFlows) {
+    public static function generateAnswer(string $question, array $topFlows , ?callable $trace) {
         $context = self::buildContext($topFlows);
         $planningPrompt = Prompts::getWorkflowBuildingPlanPrompt($question, $context);
 
         $plan = self::callOpenAI($planningPrompt);
+
+        $trace("genration_plan", [
+            "connected_nodes" => $plan["nodes"]
+        ]);
 
         // generate workflow
         $compilerPrompt = Prompts::getWorkflowBuildingPrompt($question , $plan , $context);

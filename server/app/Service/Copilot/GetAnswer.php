@@ -29,33 +29,46 @@ use Illuminate\Support\Facades\Log;
 
 class GetAnswer{
     // Orchestrater
-    public static function execute(array $messages , ?callable $onStage = null){
+    public static function execute(array $messages , ?callable $stream = null){
         set_time_limit(300); // 5 minutes max
 
-       if ($onStage) {
-            $onStage("analyzing");
-        }
+        $stage = fn($name) => $stream && $stream("stage", $name);
+        $trace = fn($type, $payload) => $stream && $stream("trace", [
+            "type" => $type,
+            "payload" => $payload
+        ]);
+
+        $stage("analyzing");
 
         $analysis = AnalyzeIntent::analyze($messages);// optimized
         $question = $analysis["question"];
+ 
+        $trace("analyzing", [
+            "intent" => $analysis["intent"],
+        ]);
 
-        if ($onStage) $onStage("retrieving");
+        $points = GetPoints::execute($analysis);// optimized --> requires re-injection
 
-        $points = GetPoints::execute($analysis);// optimized --> reuires re-injection
+        $trace("retrieval", [
+            "candidates" => [
+                "workflows_count" => count($points["workflows"]),
+                "nodes" => $points["nodes"],
+            ]
+        ]);
 
-        if ($onStage) $onStage("ranking");
+        $finalPoints = RankingFlows::rank($analysis, $points , $stage);
 
-        $finalPoints = RankingFlows::rank($analysis, $points);
+        $workflow = LLMService::generateAnswer($question, $finalPoints , $trace);// optimized
 
-        if ($onStage) $onStage("generating");
+        $trace("generating", [
+            "workflow" => $workflow
+        ]);
 
-        $workflow = LLMService::generateAnswer($question, $finalPoints);// optimized
+        $stage("validating");
 
-       if ($onStage) $onStage("validating");
-       
         // analyze output workflow with user's intent 
         $validateWorkflowService = new ValidateFlowLogicService();// optimized -> requires prompt sharpening
-        $workflow = $validateWorkflowService->execute($workflow , $question , $finalPoints);
+        $workflow = $validateWorkflowService->execute($workflow , $question , $finalPoints , $trace);
 
         // $validateWorkflowDataInjection = new ValidateFlowDataInjection();// we are here now
         // $workflow = $validateWorkflowDataInjection->execute($workflow , $question , $finalPoints);
@@ -63,3 +76,6 @@ class GetAnswer{
         return $workflow;
     }
 }
+
+
+

@@ -11,10 +11,10 @@ use Illuminate\Support\Facades\Log;
 
 class UserService{
 
-    public static function getCopilotAnswer(array $messages, ?int $historyId = null , ?callable $onStage = null): array{
+    public static function getCopilotAnswer(array $messages, ?int $historyId = null , ?callable $stream = null): array{
         $userId = 1; // replace with authenticated user id when auth is wired
 
-        $answer = GetAnswer::execute($messages , $onStage);
+        $answer = GetAnswer::execute($messages , $stream);
         $history = self::handleHistoryManagement($userId , $historyId , $messages , $answer);
 
         return [
