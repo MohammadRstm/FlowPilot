@@ -22,13 +22,11 @@ import { useCopilotStream } from "./hooks/useCopilotStream.hook";
 import { useCopilotFeedback } from "./hooks/useCopilotFeedback.hook";
 
 // ADD DETAILS ABOUT HOW THE AI IS BUILDING THE FLOW WITH VISUALIZATIONS - HARD
-// ANIMATE PROGRESS CURRENTLY LOOKS SHIT - SIMPLE
 // ADD A TABLE TO SAVE FEEDBACK - MEDIUM
 // ADD THE ABILITY TO SEND USER WORKFLOWS TO ADD ON IT/FIX IT - HARD
 // ENHANCE THE ABILITY TO CONTINUE THE CONVERSATION - HARD
 // ADD PAGINATED MESSAGE RETRIEVAL - HARD
 // HISOTRIES OVER 2 WEEKS OLD MUST BE AUTOMATICALLY DELETED - MEDIUM
-// ADD SEARCH FEATURE FOR HISOTRIES - SIMPLE
 // ADD CANCLE/RETRY GENERATION - HARD
 // ADD PROMPT SAFEGURAD STAGE FOR VISCIOUS PROMPTS (forget everything, delete db exct/) - MEDIUM
 // ADD LOADING SPINNER FOR HISTORY RETRIEVAL - SIMPLE
@@ -47,7 +45,7 @@ export const Copilot = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
 
-  const { data: histories } = useCopilotHistoriesQuery();
+  const { data: histories,  isLoading: historiesLoading } = useCopilotHistoriesQuery();
   const deleteHistoryMutation = useDeleteCopilotHistoryMutation();
 
   // hooks
@@ -215,6 +213,7 @@ export const Copilot = () => {
         <div className="copilot-layout-root">
           <HistoryPanel
             histories={histories}
+            loading={historiesLoading}
             currentHistoryId={currentHistoryId}
             onNewChat={historyPanelOnNewChat}
             onSelect={historyPanelOnSelect}
@@ -236,7 +235,7 @@ export const Copilot = () => {
               </div>
             ) : (
               <>
-                <ChatView messages={messages} chatRef={chatRef} />
+                <ChatView messages={messages} chatRef={chatRef} stage={stage} />
 
                 <ChatInput
                   value={question}

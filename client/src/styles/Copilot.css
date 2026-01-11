@@ -214,6 +214,70 @@ body {
   cursor: pointer;
 }
 
+/* Header row */
+.history-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.history-search-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 0.7;
+  font-size: 14px;
+}
+
+.history-search-button:hover {
+  opacity: 1;
+}
+
+/* Search container */
+.history-search-wrapper {
+  position: relative;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: all 0.25s ease;
+}
+
+.history-search-wrapper.open {
+  max-height: 40px;
+  opacity: 1;
+  transform: translateY(0);
+  margin-bottom: 8px;
+}
+
+/* Input */
+.history-search-wrapper input {
+  width: 100%;
+  padding: 8px 12px 8px 32px;
+  font-size: 13px;
+  border-radius: 8px;
+  border: 1px solid #2a2a2a;
+  background: #111;
+  color: #fff;
+}
+
+/* Cancel button */
+.search-cancel {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.search-cancel:hover {
+  color: #fff;
+}
+
+
 .new-chat-button:hover {
   background: #ffb733;
 }
@@ -274,6 +338,16 @@ body {
   opacity: 0.75;
 }
 
+.history-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+
 /* Hide scrollbar (Chrome, Safari, Edge) */
 .chat-container::-webkit-scrollbar {
   width: 0;
@@ -322,6 +396,16 @@ body {
   color: #fff;
   border-bottom-left-radius: 4px;
 }
+
+.chat-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  opacity: 0.7;
+}
+
 
 .file-link {
   display: inline-block;
