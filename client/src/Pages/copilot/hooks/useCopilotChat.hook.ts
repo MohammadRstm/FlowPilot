@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ChatMessage, GenerationStage } from "../Copilot.types";
+import { STAGE_LABELS } from "../Copilot.constants";
 
 const STORAGE_KEY = "copilot_messages";
 
@@ -26,34 +27,45 @@ export function useCopilotChat() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(messageStore));
     }, [messageStore]);
 
-    const upsertProgressMessage = (key: number | "new", stage: GenerationStage) => {
-        setMessageStore((prev) => {
-            const msgs = prev[key] ?? [];
+    const upsertStreamingAssistant = (
+    key: number | "new",
+    stage: GenerationStage
+    ) => {
+    setMessageStore((prev) => {
+        const msgs = prev[key] ?? [];
+        const last = msgs[msgs.length - 1];
 
-            const progress: ChatMessage = { type: "progress", stage };
+        const label = STAGE_LABELS[stage] ?? "";
 
-            const hasProgress = msgs.some((m) => m.type === "progress");
-
-            return {
+        if (last?.type === "assistant" && last.isStreaming) {
+        return {
             ...prev,
-            [key]: hasProgress
-                ? msgs.map((m) => (m.type === "progress" ? progress : m))
-                : [...msgs, progress],
-            };
-        }); 
+            [key]: msgs.map((m, i) =>
+            i === msgs.length - 1
+                ? { ...m, content: label }
+                : m
+            ),
+        };
+        }
+
+        return {
+        ...prev,
+        [key]: [
+            ...msgs,
+            {
+            type: "assistant",
+            content: label,
+            isStreaming: true,
+            canRetry: false,
+            },
+        ],
+        };
+    });
     };
 
-    const removeProgressMessage = (key: number | "new") => {
-        setMessageStore((prev) => ({
-            ...prev,
-            [key]: (prev[key] ?? []).filter((m) => m.type !== "progress"),
-        }));
-    };
-
-    return {
+    return{
         messageStore,
         setMessageStore,
-        upsertProgressMessage,
-        removeProgressMessage,
+        upsertStreamingAssistant,
     };
 }

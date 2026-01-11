@@ -11,8 +11,14 @@ export type GenerationStage =
 
 export type ChatMessage =
   | { type: "user"; content: string }
-  | { type: "assistant"; content: string; fileUrl?: string; fileName?: string }
-  | { type: "progress"; stage: GenerationStage; content?: string };
+  | {
+      type: "assistant";
+      content: string;
+      fileUrl?: string;
+      fileName?: string;
+      isStreaming?: boolean;
+      canRetry?: boolean;
+    };
 
 export type FeedbackStatus = "pending" | "thanks" | "sorry";
 

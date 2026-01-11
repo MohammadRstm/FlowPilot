@@ -29,7 +29,6 @@ import { useCopilotFeedback } from "./hooks/useCopilotFeedback.hook";
 // HISOTRIES OVER 2 WEEKS OLD MUST BE AUTOMATICALLY DELETED - MEDIUM
 // ADD CANCLE/RETRY GENERATION - HARD
 // ADD PROMPT SAFEGURAD STAGE FOR VISCIOUS PROMPTS (forget everything, delete db exct/) - MEDIUM
-// FIX SORRY TO HEAR THAT FEEDBACK TOAST HANGING - SIMPLE
 // FIGURE OUT A BETTER WAY TO GET USER FEEDBACK CURRENTLY NOT VERY EFFICIENT NOR DOES IT MAKE SENSE - UNKNOWN
 // ADD THE ABILITY TO CREATE CUSTOM NODES - VERY HARD
 // ADD THE ABILITY TO SAVE CREDENTIALS OR FIGURE OUT A WAY TO DO IT AUTOMATICALLY - HARD
@@ -47,24 +46,25 @@ export const Copilot = () => {
   const { data: histories,  isLoading: historiesLoading } = useCopilotHistoriesQuery();
   const deleteHistoryMutation = useDeleteCopilotHistoryMutation();
 
+  const [activeGenerationKey, setActiveGenerationKey] =
+  useState<number | "new" | null>(null);
+
+
   // hooks
   const {
     messageStore,
     setMessageStore,
-    upsertProgressMessage,
-    removeProgressMessage,
+    upsertStreamingAssistant,
   } = useCopilotChat();
   const messages = messageStore[activeKey] ?? [];
 
-  const { run } = useCopilotStream({
+  const { run , cancel} = useCopilotStream({
     onStage: setStage,
     onProgress: (key : number | "new", stage: GenerationStage) => {
-      upsertProgressMessage(key, stage); 
+      upsertStreamingAssistant(key, stage); 
     },
     onComplete: (answer, newHistoryId) => {
       const key = currentHistoryId ?? "new";
-
-      removeProgressMessage(key);
 
       const blob = new Blob([JSON.stringify(answer, null, 2)], {
         type: "application/json",
@@ -72,30 +72,32 @@ export const Copilot = () => {
       const url = URL.createObjectURL(blob);
 
       setMessageStore((prev) => {
-        const existing = prev[key] ?? [];
+        const msgs = prev[key] ?? [];
 
-        const next = {
+        const updated = msgs.map((m, i) =>
+          i === msgs.length - 1 && m.type === "assistant"
+            ? {
+                ...m,
+                isStreaming: false,
+                canRetry: true,
+                content: "I’ve generated your workflow.",
+                fileUrl: url,
+                fileName: `${answer.name || "workflow"}.json`,
+              }
+            : m
+        );
+
+        return {
           ...prev,
-          [newHistoryId]: [
-            ...existing,
-            {
-              type: "assistant",
-              content: "I’ve generated your workflow.",
-              fileUrl: url,
-              fileName: `${answer.name || "workflow"}.json`,
-            },
-          ] as ChatMessage[],
+          [newHistoryId]: updated,
         };
-
-        delete next["new"];
-        return next;
       });
 
       setCurrentHistoryId(newHistoryId);
       setStage("done");
+      setActiveGenerationKey(null);
 
       openFeedback(question, answer);
-
     },
   });
 
@@ -136,6 +138,8 @@ export const Copilot = () => {
       userMessage,
     ].slice(-10);
 
+    setActiveGenerationKey(activeKey);
+
     run(lastTen, currentHistoryId , activeKey);
   };
 
@@ -152,8 +156,66 @@ export const Copilot = () => {
     el.style.overflowY = el.scrollHeight > 66 ? "auto" : "hidden";
   };
 
-  // helpers:
+  const handleCancel = () => {
+    cancel();
+    setActiveGenerationKey(null);
+    setStage("done");
+
+    setMessageStore((prev) => {
+      const msgs = prev[activeKey] ?? [];
+
+      return {
+        ...prev,
+        [activeKey]: msgs.map((m, i) =>
+          i === msgs.length - 1 && m.type === "assistant"
+            ? {
+                ...m,
+                isStreaming: false,
+                canRetry: true,
+                content: "Generation cancelled.",
+              }
+            : m
+        ),
+      };
+    });
+  };
+
+
+  const handleRetry = () => {
+    const lastUser = getLastUserMessage();
+    if (!lastUser) return;
+
+    cancel();
+    setQuestion(lastUser.content);
+    setActiveGenerationKey(null);
+    setStage("done");
+
+    setMessageStore((prev) => {
+      const msgs = prev[activeKey] ?? [];
+
+      return {
+        ...prev,
+        [activeKey]: msgs.map((m, i) =>
+          i === msgs.length - 1 && m.type === "assistant"
+            ? {
+                ...m,
+                isStreaming: false,
+                canRetry: true,
+                content: "Generation cancelled.",
+              }
+            : m
+        ),
+      };
+    });
+  };
+
+
+
+    // helpers:
   const historyPanelOnSelect =(history : CopilotHistory) => {
+    cancel();
+    setActiveGenerationKey(null);
+
     setCurrentHistoryId(history.id);
     setStage("done");
 
@@ -203,6 +265,12 @@ export const Copilot = () => {
         }
       }
   })
+
+  const getLastUserMessage = () => {
+    const msgs = messageStore[activeKey] ?? [];
+    return [...msgs].reverse().find(m => m.type === "user");
+  };
+
   
   return (
     <>
@@ -234,12 +302,18 @@ export const Copilot = () => {
               </div>
             ) : (
               <>
-                <ChatView messages={messages} chatRef={chatRef}/>
-
+                <ChatView
+                  messages={messages}
+                  chatRef={chatRef}
+                  activeGeneration={activeGenerationKey === activeKey}
+                  stage={stage}
+                  onCancel={handleCancel}
+                  onRetry={handleRetry}
+                />
                 <ChatInput
                   value={question}
                   textareaRef={textareaRef}
-                  disabled={stage !== "done"}
+                  disabled={activeGenerationKey !== null}
                   onChange={handleTextareaChange}
                   onSubmit={handleSubmit}
                 />

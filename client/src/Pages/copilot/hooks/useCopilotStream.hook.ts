@@ -13,6 +13,11 @@ export function useCopilotStream({
 }) {
   const streamRef = useRef<EventSource | null>(null);
 
+  const cancel = () => {
+    streamRef.current?.close();
+    streamRef.current = null;
+  };
+
   const run = (
     messages: ChatMessage[],
     historyId: number | null,
@@ -37,5 +42,5 @@ export function useCopilotStream({
     );
   };
 
-  return { run };
+  return { run , cancel };
 }
