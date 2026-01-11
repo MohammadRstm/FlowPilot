@@ -41,6 +41,8 @@ body {
 .copilot-input-wrapper {
   width: 100%;
   display: flex;
+  align-items: flex-end;
+  gap: 8px;
   justify-content: center;
 }
 
@@ -70,6 +72,31 @@ body {
   box-shadow:
     0 0 0 2px rgba(19, 19, 19, 0.6),
     0 30px 60px rgba(0, 0, 0, 0.35);
+}
+
+.chat-send-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary, #111);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.chat-send-button:hover:not(:disabled) {
+  color: var(--accent, #4f46e5);
+  transform: translateX(1px);
+}
+
+.chat-send-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .workflow-file {
@@ -375,6 +402,112 @@ body {
 .copilot-feedback-actions button:hover {
   filter: brightness(1.05);
 }
+
+.copilot-progress {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+
+.copilot-progress-text {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+
+  /* fallback color */
+  color: #c7c9ff;
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    #9aa0ff 0%,
+    #ffffff 45%,
+    #9aa0ff 90%
+  );
+  background-size: 200% 100%;
+  background-position: -100% 0;
+
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  animation: textShimmer 1.8s ease-in-out infinite;
+}
+
+.shimmer.generating {
+  animation-duration: 1.2s;
+}
+
+.shimmer.validating {
+  animation-duration: 2.4s;
+}
+
+/* Left → Right sweep */
+@keyframes textShimmer {
+  0% {
+    background-position: -100% 0;
+  }
+  100% {
+    background-position: 100% 0;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.dots {
+  display: inline-flex;
+  margin-left: 4px;
+}
+
+.dots span {
+  animation: dotPulse 1.4s infinite;
+  opacity: 0;
+}
+
+.dots span:nth-child(1) {
+  animation-delay: 0s;
+}
+.dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dotPulse {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 0;
+  }
+}
+
+.copilot-progress {
+  animation: breathe 2.5s ease-in-out infinite;
+}
+.copilot-progress-text.generating::after {
+  animation-duration: 1.1s;
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
 
 /* Mobile tweaks */
 @media (max-width: 640px) {
