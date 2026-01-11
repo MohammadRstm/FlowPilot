@@ -29,7 +29,6 @@ import { useCopilotFeedback } from "./hooks/useCopilotFeedback.hook";
 // HISOTRIES OVER 2 WEEKS OLD MUST BE AUTOMATICALLY DELETED - MEDIUM
 // ADD CANCLE/RETRY GENERATION - HARD
 // ADD PROMPT SAFEGURAD STAGE FOR VISCIOUS PROMPTS (forget everything, delete db exct/) - MEDIUM
-// ADD LOADING SPINNER FOR HISTORY RETRIEVAL - SIMPLE
 // FIX SORRY TO HEAR THAT FEEDBACK TOAST HANGING - SIMPLE
 // FIGURE OUT A BETTER WAY TO GET USER FEEDBACK CURRENTLY NOT VERY EFFICIENT NOR DOES IT MAKE SENSE - UNKNOWN
 // ADD THE ABILITY TO CREATE CUSTOM NODES - VERY HARD
@@ -235,7 +234,7 @@ export const Copilot = () => {
               </div>
             ) : (
               <>
-                <ChatView messages={messages} chatRef={chatRef} stage={stage} />
+                <ChatView messages={messages} chatRef={chatRef}/>
 
                 <ChatInput
                   value={question}

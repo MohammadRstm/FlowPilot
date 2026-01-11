@@ -7,22 +7,14 @@ import { Spinner } from "../../components/Spinner";
 interface ChatViewProps {
   messages: Msg[];
   chatRef: RefObject<HTMLDivElement | null>;
-  stage : GenerationStage
 }
 
-export function ChatView({ messages, chatRef , stage }: ChatViewProps) {
+export function ChatView({ messages, chatRef }: ChatViewProps) {
   return (
     <div className="chat-container" ref={chatRef}>
       {messages.map((msg, idx) => (
         <ChatMessageComponent key={idx} msg={msg} />
       ))}
-
-      {stage !== "idle" && stage !== "done" && (
-        <div className="chat-loading">
-          <Spinner size={18} />
-          <span>Thinking…</span>
-        </div>
-      )}
     </div>
   );
 }
