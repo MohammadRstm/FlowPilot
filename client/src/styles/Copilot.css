@@ -626,6 +626,138 @@ body {
 }
 
 
+.trace-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.trace-block {
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,155,0,0.25);
+  border-radius: 12px;
+  padding: 12px 14px;
+  backdrop-filter: blur(6px);
+}
+
+.trace-title {
+  color: #ff9b00;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.kv strong {
+  color: #ffcc66;
+  font-weight: 500;
+}
+
+.global-cursor {
+  display: inline-block;
+  margin-left: 4px;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* --- N8N PLAN --- */
+
+.n8n-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.plan-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.n8n-node {
+  background: #1e293b;
+  border: 1px solid #334155;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.n8n-node.trigger { border-left: 4px solid #22c55e; }
+.n8n-node.read    { border-left: 4px solid #38bdf8; }
+.n8n-node.filter  { border-left: 4px solid #facc15; }
+.n8n-node.write   { border-left: 4px solid #a855f7; }
+.n8n-node.send    { border-left: 4px solid #f97316; }
+
+.node-role {
+  margin-left: 8px;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+/* --- WORKFLOW --- */
+
+.workflow-preview {
+  border: 1px solid #334155;
+  border-radius: 8px;
+  background: #020617;
+}
+
+.workflow-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  cursor: pointer;
+  background: #020617;
+}
+
+.workflow-json {
+  max-height: 400px;
+  overflow: auto;
+  padding: 10px;
+  background: #020617;
+  color: #e5e7eb;
+}
+
+.plan-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: pop 0.3s ease-out;
+}
+
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.trace-panel {
+  max-width: 720px;
+  width: 100%;
+}
+
+.trace-block {
+  max-width: 100%;
+  word-wrap: break-word;
+}
+
+.kv, .kv-value, .typed-line {
+  max-width: 100%;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+
+
+
 
 /* Mobile tweaks */
 @media (max-width: 640px) {

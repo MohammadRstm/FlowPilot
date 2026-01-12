@@ -1,11 +1,12 @@
 import type { RefObject } from "react";
-import type { GenerationStage, ChatMessage as Msg } from "../Copilot.types";
+import type { GenerationStage, ChatMessage as Msg, TraceEvent } from "../Copilot.types";
 import { ChatMessage as ChatMessageComponent } from "./ChatMessages";
 
 interface ChatViewProps {
   messages: Msg[];
   chatRef: RefObject<HTMLDivElement | null>;
   activeGeneration: boolean;
+  traces: TraceEvent[];
   stage: GenerationStage;
   onCancel: () => void;
   onRetry: () => void;
@@ -16,6 +17,7 @@ export function ChatView({
   chatRef,
   activeGeneration,
   stage,
+  traces,
   onCancel,
   onRetry,
 }: ChatViewProps) {
@@ -26,7 +28,7 @@ export function ChatView({
 
         return (
           <div key={idx}>
-            <ChatMessageComponent msg={msg} stage={stage}/>
+            <ChatMessageComponent msg={msg} stage={stage} traces={isLast ? traces : []}/>
 
             {msg.type === "assistant" &&
               isLast &&

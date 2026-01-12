@@ -32,14 +32,6 @@ class ValidateFlowLogicService{
             'judgement' => $judgement
         ]);
 
-        $trace("judgement" , [
-            "retries" => $retries,
-            "capabilities" => $judgement["capabilities"],
-            "requirements" => $judgement["requirements"],
-            "errors" => $judgement["errors"],
-            "matches" => count($judgement["matches"])
-        ]);
-
         $this->updateBestWorkflow($workflow, $judgement['score']);
 
         // check score
@@ -47,6 +39,13 @@ class ValidateFlowLogicService{
             Log::info("Terminal convergence reached");
             return $this->bestWorkflow ?? $workflow;
         }
+
+        $trace("judgement" , [
+            "capabilities" => $judgement["capabilities"],
+            "requirements" => $judgement["requirements"],
+            "errors" => $judgement["errors"],
+            "matches" => count($judgement["matches"])
+        ]);
 
         // check if we've seen this workflow before
         $fingerprint = $this->fingerprintWorkflow($workflow);

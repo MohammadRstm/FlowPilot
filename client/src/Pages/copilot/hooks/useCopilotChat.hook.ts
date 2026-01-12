@@ -4,21 +4,19 @@ import { STAGE_LABELS } from "../Copilot.constants";
 
 const STORAGE_KEY = "copilot_messages";
 
-export function useCopilotChat() {
-    const [messageStore, setMessageStore] = useState<{
+export function useCopilotChat(){// the holy grale of storing messages
+    const [messageStore, setMessageStore] = useState<{// the structure contians messages of new conversation or an old one (hence key)
         [key: number]: ChatMessage[];
         new?: ChatMessage[];
     }>({});
 
     // hydrate on mount
     useEffect(() => {
-        try {
-        const cached = localStorage.getItem(STORAGE_KEY);
-        if (cached) {
-            setMessageStore(JSON.parse(cached));
-        }
-        } catch {
-        localStorage.removeItem(STORAGE_KEY);
+        try{
+            const cached = localStorage.getItem(STORAGE_KEY);
+            if(cached) setMessageStore(JSON.parse(cached));
+        }catch{
+            localStorage.removeItem(STORAGE_KEY);
         }
     }, []);
 
@@ -31,14 +29,14 @@ export function useCopilotChat() {
     key: number | "new",
     stage: GenerationStage
     ) => {
-    setMessageStore((prev) => {
-        const msgs = prev[key] ?? [];
-        const last = msgs[msgs.length - 1];
+    setMessageStore((prev) => {// update messages
+        const msgs = prev[key] ?? [];// get current messages
+        const last = msgs[msgs.length - 1];// get last message
 
-        const label = STAGE_LABELS[stage] ?? "";
+        const label = STAGE_LABELS[stage] ?? "";// identify the message's label according to the current stage
 
-        if (last?.type === "assistant" && last.isStreaming) {
-        return {
+        if(last?.type === "assistant" && last.isStreaming){// if the last message is an AI one and its currently streaming
+        return {// return the all prev message only give the label to the last one as content
             ...prev,
             [key]: msgs.map((m, i) =>
             i === msgs.length - 1
@@ -47,7 +45,7 @@ export function useCopilotChat() {
             ),
         };
         }
-
+        // else just give the old messages back + new one (the last message is a user message (stage is still idle))
         return {
         ...prev,
         [key]: [
@@ -56,7 +54,8 @@ export function useCopilotChat() {
             type: "assistant",
             content: label,
             isStreaming: true,
-            canRetry: false,
+            canRetry: true,
+            canCancel : true 
             },
         ],
         };

@@ -1,7 +1,8 @@
-import type { GenerationStage, ChatMessage as Msg } from "../Copilot.types";
+import type { GenerationStage, ChatMessage as Msg, TraceEvent } from "../Copilot.types";
 import { ProgressMessage } from "./ProgressMessage";
+import { TraceView } from "./tracer/TraceView";
 
-export function ChatMessage({ msg , stage }: { msg: Msg , stage : GenerationStage}) {
+export function ChatMessage({ msg , stage , traces }: { msg: Msg , stage : GenerationStage; traces : TraceEvent[]}) {
   switch (msg.type) {
     case "user":
       return (
@@ -17,7 +18,10 @@ export function ChatMessage({ msg , stage }: { msg: Msg , stage : GenerationStag
         <div className="chat-message assistant">
         <div className="bubble">
             {msg.isStreaming ? (
-            <ProgressMessage stage={stage as GenerationStage} />
+                <>
+                    <TraceView traces={traces || []} />
+                    <ProgressMessage stage={stage as GenerationStage} />
+                </>
             ) : (
             <>
                 <p>{msg.content}</p>

@@ -34,3 +34,9 @@ export type CopilotHistoryMessage = {
   user_message: string;
   ai_response: WorkflowAnswer; 
 };
+
+
+export interface TraceEvent {
+  type: "analyzing" | "retrieval" | "ranking" | "generation" | "validation";
+  payload: any;
+}

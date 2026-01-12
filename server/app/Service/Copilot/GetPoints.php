@@ -25,9 +25,12 @@ class GetPoints{
             ($analysis["trigger"] ?? "")
         );
 
+        $workflows =  self::searchWorkflows($workflowDense, $workflowSparse, $analysis);
+        $nodes = self::searchNodes($nodeDense, $nodeSparse, $analysis);
+
         return [
-            "workflows" => self::searchWorkflows($workflowDense, $workflowSparse, $analysis),
-            "nodes"     => self::searchNodes($nodeDense, $nodeSparse, $analysis),
+            "workflows" => $workflows,
+            "nodes"     => $nodes,
             "schemas"   => self::searchSchemas($nodeDense, $nodeSparse, $analysis),
         ];
     }

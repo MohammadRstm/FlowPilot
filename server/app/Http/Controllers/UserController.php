@@ -39,7 +39,7 @@ class UserController extends Controller{
     }
 
     public function askStream(Request $req){
-        return response()->stream(function () use ($req) {
+        return response()->stream(function () use ($req){// we are telling laravel that we're sending chunks of data not everything at once
 
             $messages = json_decode($req->query('messages'), true);
             $historyId = $req->query('history_id');
@@ -49,23 +49,24 @@ class UserController extends Controller{
             }
 
 
-            $stream = function (string $event, $data) {
+            $stream = function (string $event, $data){// stream helper, this sends the events (chunks) to frontend
                 if (!is_string($data)) {
                     $data = json_encode($data);
                 }
 
                 echo "event: $event\n";
-                echo "data: $data\n\n";
-                ob_flush(); flush();
+                echo "data: $data\n\n";// needs to have two new line charachters or else it breaks 
+                ob_flush(); flush();// this forces laravel to send now instead of waiting
             };
 
 
             $result = UserService::getCopilotAnswer(
                 $messages,
                 $historyId,
-                $stream
+                $stream// the helper is sent further down the pipeline for detialed chunks
             );
 
+            // finally we send the results
             echo "event: result\n";
             echo "data: " . json_encode($result) . "\n\n";
             ob_flush(); flush();

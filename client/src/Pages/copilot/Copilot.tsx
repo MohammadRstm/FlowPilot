@@ -20,6 +20,7 @@ import type { CopilotHistory } from "../../api/copilot.api";
 import { useCopilotChat } from "./hooks/useCopilotChat.hook";
 import { useCopilotStream } from "./hooks/useCopilotStream.hook";
 import { useCopilotFeedback } from "./hooks/useCopilotFeedback.hook";
+import { applyTraceEvent } from "./components/tracer/traceReduces";
 
 // ADD DETAILS ABOUT HOW THE AI IS BUILDING THE FLOW WITH VISUALIZATIONS - HARD - F/B HEAVY ON BOTH
 // ADD THE ABILITY TO SEND USER WORKFLOWS TO ADD ON IT/FIX IT - HARD - BACKEND HEAVY
@@ -31,9 +32,15 @@ import { useCopilotFeedback } from "./hooks/useCopilotFeedback.hook";
 // ADD THE ABILITY TO SAVE CREDENTIALS OR FIGURE OUT A WAY TO DO IT AUTOMATICALLY - HARD F/B HEAVY ON BOTH
 // APPROX TIME : 8 DAYS TO FINISH (EXCLUDING ENHANCING THE AI'S ABILITY TO GENERATE WORKFLOWS)
 
+type TraceEvent = {
+  type: string;
+  payload: any;
+};
+
+
 export const Copilot = () => {
   const [question, setQuestion] = useState("");
-  const [stage, setStage] = useState<GenerationStage>("idle");
+  const [stage, setStage] = useState<GenerationStage>("idle");// lets the UI know where the UI is in the generation process
   const [currentHistoryId, setCurrentHistoryId] = useState<number | null>(null);
 
   const activeKey = currentHistoryId ?? "new";
@@ -46,6 +53,10 @@ export const Copilot = () => {
   const [activeGenerationKey, setActiveGenerationKey] =
   useState<number | "new" | null>(null);
 
+  const [traceStore, setTraceStore] = useState<
+    Record<number | "new", any>
+  >({});
+
 
   // hooks
   const {
@@ -55,12 +66,30 @@ export const Copilot = () => {
   } = useCopilotChat();
   const messages = messageStore[activeKey] ?? [];
 
-  const { run , cancel} = useCopilotStream({
-    onStage: setStage,
+  const { run , cancel} = useCopilotStream({// this hook requires three call back functions
+    onStage: setStage,// tracks current stage of generation
     onProgress: (key : number | "new", stage: GenerationStage) => {
-      upsertStreamingAssistant(key, stage); 
+      upsertStreamingAssistant(key, stage); // updates chat messages reflecting the new stage
     },
-    onComplete: (answer, newHistoryId) => {
+    onTrace: (key, trace) => {// updates trace store holding all the traces sent from the be
+      const traceState = traceStore[key] ?? {};
+
+      if (trace.path === "judgement.start") {
+        traceState.judgement = {
+          capabilities: [],
+          requirements: [],
+          errors: []
+        };
+      }
+
+      applyTraceEvent(traceState, trace);// build our dynamic tree of objects
+
+      setTraceStore(prev => ({
+        ...prev,
+        [key]: { ...traceState }
+      }));
+    },
+    onComplete: (answer, newHistoryId) =>{// called once when backend finishes generation
       const key = currentHistoryId ?? "new";
 
       const blob = new Blob([JSON.stringify(answer, null, 2)], {
@@ -123,6 +152,12 @@ export const Copilot = () => {
       content: question.trim(),
     };
 
+    setTraceStore(prev => ({
+      ...prev,
+      [activeKey]: {},
+    }));
+
+
     setMessageStore((prev) => ({
       ...prev,
       [activeKey]: [...(prev[activeKey] ?? []), userMessage],
@@ -158,6 +193,12 @@ export const Copilot = () => {
     setActiveGenerationKey(null);
     setStage("done");
 
+      setTraceStore(prev => ({
+  ...prev,
+  [activeKey]: {},
+}));
+
+
     setMessageStore((prev) => {
       const msgs = prev[activeKey] ?? [];
 
@@ -177,12 +218,17 @@ export const Copilot = () => {
     });
   };
 
-
   const handleRetry = () => {
     const lastUser = getLastUserMessage();
     if (!lastUser) return;
 
     cancel();
+
+   setTraceStore(prev => ({
+  ...prev,
+  [activeKey]: {},
+}));
+
     setQuestion(lastUser.content);
     setActiveGenerationKey(null);
     setStage("done");
@@ -206,12 +252,17 @@ export const Copilot = () => {
     });
   };
 
+  // helpers:
 
-
-    // helpers:
   const historyPanelOnSelect =(history : CopilotHistory) => {
     cancel();
     setActiveGenerationKey(null);
+
+    setTraceStore(prev => ({
+      ...prev,
+      [activeKey]: [],
+    }));
+
 
     setCurrentHistoryId(history.id);
     setStage("done");
@@ -244,6 +295,7 @@ export const Copilot = () => {
     setCurrentHistoryId(null);
     setStage("idle");
     setQuestion("");
+    setTraceStore({ new: {} });
   }
 
   const historyPanelOnDelete = (id : number) =>
@@ -272,7 +324,6 @@ export const Copilot = () => {
   return (
     <>
       <Header />
-
       <section className="copilot-hero">
         <div className="copilot-layout-root">
           <HistoryPanel
@@ -302,11 +353,13 @@ export const Copilot = () => {
                 <ChatView
                   messages={messages}
                   chatRef={chatRef}
+                  traces={traceStore[activeKey] || []}
                   activeGeneration={activeGenerationKey === activeKey}
                   stage={stage}
                   onCancel={handleCancel}
                   onRetry={handleRetry}
                 />
+
                 <ChatInput
                   value={question}
                   textareaRef={textareaRef}
