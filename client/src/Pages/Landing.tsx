@@ -8,9 +8,7 @@ export default function LandingPage() {
   return (
     <div className="landing-root">
 
-        <Header />
-
-      {/* Hero */}
+    <Header />
       <section className="hero">
         <div className="hero-content">
           <h1>AI Generated Workflows</h1>
@@ -19,7 +17,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Workflow image */}
       <section className="workflow-showcase">
         <h2>n8n Has Never Been This Easy</h2>
         <h3>Discover what n8n can truly do</h3>
@@ -33,7 +30,6 @@ export default function LandingPage() {
 
         <div className="data-chat-layout">
 
-            {/* LEFT – Chat card */}
             <div className="data-chat-card">
             <h3>Ask your data questions</h3>
             <p>
@@ -56,7 +52,6 @@ export default function LandingPage() {
             </div>
             </div>
 
-            {/* RIGHT – Image / network */}
             <div className="data-network">
             <img
                 src={n8nMediaImage}
@@ -68,9 +63,6 @@ export default function LandingPage() {
         </div>
     </section>
 
-
-      {/* Community */}
-    {/* Community */}
     <section className="community">
         <h2>Join the n8n Community</h2>
         <p>Where automation builders collaborate, share, and grow</p>
@@ -78,7 +70,6 @@ export default function LandingPage() {
         <div className="hub">
             <div className="center">Community</div>
 
-            {/* Community Nodes */}
             <div className="node n1">Workflow Library</div>
             <div className="node n2">Template Hub</div>
             <div className="node n3">n8n Experts</div>
@@ -88,7 +79,6 @@ export default function LandingPage() {
             <div className="node n7">Troubleshooting</div>
             <div className="node n8">Community Plugins</div>
 
-            {/* Connection Lines */}
             <svg className="lines" viewBox="0 0 480 480">
                 <path d="M240 240 C 180 120, 60 120, 40 120" />
                 <path d="M240 240 C 320 100, 360 90, 380 80" />
@@ -102,8 +92,6 @@ export default function LandingPage() {
         </div>
     </section>
 
-
-      {/* Footer */}
       <footer>
         <div>
           <h3>FlowPilot</h3>

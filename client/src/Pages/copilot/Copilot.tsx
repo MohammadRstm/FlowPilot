@@ -132,7 +132,7 @@ export const Copilot =() => {
 
   
   return (
-    <>
+    <div className="copilot-page">
       <Header />
       <section className="copilot-hero">
         <div className="copilot-layout-root">
@@ -191,6 +191,6 @@ export const Copilot =() => {
         />
         )}
       </section>
-    </>
+    </div>
   );
 };

@@ -6,15 +6,15 @@ const Header: React.FC = () => {
   return (
     <header className="header">
       <div className="header__container">
-        {/* Logo */}
         <div className="header__logo">
-          <span className="logo-icon">⟡</span>
-          <span className="logo-text">
-            <strong>Flow</strong> Pilot
-          </span>
+          <Link to="/">
+            <span className="logo-icon">⟡</span>
+            <span className="logo-text">
+                <strong>Flow</strong> Pilot
+            </span>
+          </Link>
         </div>
 
-        {/* Navigation */}
         <nav className="header__nav">
           <Link to="/">Community</Link>
           <Link to="/copilot">Copilot</Link>

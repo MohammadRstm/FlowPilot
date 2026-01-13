@@ -1,7 +1,12 @@
+html, body {
+  height: auto;
+  overflow-y: auto;
+}
+
 body {
   margin: 0;
   font-family: "Inter", sans-serif;
-  background: #050300; /* solid dark */
+  background: #050300;
   color: #fff;
 }
 
@@ -15,11 +20,9 @@ body {
   );
 }
 
-
-/* HERO */
 .hero {
   position: relative;
-  height: 87vh;
+  min-height: 87vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -35,11 +38,8 @@ body {
 
   background-position: center;
   background-size: 120% 100%, contain;
-  overflow: hidden;
+  overflow-x: hidden;
 }
-
-
-
 
 .hero-content {
   text-align: center;
@@ -65,7 +65,6 @@ body {
   cursor: pointer;
 }
 
-/* Workflow */
 .workflow-showcase {
     background: linear-gradient(
     to bottom,

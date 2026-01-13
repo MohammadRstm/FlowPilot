@@ -1,9 +1,7 @@
-html,
-body {
+.copilot-page {
   height: 100%;
   overflow: hidden;
 }
-
 
 .copilot-hero {
   min-height: calc(100vh - 72px);
