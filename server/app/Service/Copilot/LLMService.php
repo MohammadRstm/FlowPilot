@@ -72,7 +72,9 @@ class LLMService{
         return self::callOpenAI($prompt);
     }
 
-    public static function generateAnswer(string $question, array $topFlows , ?callable $trace) {
+    public static function generateAnswer(string $question, array $topFlows ,?callable $stage ,  ?callable $trace) {
+        $stage("generating");
+
         $context = self::buildContext($topFlows);
         $planningPrompt = Prompts::getWorkflowBuildingPlanPrompt($question, $context);
 
@@ -86,6 +88,10 @@ class LLMService{
         $compilerPrompt = Prompts::getWorkflowBuildingPrompt($question , $plan , $context);
 
         $workflow = self::callOpenAI($compilerPrompt);
+
+        $trace("workflow", [
+            "workflow" => $workflow
+        ]);
 
         return $workflow;   
     }

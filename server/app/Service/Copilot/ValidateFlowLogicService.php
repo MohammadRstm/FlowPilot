@@ -24,7 +24,8 @@ class ValidateFlowLogicService{
         $this->maxRetries = 3;
     }
 
-    public function execute($workflow, $question, $totalPoints, $trace ,  $retries = 0){
+    public function execute($workflow, $question, $totalPoints, $stage ,  $trace ,  $retries = 0){
+        $stage("validating");
         $judgement = LLMService::judgeResults($workflow , $question);
 
         Log::debug('Workflow judgement', [
@@ -68,7 +69,7 @@ class ValidateFlowLogicService{
             "workflow" => $repaired
         ]);
 
-        return $this->execute($repaired, $question, $totalPoints, $retries + 1);
+        return $this->execute($repaired, $question, $totalPoints, $stage , $trace, $retries + 1);
     }
 
     private function updateBestWorkflow(array $workflow, float $score){

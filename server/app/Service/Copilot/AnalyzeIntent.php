@@ -8,13 +8,12 @@ use Illuminate\Support\Facades\Log;
 class AnalyzeIntent{
 
     // Orchestrater
-    public static function analyze(array $question): array {
+    public static function analyze(array $question , $stage , $trace): array {
+        $stage("analyzing");
+
         $intentData = LLMService::intentAnalyzer($question);
-        Log::debug("intent data" , ["intent data" => $intentData]);
         $nodeData = LLMService::nodeAnalyzer($intentData["question"], $intentData["intent"]);
-        Log::debug("node Data " , ["node data" => $nodeData]);
         $final = LLMService::workflowSchemaValidator($intentData, $nodeData);
-        Log::debug("final Data " , ["final" => $final]);
 
         $final["intent"] = $intentData["intent"];
         $final["trigger"] = $intentData["trigger"];
@@ -24,6 +23,10 @@ class AnalyzeIntent{
 
         Log::info("Intent" , ["intent" => $final["intent"]]);
         Log::info("embedding_query" , ["embedding" => $final["embedding_query"]]);
+
+        $trace("intent analysis", [
+            "intent" => $final["intent"],
+        ]);
 
         return $final;
     }

@@ -110,4 +110,31 @@ class UserService{
             ->get();
     }
 
+    public static function returnSseHeaders(){
+        return [
+            "Content-Type" => "text/event-stream",
+            "Cache-Control" => "no-cache",
+            "Connection" => "keep-alive",
+            "X-Accel-Buffering" => "no",
+        ];
+    }
+
+    public static function returnFinalWorkflowResult($result){
+        echo "event: result\n";
+        echo "data: " . json_encode($result) . "\n\n";
+        ob_flush(); flush();
+    }
+
+    public static function initializeStream(){
+        return function (string $event, $data){// stream helper, this sends the events (chunks) to frontend
+                if (!is_string($data)) {
+                    $data = json_encode($data);
+                }
+
+                echo "event: $event\n";
+                echo "data: $data\n\n";// needs to have two new line charachters or else it breaks 
+                ob_flush(); flush();// this forces laravel to send now instead of waiting
+            };
+    }
+
 }

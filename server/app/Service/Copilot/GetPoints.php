@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Log;
 
 class GetPoints{
 
-    public static function execute(array $analysis): array {
+    public static function execute(array $analysis , $stage , $trace): array {
+        $stage("retrieving");
+
         $workflowDense = IngestionService::embed(
            $analysis["embedding_query"]
         );
@@ -27,6 +29,15 @@ class GetPoints{
 
         $workflows =  self::searchWorkflows($workflowDense, $workflowSparse, $analysis);
         $nodes = self::searchNodes($nodeDense, $nodeSparse, $analysis);
+
+        $nodeNames = array_map(function($n){
+            return $n["payload"]["key"] ?? $n["payload"]["node"] ?? "unknown";
+        }, $nodes);
+
+        $trace("candidates",[
+            "workflow_count" => count($nodes),
+            "nodes" => $nodeNames
+        ]);
 
         return [
             "workflows" => $workflows,

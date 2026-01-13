@@ -32,51 +32,32 @@ class GetAnswer{
     public static function execute(array $messages , ?callable $stream = null){
         set_time_limit(300); // 5 minutes max
 
-        $stage = fn($name) => $stream && $stream("stage", $name);// shorthand (sends chunks were events = 'stage' and payload is the name of the event)
-        $trace = fn($type, $payload) => $stream && $stream("trace", [// shortand (sends more complex chunks where payload can be anything and events hold the type of the event themselves)
+        // streaming services
+        $stage = self::initializeStage($stream);
+        $trace = self::initializeTrace($stream);
+
+        $analysis = AnalyzeIntent::analyze($messages , $stage , $trace);
+        $question = $analysis["question"];
+
+        $points = GetPoints::execute($analysis , $stage , $trace);
+        $finalPoints = RankingFlows::rank($analysis, $points , $stage);
+        $workflow = LLMService::generateAnswer($question, $finalPoints , $stage , $trace);
+
+        $validateWorkflowService = new ValidateFlowLogicService();
+        $workflow = $validateWorkflowService->execute($workflow , $question , $finalPoints ,$stage ,  $trace);
+
+        return $workflow;
+    }
+
+    private static function initializeStage($stream){
+        return fn($name) => $stream && $stream("stage", $name);// shorthand (sends chunks were events = 'stage' and payload is the name of the event)
+    }
+
+    private static function initializeTrace($stream){
+        return fn($type, $payload) => $stream && $stream("trace", [// shortand (sends more complex chunks where payload can be anything and events hold the type of the event themselves)
             "type" => $type,
             "payload" => $payload
         ]);
-
-        $stage("analyzing");
-        $analysis = AnalyzeIntent::analyze($messages);// optimized
-        $question = $analysis["question"];
- 
-        $trace("intent analysis", [
-            "intent" => $analysis["intent"],
-        ]);
-
-        $stage("retrieving");
-        $points = GetPoints::execute($analysis);// optimized --> requires re-injection
-
-        $nodeNames = array_map(function($n){
-            return $n["payload"]["key"] ?? $n["payload"]["node"] ?? "unknown";
-        }, $points["nodes"]);
-
-        $trace("candidates",[
-            "workflow_count" => count($points["workflows"]),
-            "nodes" => $nodeNames
-        ]);
-
-
-        $stage("ranking");
-        $finalPoints = RankingFlows::rank($analysis, $points , $stage);
-        $stage("generating");
-        $workflow = LLMService::generateAnswer($question, $finalPoints , $trace);// optimized
-
-        $trace("workflow", [
-            "workflow" => $workflow
-        ]);
-
-        $stage("validating");
-        // analyze output workflow with user's intent 
-        $validateWorkflowService = new ValidateFlowLogicService();// optimized -> requires prompt sharpening
-        $workflow = $validateWorkflowService->execute($workflow , $question , $finalPoints , $trace);
-
-        // $validateWorkflowDataInjection = new ValidateFlowDataInjection();// we are here now
-        // $workflow = $validateWorkflowDataInjection->execute($workflow , $question , $finalPoints);
-
-        return $workflow;
     }
 }
 
