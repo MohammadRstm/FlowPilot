@@ -1,15 +1,15 @@
-import type { TraceBlock } from "../../Copilot.types";
-import { N8nPlan } from "./N8NPlan";
-import { TypedLine } from "./typedLine";
-import { TypedList } from "./TypedList";
-import { WorkflowPreview } from "./WorkflowPreview";
+import { TraceEventName, type TraceBlock } from "../../Copilot.types";
+import { N8nPlan } from "./components/N8NPlan";
+import { TypedLine } from "./components/TypedLine";
+import { TypedList } from "./components/TypedList";
+import { WorkflowPreview } from "./components/WorkflowPreview";
 
 export function TraceView({ traces }: { traces: TraceBlock[] }) {
   return (
     <div className="trace-panel">
       {traces.map(block => {
         switch (block.type) {
-          case "intent":
+          case TraceEventName.INTENT:
             return (
               <div key={block.id} className="trace-block">
                 <strong><TypedLine value={`I interpret your goal as:`} /></strong><br />
@@ -17,7 +17,7 @@ export function TraceView({ traces }: { traces: TraceBlock[] }) {
               </div>
             );
 
-          case "candidates":
+          case TraceEventName.CANDIDATES:
             return (
               <div key={block.id} className="trace-block">
                 <strong><TypedLine value={`Candidate Nodes (${block.nodes.length})`} /></strong>
@@ -28,7 +28,7 @@ export function TraceView({ traces }: { traces: TraceBlock[] }) {
               </div>
             );
 
-         case "plan":
+         case TraceEventName.PLAN:
             return (
                 <div key={block.id} className="trace-block">
                 <strong><TypedLine value="Execution Plan" /></strong><br />
@@ -36,14 +36,14 @@ export function TraceView({ traces }: { traces: TraceBlock[] }) {
                 </div>
             );
 
-          case "workflow":
+          case TraceEventName.WORKFLOW:
             return (
                 <div key={block.id} className="trace-block">
                 <strong><TypedLine value="Workflow ready. You can inspect or download it below." /></strong><br />
                 <WorkflowPreview workflow={block.workflow} />
                 </div>
             );
-            case "judgement":
+            case TraceEventName.JUDGEMENT:
                 return (
                 <div key={block.id} className="trace-block judgement-block">
                     <strong><TypedLine value="Judgement Report" /></strong>
@@ -58,7 +58,8 @@ export function TraceView({ traces }: { traces: TraceBlock[] }) {
                     </>
                     )}
 
-                    {block.errors?.length > 0 && (
+                    {block.errors && block.errors?.length
+                     > 0 && (
                     <>
                         <TypedLine value="Errors:" />
                         <TypedList
@@ -68,7 +69,7 @@ export function TraceView({ traces }: { traces: TraceBlock[] }) {
                     </>
                     )}
 
-                    {block.requirements?.length > 0 && (
+                    {block.requirements && block.requirements?.length > 0 && (
                     <>
                         <TypedLine value="Requirements:" />
                         <TypedList
@@ -79,7 +80,7 @@ export function TraceView({ traces }: { traces: TraceBlock[] }) {
                     )}
                 </div>
                 );
-                case "repaired_workflow":
+                case TraceEventName.REPAIRED_WORKFLOW:
                 return (
                     <div key={block.id} className="trace-block">
                     <strong><TypedLine value="Workflow was repaired. Updated version below:" /></strong><br />

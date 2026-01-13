@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchCopilotHistories } from "../../../api/copilot.api";
-import type { CopilotHistory } from "../../../api/copilot.api";
+import type { CopilotHistory } from "../../../api/copilot/types";
+import { fetchCopilotHistories } from "../../../api/copilot/fetchCopilotHistories";
 
 export const useCopilotHistoriesQuery = () => {
   return useQuery<CopilotHistory[]>({

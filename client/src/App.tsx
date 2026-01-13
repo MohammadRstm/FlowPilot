@@ -29,9 +29,8 @@ import { Copilot } from './Pages/copilot/Copilot'
 
 // ADD THE ABILITY TO CREATE CUSTOM NODES - VERY HARD - F/B HEAVY ON BOTH
 // ADD THE ABILITY TO SAVE CREDENTIALS OR FIGURE OUT A WAY TO DO IT AUTOMATICALLY - HARD F/B HEAVY ON BOTH
+// Fix Retry taking so long to kick start again. Add Edit Message ability
 // APPROX TIME : 8 DAYS TO FINISH (EXCLUDING ENHANCING THE AI'S ABILITY TO GENERATE WORKFLOWS)
-
-
 
 function App() {
   return (

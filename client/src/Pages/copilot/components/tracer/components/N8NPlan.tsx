@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { PlanNode } from "../../Copilot.constants";
+import type { PlanNode } from "../../../Copilot.constants";
 
 function PlanRow({ node }: { node: PlanNode }) {
   return (

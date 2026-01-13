@@ -1,5 +1,4 @@
-import type { WorkflowAnswer } from "../../api/copilot.api";
-import type { PlanNode } from "./Copilot.constants";
+import type { WorkflowAnswer } from "../../api/copilot/types";
 
 export type GenerationStage =
   | "idle"
@@ -20,6 +19,14 @@ export type ChatMessage =
       isStreaming?: boolean;
       canRetry?: boolean;
     };
+
+export const ChatMessageType = {
+  USER: "user",
+  ASSISTANT: "assistant",
+} as const;
+
+export type ChatMessageType =
+  typeof ChatMessageType[keyof typeof ChatMessageType];
 
 export type FeedbackStatus = "pending" | "thanks" | "sorry";
 
@@ -45,17 +52,17 @@ export interface TraceEvent {
 export type TraceBlock =
   | {
       id: "intent";
-      type: "intent";
+      type: typeof TraceEventName.INTENT;
       intent: string;
     }
   | {
       id: "candidates";
-      type: "candidates";
+      type: typeof TraceEventName.CANDIDATES;
       nodes: string[];
     }
   | {
       id: "plan";
-      type: "plan";
+      type: typeof TraceEventName.PLAN;
       nodes: {
         name: string;
         role: string;
@@ -64,13 +71,40 @@ export type TraceBlock =
     }
   | {
       id: "workflow";
-      type: "workflow";
+      type: typeof TraceEventName.WORKFLOW;
       workflow: any;
     }
-  | { id: string; type: "judgement"; capabilities: any[]; errors?: any[]; matches?: any[]; requirements?: any[] }
-  |{
+  | {
+      id: string;
+      type: typeof TraceEventName.JUDGEMENT;
+      capabilities: {
+        id: string;
+        description: string;
+      }[];
+      errors: {
+        severity: string;
+        message: string;
+      }[];
+      requirements: {
+        id: string;
+        description: string;
+      }[];
+    }
+  | {
       id: "repaired_workflow";
-      type: "repaired_workflow";
+      type: typeof TraceEventName.REPAIRED_WORKFLOW;
       workflow: any;
     };
 
+
+export const TraceEventName = {
+  JUDGEMENT: "judgement",
+  INTENT: "intent",
+  CANDIDATES: "candidates",
+  PLAN: "plan",
+  WORKFLOW: "workflow",
+  REPAIRED_WORKFLOW: "repaired_workflow",
+} as const;
+
+export type TraceEventName =
+  typeof TraceEventName[keyof typeof TraceEventName];

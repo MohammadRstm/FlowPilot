@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
-import type { GenerationStage, ChatMessage as Msg, TraceBlock } from "../Copilot.types";
+import { ChatMessageType, type GenerationStage, type ChatMessage as Msg, type TraceBlock } from "../Copilot.types";
 import { ChatMessage as ChatMessageComponent } from "./ChatMessages";
 
 interface ChatViewProps {
@@ -23,14 +23,13 @@ export function ChatView({
   onCancel,
   onRetry,
 }: ChatViewProps) {
-  const [autoScroll, setAutoScroll] = useState(true);
-  const lastScrollTop = useRef(0);
-  const autoScrollRef = useRef(true);
+    const [autoScroll, setAutoScroll] = useState(true);
+    const autoScrollRef = useRef(true);
 
 
-  const SCROLL_BUFFER = 50; // px buffer to ignore minor scrolls
+    const SCROLL_BUFFER = 50; // px buffer to ignore minor scrolls
 
-  // handle user scroll
+    // handle user scroll
     const handleScroll = useCallback(() => {
         if (!chatRef.current) return;
 
@@ -59,21 +58,21 @@ export function ChatView({
 
     // continuously scroll while streaming
     useEffect(() => {
-    if (!chatRef.current || !autoScroll) return;
+        if (!chatRef.current || !autoScroll) return;
 
-    let frameId: number;
+        let frameId: number;
 
-    const scrollToBottom = () => {
-        if (!chatRef.current) return;
-        if (!autoScrollRef.current) return; 
+        const scrollToBottom = () => {
+            if (!chatRef.current) return;
+            if (!autoScrollRef.current) return; 
 
-        chatRef.current.scrollTo({
-        top: chatRef.current.scrollHeight,
-        behavior: "smooth",
-        });
+            chatRef.current.scrollTo({
+            top: chatRef.current.scrollHeight,
+            behavior: "smooth",
+            });
 
-        if (activeGeneration) {
-        frameId = requestAnimationFrame(scrollToBottom);
+            if (activeGeneration) {
+            frameId = requestAnimationFrame(scrollToBottom);
         }
     };
 
@@ -96,7 +95,7 @@ export function ChatView({
               runId={runId}
             />
 
-            {msg.type === "assistant" &&
+            {msg.type === ChatMessageType.ASSISTANT &&
               isLast &&
               activeGeneration && (
                 <div className="assistant-actions">

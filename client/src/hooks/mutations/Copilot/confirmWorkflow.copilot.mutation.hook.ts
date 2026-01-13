@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
-import { confirmWorkflow, type ConfirmWorkflowPayload, type ConfirmWorkflowResponse } from "../../../api/copilot.api";
+import type { ConfirmWorkflowPayload, ConfirmWorkflowResponse } from "../../../api/copilot/types";
+import { confirmWorkflow } from "../../../api/copilot/confirmWorkflow";
 
 export const useConfirmWorkflowMutation = () => {
   return useMutation<ConfirmWorkflowResponse, unknown, ConfirmWorkflowPayload>({

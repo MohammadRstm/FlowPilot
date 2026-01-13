@@ -1,70 +1,153 @@
 import { useEffect, useState } from "react";
-import type { ChatMessage, GenerationStage } from "../Copilot.types";
+import { ChatMessageType, type ChatMessage, type GenerationStage, type TraceBlock } from "../Copilot.types";
 import { STAGE_LABELS } from "../Copilot.constants";
 
 const STORAGE_KEY = "copilot_messages";
 
-export function useCopilotChat(){// the holy grale of storing messages
-    const [messageStore, setMessageStore] = useState<{// the structure contians messages of new conversation or an old one (hence key)
-        [key: number]: ChatMessage[];
-        new?: ChatMessage[];
-    }>({});
+type ChatKey = number | "new";
 
-    // hydrate on mount
+type CopilotChatPropsType = {
+  run: Function;
+  cancel: () => void;
+  setStage: (s: GenerationStage) => void;
+  setQuestion: (q : string ) => void;
+  setActiveGenerationKey: (k: ChatKey | null) => void;
+  setTraceBlocks: React.Dispatch<
+    React.SetStateAction<Record<ChatKey, TraceBlock[]>>
+  >;
+  currentHistoryId: number | null;
+} 
+
+export function useCopilotChatController({
+  run,
+  cancel,
+  setStage,
+  setQuestion,
+  setActiveGenerationKey,
+  setTraceBlocks,
+  currentHistoryId,
+}: CopilotChatPropsType){
+
+    const [messageStore, setMessageStore] = useState<Record<ChatKey, ChatMessage[]>>({
+        new: [],
+    });
+    const activeKey: ChatKey = currentHistoryId ?? "new";
+
     useEffect(() => {
-        try{
-            const cached = localStorage.getItem(STORAGE_KEY);
-            if(cached) setMessageStore(JSON.parse(cached));
-        }catch{
-            localStorage.removeItem(STORAGE_KEY);
+        try {
+        const cached = localStorage.getItem(STORAGE_KEY);
+        if (cached) setMessageStore(JSON.parse(cached));
+        } catch {
+        localStorage.removeItem(STORAGE_KEY);
         }
     }, []);
 
-    // persist on change
     useEffect(() => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(messageStore));
     }, [messageStore]);
 
-    const upsertStreamingAssistant = (
-    key: number | "new",
-    stage: GenerationStage
-    ) => {
-    setMessageStore((prev) => {// update messages
-        const msgs = prev[key] ?? [];// get current messages
-        const last = msgs[msgs.length - 1];// get last message
+    const resetTracesForKey = (key: ChatKey) => {
+        setTraceBlocks(prev => ({ ...prev, [key]: [] }));
+    };
 
-        const label = STAGE_LABELS[stage] ?? "";// identify the message's label according to the current stage
+    const getLastUserMessage = () => {
+        const msgs = messageStore[activeKey] ?? [];
+        return [...msgs].reverse().find(m => m.type === ChatMessageType.USER);
+    };
 
-        if(last?.type === "assistant" && last.isStreaming){// if the last message is an AI one and its currently streaming
-        return {// return the all prev message only give the label to the last one as content
+    const upsertStreamingAssistant = (key: ChatKey, stage: GenerationStage) => {
+        setMessageStore(prev => {
+        const msgs = prev[key] ?? [];
+        const last = msgs[msgs.length - 1];
+        const label = STAGE_LABELS[stage] ?? "";
+
+        if (last?.type === ChatMessageType.ASSISTANT && last.isStreaming) {
+            return {
             ...prev,
             [key]: msgs.map((m, i) =>
-            i === msgs.length - 1
-                ? { ...m, content: label }
+                i === msgs.length - 1 ? { ...m, content: label } : m
+            ),
+            };
+        }
+
+        return {
+            ...prev,
+            [key]: [
+            ...msgs,
+            {
+                type: ChatMessageType.ASSISTANT,
+                content: label,
+                isStreaming: true,
+                canRetry: true,
+                canCancel: true,
+            },
+            ],
+        };
+        });
+    };
+
+    const submit = (question: string) => {
+        if (!question.trim()) return;
+
+        const userMessage: ChatMessage = {
+        type: ChatMessageType.USER,
+        content: question.trim(),
+        };
+
+        resetTracesForKey(activeKey);
+
+        setMessageStore(prev => ({
+        ...prev,
+        [activeKey]: [...(prev[activeKey] ?? []), userMessage],
+        }));
+
+        setQuestion("");
+        const lastTen = [...(messageStore[activeKey] ?? []), userMessage].slice(-10);
+
+        setActiveGenerationKey(activeKey);
+        run(lastTen, currentHistoryId, activeKey);
+    };
+
+    const cancelGeneration = () => {
+        cancel();
+        setActiveGenerationKey(null);
+        setStage("done");
+        resetTracesForKey(activeKey);
+
+        setMessageStore(prev => {
+        const msgs = prev[activeKey] ?? [];
+        return {
+            ...prev,
+            [activeKey]: msgs.map((m, i) =>
+            i === msgs.length - 1 && m.type === ChatMessageType.ASSISTANT
+                ? { ...m, isStreaming: false, canRetry:true, content: "Generation cancelled." }
                 : m
             ),
         };
-        }
-        // else just give the old messages back + new one (the last message is a user message (stage is still idle))
-        return {
-        ...prev,
-        [key]: [
-            ...msgs,
-            {
-            type: "assistant",
-            content: label,
-            isStreaming: true,
-            canRetry: true,
-            canCancel : true 
-            },
-        ],
-        };
-    });
+        });
     };
 
-    return{
+    const retry = () => {
+        const lastUser = getLastUserMessage();
+        if (!lastUser) return;
+
+        cancelGeneration();
+        submit(lastUser.content); 
+    };
+
+    const edit = () =>{
+        const lastUser = getLastUserMessage();
+        if(!lastUser) return;
+
+        cancelGeneration();
+    }
+
+    return {
         messageStore,
         setMessageStore,
         upsertStreamingAssistant,
+        submit,
+        cancelGeneration,
+        retry,
     };
 }

@@ -1,4 +1,4 @@
-import { TypedLine } from "./typedLine";
+import { TypedLine } from "./TypedLine";
 import { TypedList } from "./TypedList";
 
 function renderItem(item: any, hideId = true) {

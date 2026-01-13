@@ -1,10 +1,10 @@
-import type { GenerationStage, ChatMessage as Msg, TraceBlock } from "../Copilot.types";
+import { ChatMessageType, type GenerationStage, type ChatMessage as Msg, type TraceBlock } from "../Copilot.types";
 import { ProgressMessage } from "./ProgressMessage";
 import { TraceView } from "./tracer/TraceView";
 
 export function ChatMessage({ msg , stage , traces }: { msg: Msg , stage : GenerationStage; traces : TraceBlock[]; runId : number}) {
   switch (msg.type) {
-    case "user":
+    case ChatMessageType.USER:
       return (
         <div className="chat-message user">
           <div className="bubble">
@@ -13,7 +13,7 @@ export function ChatMessage({ msg , stage , traces }: { msg: Msg , stage : Gener
         </div>
       );
 
-    case "assistant":
+    case ChatMessageType.ASSISTANT:
     return (
         <div className="chat-message assistant">
         <div className="bubble">
