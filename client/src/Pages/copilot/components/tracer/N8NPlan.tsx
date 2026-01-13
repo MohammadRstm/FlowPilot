@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import type { PlanNode } from "../../Copilot.constants";
-import { typingBarrier } from "./typingBarrier";
 
 function PlanRow({ node }: { node: PlanNode }) {
   return (
@@ -20,7 +19,6 @@ export function N8nPlan({ nodes }: { nodes: PlanNode[] }) {
   useEffect(() => {
     if (!nodes?.length) return;
 
-    typingBarrier.start();
     setVisible([]);
 
     let i = 0;
@@ -28,7 +26,6 @@ export function N8nPlan({ nodes }: { nodes: PlanNode[] }) {
       setVisible(prev => {
         if (i >= nodes.length) {
           clearInterval(timer);
-          typingBarrier.done();
           return prev;
         }
         return [...prev, nodes[i++]];
@@ -37,7 +34,6 @@ export function N8nPlan({ nodes }: { nodes: PlanNode[] }) {
 
     return () => {
       clearInterval(timer);
-      typingBarrier.done();
     };
   }, [nodes]);
 

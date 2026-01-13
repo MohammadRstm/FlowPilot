@@ -1,12 +1,12 @@
-import { TypedArrayItem } from "./typedArrayItem";
 import { TypedLine } from "./typedLine";
+import { TypedList } from "./TypedList";
 
 function renderItem(item: any, hideId = true) {
   if (item && typeof item === "object") {
     if ("id" in item && "description" in item) {
       return (
         <div className="kv-object">
-          {!hideId && <strong>{item.id}</strong>}
+          {!hideId && <TypedLine value={String(item.id)} />}
           <TypedLine value={item.description} />
         </div>
       );
@@ -15,9 +15,13 @@ function renderItem(item: any, hideId = true) {
     if ("requirement_id" in item && "message" in item) {
       return (
         <div className={`kv-object ${item.severity}`}>
-          {!hideId && <strong>{item.requirement_id}</strong>}
+          {!hideId && (
+            <TypedLine value={String(item.requirement_id)} />
+          )}
           <TypedLine value={item.message} />
-          {item.severity && <span className="severity">{item.severity}</span>}
+          {item.severity && (
+            <TypedLine value={item.severity} />
+          )}
         </div>
       );
     }
@@ -28,7 +32,6 @@ function renderItem(item: any, hideId = true) {
   return <TypedLine value={String(item)} />;
 }
 
-
 function renderValue(value: any) {
   if (value && typeof value === "object" && !Array.isArray(value)) {
     return <KeyValueList data={value} />;
@@ -36,11 +39,10 @@ function renderValue(value: any) {
 
   if (Array.isArray(value)) {
     return (
-      <ul>
-        {value.map((v, i) => (
-          <TypedArrayItem key={i}>{renderItem(v)}</TypedArrayItem>
-        ))}
-      </ul>
+        <TypedList
+        items={value}
+        renderItem={(item) => renderItem(item)}
+        />
     );
   }
 
@@ -52,10 +54,13 @@ export function KeyValueList({ data }: { data: any }) {
     <div className="kv">
       {Object.entries(data).map(([key, value]) => (
         <div key={key} className="kv-row">
-          <strong>{key}</strong>
+          <strong>
+            <TypedLine value={key} />
+          </strong>
           <div className="kv-value">{renderValue(value)}</div>
         </div>
       ))}
     </div>
   );
 }
+

@@ -39,7 +39,6 @@ class GetAnswer{
         ]);
 
         $stage("analyzing");
-
         $analysis = AnalyzeIntent::analyze($messages);// optimized
         $question = $analysis["question"];
  
@@ -47,7 +46,7 @@ class GetAnswer{
             "intent" => $analysis["intent"],
         ]);
 
-        $stage("retrieval");
+        $stage("retrieving");
         $points = GetPoints::execute($analysis);// optimized --> requires re-injection
 
         $nodeNames = array_map(function($n){

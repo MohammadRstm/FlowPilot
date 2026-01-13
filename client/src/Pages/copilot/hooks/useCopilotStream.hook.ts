@@ -1,7 +1,6 @@
 import { useRef } from "react";
 import { streamCopilotQuestion } from "../../../api/copilot.api";
 import type { GenerationStage, ChatMessage } from "../Copilot.types";
-import { typingBarrier } from "../components/tracer/typingBarrier";
 
 export function useCopilotStream({
   onStage,
@@ -13,68 +12,46 @@ export function useCopilotStream({
   onProgress: (key: number | "new", label: GenerationStage) => void;
   onTrace: (key: number | "new", trace: any) => void;
   onComplete: (answer: any, historyId: number) => void;
-}){
+}) {
+  const streamRef = useRef<EventSource | null>(null); // SSE connection
+  const runIdRef = useRef(0);
 
-  const streamRef = useRef<EventSource | null>(null);// holds SSE connection
-  const stageQueue = useRef<GenerationStage[]>([]);// holds queue for tracing
-  const processing = useRef(false);// tracks whether a stage is currently being handeld
+    const cancel = () => {
+        streamRef.current?.close();
+        streamRef.current = null;
+    };
 
-  const waitForTyping = () => typingBarrier.wait();// typingBarrier sends a signal when a stage has finished being typed on the screen
 
-  const processQueue = async (key: number | "new") => {
-    processing.current = true;// set processing on
-
-    while (stageQueue.current.length){// while queue not empty
-      const next = stageQueue.current.shift()!;
-      onStage(next);// update UI stage
-      onProgress(key, next);// update per session stage
-
-      await waitForTyping();// wait for the current stage to finish being typed before moving on
-    }
-
-    processing.current = false;// set processing off
-  };
-
-  const enqueueStage = (s: GenerationStage, key: number | "new") =>{// push an incoming stage into queue
-    stageQueue.current.push(s);
-    if (!processing.current){// only initiate processing if their is no stage being processed
-      processQueue(key);
-    }
-  };
-
-  const cancel = () =>{// closes SSE connection
-    streamRef.current?.close();
-    streamRef.current = null;
-  };
-
-  const run = (// running the stream
+  const run = (
     messages: ChatMessage[],
     historyId: number | null,
-    key : number | "new" = "new"
+    key: number | "new" = "new"
   ) => {
-    streamRef.current?.close();// close any previous connections
+    runIdRef.current += 1;
+    const id =runIdRef.current;
+    // close any previous SSE connection
+    streamRef.current?.close();
 
-    // reset states
-    stageQueue.current = [];
-    processing.current = false;
-
-    enqueueStage("analyzing", key);// immediatley enqueue analyzing (no need to make user wait)
-    streamRef.current = streamCopilotQuestion(// open SSE connection
-        messages,// user question(s)
-        historyId,// to what history this conversation belongs to
-        // pass call backs
-        (stage) =>{// pushes stage
-            const typed = stage as GenerationStage;
-            enqueueStage(typed, key);
-        },
-        (trace) =>{// calls onTrace handler defined in Copilot.tsx
-            onTrace(key, trace);
-        },
-        (answer, historyId) =>{// calls onComplete handler defined in Copilot.tsx
-            onComplete(answer, historyId);
-        }
+    // immediately enqueue "analyzing" stage
+    onStage("analyzing");
+    // open new SSE connection
+    streamRef.current = streamCopilotQuestion(
+      messages,
+      historyId,
+      (stage) => {
+        onStage(stage as GenerationStage);
+        onProgress(key, stage as GenerationStage);
+      },
+      (trace) => {
+        if (id !== runIdRef.current) return;
+        onTrace(key, trace);
+      },
+      (answer, historyId) => {
+        if (id !== runIdRef.current) return;
+        onComplete(answer, historyId);
+      }
     );
   };
-
-  return { run , cancel };
+  const runId = runIdRef.current;
+  return { run, cancel , runId};
 }

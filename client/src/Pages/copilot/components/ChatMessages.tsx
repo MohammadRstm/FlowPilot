@@ -1,8 +1,8 @@
-import type { GenerationStage, ChatMessage as Msg, TraceEvent } from "../Copilot.types";
+import type { GenerationStage, ChatMessage as Msg, TraceBlock } from "../Copilot.types";
 import { ProgressMessage } from "./ProgressMessage";
 import { TraceView } from "./tracer/TraceView";
 
-export function ChatMessage({ msg , stage , traces }: { msg: Msg , stage : GenerationStage; traces : TraceEvent[]}) {
+export function ChatMessage({ msg , stage , traces }: { msg: Msg , stage : GenerationStage; traces : TraceBlock[]; runId : number}) {
   switch (msg.type) {
     case "user":
       return (

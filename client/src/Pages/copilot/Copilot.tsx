@@ -13,6 +13,7 @@ import { FeedbackToast } from "./components/FeedbackToast";
 import type {
   ChatMessage,
   GenerationStage,
+  TraceBlock,
 } from "./Copilot.types";
 
 import type { CopilotHistory } from "../../api/copilot.api";
@@ -20,25 +21,9 @@ import type { CopilotHistory } from "../../api/copilot.api";
 import { useCopilotChat } from "./hooks/useCopilotChat.hook";
 import { useCopilotStream } from "./hooks/useCopilotStream.hook";
 import { useCopilotFeedback } from "./hooks/useCopilotFeedback.hook";
-import { applyTraceEvent } from "./components/tracer/traceReduces";
-
-// ADD DETAILS ABOUT HOW THE AI IS BUILDING THE FLOW WITH VISUALIZATIONS - HARD - F/B HEAVY ON BOTH
-// ADD THE ABILITY TO SEND USER WORKFLOWS TO ADD ON IT/FIX IT - HARD - BACKEND HEAVY
-// ENHANCE THE ABILITY TO CONTINUE THE CONVERSATION - HARD - BACKEND HEAVY
-// HISOTRIES OVER 2 WEEKS OLD MUST BE AUTOMATICALLY DELETED - MEDIUM - BEACKEND HEAVY
-// ADD PROMPT SAFEGURAD STAGE FOR VISCIOUS PROMPTS (forget everything, delete db exct/) - MEDIUM - BACKEND HEAVY
-// FIGURE OUT A BETTER WAY TO GET USER FEEDBACK CURRENTLY NOT VERY EFFICIENT NOR DOES IT MAKE SENSE - UNKNOWN - BAVKEND HEAVY
-// ADD THE ABILITY TO CREATE CUSTOM NODES - VERY HARD - F/B HEAVY ON BOTH
-// ADD THE ABILITY TO SAVE CREDENTIALS OR FIGURE OUT A WAY TO DO IT AUTOMATICALLY - HARD F/B HEAVY ON BOTH
-// APPROX TIME : 8 DAYS TO FINISH (EXCLUDING ENHANCING THE AI'S ABILITY TO GENERATE WORKFLOWS)
-
-type TraceEvent = {
-  type: string;
-  payload: any;
-};
 
 
-export const Copilot = () => {
+export const Copilot =() => {
   const [question, setQuestion] = useState("");
   const [stage, setStage] = useState<GenerationStage>("idle");// lets the UI know where the UI is in the generation process
   const [currentHistoryId, setCurrentHistoryId] = useState<number | null>(null);
@@ -53,10 +38,9 @@ export const Copilot = () => {
   const [activeGenerationKey, setActiveGenerationKey] =
   useState<number | "new" | null>(null);
 
-  const [traceStore, setTraceStore] = useState<
-    Record<number | "new", any>
+  const [traceBlocks, setTraceBlocks] = useState<
+    Record<number | "new", TraceBlock[]>
   >({});
-
 
   // hooks
   const {
@@ -66,30 +50,161 @@ export const Copilot = () => {
   } = useCopilotChat();
   const messages = messageStore[activeKey] ?? [];
 
-  const { run , cancel} = useCopilotStream({// this hook requires three call back functions
+  const { run , cancel , runId} = useCopilotStream({// this hook requires three call back functions
     onStage: setStage,// tracks current stage of generation
     onProgress: (key : number | "new", stage: GenerationStage) => {
       upsertStreamingAssistant(key, stage); // updates chat messages reflecting the new stage
     },
-    onTrace: (key, trace) => {// updates trace store holding all the traces sent from the be
-      const traceState = traceStore[key] ?? {};
+ onTrace: (key, trace) => {
+  console.log(trace);
+  setTraceBlocks(prev => {
+    const blocks = prev[key] ?? [];
 
-      if (trace.path === "judgement.start") {
-        traceState.judgement = {
-          capabilities: [],
-          requirements: [],
-          errors: []
-        };
+    // normalize backend types
+    let blockId: TraceBlock["type"] | null = null;
+
+    if (trace.type === "intent analysis") blockId = "intent";
+    if (trace.type === "candidates") blockId = "candidates";
+    if (trace.type === "genration_plan") blockId = "plan";
+    if (trace.type === "workflow") blockId = "workflow";
+    if(trace.type === "judgement") blockId = "judgement";
+    if (trace.type === "repaired_workflow") blockId = "repaired_workflow";
+
+    if (!blockId) return prev;
+
+    const index = blocks.findIndex(b => b.id === blockId);
+
+    // ---------- INTENT ----------
+    if (blockId === "intent") {
+      const intent = trace.payload?.intent;
+      if (!intent) return prev;
+
+      const block: TraceBlock = {
+        id: "intent",
+        type: "intent",
+        intent,
+      };
+
+      if (index === -1) {
+        return { ...prev, [key]: [...blocks, block] };
       }
 
-      applyTraceEvent(traceState, trace);// build our dynamic tree of objects
+      const next = [...blocks];
+      next[index] = block;
+      return { ...prev, [key]: next };
+    }
 
-      setTraceStore(prev => ({
-        ...prev,
-        [key]: { ...traceState }
-      }));
-    },
+    // ---------- CANDIDATES ----------
+    if (blockId === "candidates") {
+      const nodes = trace.payload?.nodes;
+      if (!Array.isArray(nodes)) return prev;
+
+      const block: TraceBlock = {
+        id: "candidates",
+        type: "candidates",
+        nodes,
+      };
+
+      if (index === -1) {
+        return { ...prev, [key]: [...blocks, block] };
+      }
+
+      const next = [...blocks];
+      next[index] = block;
+      return { ...prev, [key]: next };
+    }
+
+    // ---------- PLAN ----------
+    if (blockId === "plan") {
+      const nodes = trace.payload?.connected_nodes || [];
+      if (!Array.isArray(nodes)) return prev;
+
+      const block: TraceBlock = {
+        id: "plan",
+        type: "plan",
+        nodes,
+      };
+
+      if (index === -1) {
+        return { ...prev, [key]: [...blocks, block] };
+      }
+
+      const next = [...blocks];
+      next[index] = block;
+      return { ...prev, [key]: next };
+    }
+
+    // ---------- WORKFLOW ----------
+    if (blockId === "workflow") {
+      const workflow = trace.payload?.workflow;
+      if (!workflow) return prev;
+
+      const block: TraceBlock = {
+        id: "workflow",
+        type: "workflow",
+        workflow,
+      };
+
+      if (index === -1) {
+        return { ...prev, [key]: [...blocks, block] };
+      }
+
+      const next = [...blocks];
+      next[index] = block;
+      return { ...prev, [key]: next };
+    }
+
+    if (trace.type === "judgement") {
+      if (index === -1) {
+        return {
+          ...prev,
+          [key]: [
+            ...blocks,
+            {
+              id: "judgement",
+              type: "judgement",
+              capabilities: trace.payload.capabilities,
+              errors: trace.payload.errors,
+              requirements: trace.payload.requirements,
+              matches: trace.payload.matches,
+            },
+          ],
+        };
+      }
+      const next = [...blocks];
+      next[index] = {
+        ...next[index],
+        capabilities: trace.payload.capabilities,
+        errors: trace.payload.errors,
+        requirements: trace.payload.requirements,
+        matches: trace.payload.matches,
+      };
+      return { ...prev, [key]: next };
+    }
+
+    if (blockId === "repaired_workflow") {
+      const workflow = trace.payload?.workflow;
+      if (!workflow) return prev;
+
+      const block: TraceBlock = {
+        id: "repaired_workflow",
+        type: "repaired_workflow",
+        workflow,
+      };
+
+      if (index === -1) {
+        return { ...prev, [key]: [...blocks, block] };
+      }
+
+      const next = [...blocks];
+      next[index] = block; // 🔁 replace previous repair
+      return { ...prev, [key]: next };
+    }
+    return prev;
+  });
+},
     onComplete: (answer, newHistoryId) =>{// called once when backend finishes generation
+      // if (id !== runIdRef.current) return;
       const key = currentHistoryId ?? "new";
 
       const blob = new Blob([JSON.stringify(answer, null, 2)], {
@@ -152,10 +267,7 @@ export const Copilot = () => {
       content: question.trim(),
     };
 
-    setTraceStore(prev => ({
-      ...prev,
-      [activeKey]: {},
-    }));
+    resetTracesForKey(activeKey);
 
 
     setMessageStore((prev) => ({
@@ -193,10 +305,7 @@ export const Copilot = () => {
     setActiveGenerationKey(null);
     setStage("done");
 
-      setTraceStore(prev => ({
-  ...prev,
-  [activeKey]: {},
-}));
+    resetTracesForKey(activeKey);
 
 
     setMessageStore((prev) => {
@@ -224,10 +333,7 @@ export const Copilot = () => {
 
     cancel();
 
-   setTraceStore(prev => ({
-  ...prev,
-  [activeKey]: {},
-}));
+    resetTracesForKey(activeKey);
 
     setQuestion(lastUser.content);
     setActiveGenerationKey(null);
@@ -258,10 +364,7 @@ export const Copilot = () => {
     cancel();
     setActiveGenerationKey(null);
 
-    setTraceStore(prev => ({
-      ...prev,
-      [activeKey]: [],
-    }));
+    resetTracesForKey(activeKey);
 
 
     setCurrentHistoryId(history.id);
@@ -295,7 +398,7 @@ export const Copilot = () => {
     setCurrentHistoryId(null);
     setStage("idle");
     setQuestion("");
-    setTraceStore({ new: {} });
+    setTraceBlocks({ new: [] });
   }
 
   const historyPanelOnDelete = (id : number) =>
@@ -319,6 +422,14 @@ export const Copilot = () => {
     const msgs = messageStore[activeKey] ?? [];
     return [...msgs].reverse().find(m => m.type === "user");
   };
+
+  const resetTracesForKey = (key: number | "new") => {
+    setTraceBlocks(prev => ({
+      ...prev,
+      [key]: [],
+    }));
+  };
+
 
   
   return (
@@ -353,9 +464,10 @@ export const Copilot = () => {
                 <ChatView
                   messages={messages}
                   chatRef={chatRef}
-                  traces={traceStore[activeKey] || []}
+                  traces={traceBlocks[activeKey] || []}
                   activeGeneration={activeGenerationKey === activeKey}
                   stage={stage}
+                  runId={runId}
                   onCancel={handleCancel}
                   onRetry={handleRetry}
                 />

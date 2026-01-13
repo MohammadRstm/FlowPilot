@@ -1,74 +1,95 @@
-import { useEffect, useState } from "react";
-import type { PlanNode } from "../../Copilot.constants";
-import { TypedLine } from "./typedLine";
-import { KeyValueList } from "./keyValueList";
+import type { TraceBlock } from "../../Copilot.types";
 import { N8nPlan } from "./N8NPlan";
+import { TypedLine } from "./typedLine";
+import { TypedList } from "./TypedList";
 import { WorkflowPreview } from "./WorkflowPreview";
-import { typingBarrier } from "./typingBarrier";
 
-export function TraceView({ traces }: { traces: any }) {
-  const [showCursor, setShowCursor] = useState(false);
-
-  useEffect(() => {
-    typingBarrier.wait().then(() => setShowCursor(false));
-    setShowCursor(true);
-  }, [traces]);
-
-  if (!traces || Object.keys(traces).length === 0) return null;
-
-  console.log("In chat view " , traces);
-
-  const intentBlock = traces["intent analysis"];
-  const candidatesBlock = traces["candidates"]?.candidates;
-  const planBlock = traces["genration_plan"];
-  const workflowBlock = traces["workflow"]?.workflow;
-  const repairedWorkflowBlock = traces["repaired_workflow"]?.workflow;
-  const judgementBlock = traces["judgement"];
-
-  const planNodesRaw = planBlock?.connected_nodes;
-  const planNodes: PlanNode[] = Array.isArray(planNodesRaw)
-    ? planNodesRaw.map((n: any) => ({
-        name: n.name ?? n.node ?? "Step",
-        role: n.role ?? n.type ?? "step",
-        from: n.from ?? null,
-      }))
-    : [];
-
+export function TraceView({ traces }: { traces: TraceBlock[] }) {
   return (
     <div className="trace-panel">
-      {intentBlock && (
-        <div className="trace-block">
-          <div className="trace-title">Understanding your request</div>
-          <TypedLine value={`I interpret your goal as: ${intentBlock.intent}`} />
-        </div>
-      )}
+      {traces.map(block => {
+        switch (block.type) {
+          case "intent":
+            return (
+              <div key={block.id} className="trace-block">
+                <strong><TypedLine value={`I interpret your goal as:`} /></strong><br />
+                <TypedLine value={block.intent} />
+              </div>
+            );
 
-      {candidatesBlock?.nodes?.length > 0 && (
-        <div className="trace-block">
-            <div className="trace-title">
-            Candidate Nodes ({candidatesBlock.nodes.length})
-            </div>
-            <ul>
-            {candidatesBlock.nodes.map((node: string, idx: number) => (
-                <li key={idx}>{node}</li>
-            ))}
-            </ul>
-        </div>
-        )}
+          case "candidates":
+            return (
+              <div key={block.id} className="trace-block">
+                <strong><TypedLine value={`Candidate Nodes (${block.nodes.length})`} /></strong>
+                <TypedList
+                  items={block.nodes}
+                  renderItem={n => <TypedLine value={n} />}
+                />
+              </div>
+            );
 
+         case "plan":
+            return (
+                <div key={block.id} className="trace-block">
+                <strong><TypedLine value="Execution Plan" /></strong><br />
+                <N8nPlan nodes={block.nodes} />
+                </div>
+            );
 
-      {planNodes.length > 0 && (
-        <div className="trace-block">
-          <div className="trace-title">Workflow plan</div>
-          <N8nPlan nodes={planNodes} />
-        </div>
-      )}
+          case "workflow":
+            return (
+                <div key={block.id} className="trace-block">
+                <strong><TypedLine value="Workflow ready. You can inspect or download it below." /></strong><br />
+                <WorkflowPreview workflow={block.workflow} />
+                </div>
+            );
+            case "judgement":
+                return (
+                <div key={block.id} className="trace-block judgement-block">
+                    <strong><TypedLine value="Judgement Report" /></strong>
+                    
+                    {block.capabilities?.length > 0 && (
+                    <>
+                        <TypedLine value="Capabilities:" />
+                        <TypedList
+                        items={block.capabilities}
+                        renderItem={c => <TypedLine value={`[${c.id}] ${c.description}`} />}
+                        />
+                    </>
+                    )}
 
-      {workflowBlock && <WorkflowPreview workflow={workflowBlock} />}
-      {repairedWorkflowBlock && <WorkflowPreview workflow={repairedWorkflowBlock} />}
-      {judgementBlock && <KeyValueList data={judgementBlock} />}
+                    {block.errors?.length > 0 && (
+                    <>
+                        <TypedLine value="Errors:" />
+                        <TypedList
+                        items={block.errors}
+                        renderItem={e => <TypedLine value={`[${e.severity}] ${e.message}`} />}
+                        />
+                    </>
+                    )}
 
-      {showCursor && <div className="global-cursor">▌</div>}
+                    {block.requirements?.length > 0 && (
+                    <>
+                        <TypedLine value="Requirements:" />
+                        <TypedList
+                        items={block.requirements}
+                        renderItem={r => <TypedLine value={`[${r.id}] ${r.description}`} />}
+                        />
+                    </>
+                    )}
+                </div>
+                );
+                case "repaired_workflow":
+                return (
+                    <div key={block.id} className="trace-block">
+                    <strong><TypedLine value="Workflow was repaired. Updated version below:" /></strong><br />
+                    <WorkflowPreview workflow={block.workflow} />
+                    </div>
+                );
+            default:
+                return null;
+        }
+      })}
     </div>
   );
 }
