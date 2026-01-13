@@ -1,0 +1,337 @@
+html, body {
+  height: auto;
+  overflow-y: auto;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  background: #050300;
+  color: #fff;
+}
+
+.landing-root {
+  overflow-x: hidden;
+  background: linear-gradient(
+    to bottom,
+    #050300 0%,
+    #271300 40%,
+    #050300 100%
+  );
+}
+
+.hero {
+  position: relative;
+  min-height: 87vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(255, 140, 26, 0.45) 0%,
+      rgba(255, 140, 26, 0.25) 25%,
+      rgba(10, 5, 0, 0.95) 60%
+    ),
+    url("../assets/hero-section-landing.png");
+
+  background-position: center;
+  background-size: 120% 100%, contain;
+  overflow-x: hidden;
+}
+
+.hero-content {
+  text-align: center;
+}
+
+.hero h1 {
+  font-size: 4rem;
+  color: #ffffff;
+}
+
+.hero p {
+  color: #ffffff;
+  font-size: 1.3rem;
+}
+
+.cta {
+  margin-top: 30px;
+  padding: 14px 36px;
+  background: linear-gradient(90deg, #ff9b00, #ffb84d);
+  border: none;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.workflow-showcase {
+    background: linear-gradient(
+    to bottom,
+    #050300 0%,
+    #271300 40%,
+    #050300 100%
+  );
+  padding: 100px 10%;
+  text-align: center;
+}
+
+.fake-workflow {
+  --x: 50%;
+  --y: 50%;
+
+  position: relative;
+  height: 500px;
+  border-radius: 20px;
+  overflow: hidden;
+
+  /* Base dark image (always visible) */
+  background-image:
+    linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
+    url("../assets/landing-n8n-workflow.png");
+
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+
+  box-shadow: 0 0 40px #ff9b0020;
+  transition: background-position 0.1s ease;
+}
+
+/* Spotlight layer */
+.fake-workflow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background:
+    radial-gradient(
+      200px at var(--x) var(--y),
+      rgba(255, 180, 80, 0.7),
+      rgba(255, 160, 60, 0.3) 40%,
+      rgba(0, 0, 0, 0.85) 70%
+    ),
+    radial-gradient(
+      300px at var(--x) var(--y),
+      rgba(255,255,255,0.15),
+      rgba(0,0,0,0) 60%
+    );
+
+  mix-blend-mode: overlay;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.fake-workflow.grab {
+  background-position:
+    calc(50% + (var(--x) - 50%) * 0.15)
+    calc(50% + (var(--y) - 50%) * 0.15);
+}
+
+/* Only show spotlight on hover */
+.fake-workflow.active::after {
+  opacity: 1;
+}
+
+
+/* Chat */
+.data-chat-section {
+  padding: 120px 8%;
+    background: linear-gradient(
+    to bottom,
+    #050300 0%,
+    #271300 40%,
+    #050300 100%
+  );
+  color: white;
+}
+
+.data-chat-section h2 {
+  text-align: center;
+  font-size: 46px;
+  margin-bottom: 80px;
+}
+
+.data-chat-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 80px;
+  align-items: center;
+}
+
+/* LEFT CARD */
+.data-chat-card {
+  background: rgba(20, 10, 5, 0.6);
+  border-radius: 18px;
+  padding: 36px;
+  box-shadow: 0 0 50px rgba(255, 150, 40, 0.08);
+}
+
+.data-chat-card h3 {
+  font-size: 26px;
+  margin-bottom: 14px;
+}
+
+.data-chat-card p {
+  opacity: 0.8;
+  line-height: 1.6;
+}
+
+/* Chat bubbles */
+.chat-example {
+  margin-top: 30px;
+}
+
+.chat-msg {
+  padding: 14px 18px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  max-width: 80%;
+  font-size: 14px;
+}
+
+.chat-msg.user {
+  background: rgba(255, 150, 40, 0.12);
+}
+
+.chat-msg.bot {
+  background: rgba(255, 255, 255, 0.08);
+  margin-left: auto;
+}
+
+/* RIGHT SIDE */
+.data-network {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.network-image {
+  width: 100%;
+  max-width: 480px;
+  filter: drop-shadow(0 0 40px rgba(255, 140, 40, 0.4));
+}
+
+
+/* Community */
+.community {
+  background: linear-gradient(to bottom, #000000 0%, #271300 40%, #050300 100%);
+  padding: 120px 0;
+  text-align: center;
+  color: white;
+}
+
+.hub {
+  position: relative;
+  width: 480px;
+  height: 480px;
+  margin: 100px auto;
+}
+
+/* Center */
+.center {
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  background: radial-gradient(circle, #ff9b00, #a35b00);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: bold;
+  font-size: 18px;
+  left: 175px;
+  top: 175px;
+  box-shadow: 0 0 60px #ff9b0090;
+  z-index: 5;
+  animation: pulse 4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 40px #ff9b0060; }
+  50% { box-shadow: 0 0 90px #ff9b00cc; }
+}
+
+/* Nodes */
+.node {
+  position: absolute;
+  background: rgba(15, 15, 15, 0.9);
+  padding: 12px 18px;
+  border-radius: 14px;
+  color: white;
+  font-size: 14px;
+  box-shadow: 0 0 25px #ff9b0020;
+  backdrop-filter: blur(6px);
+  white-space: nowrap;
+  animation: float 6s ease-in-out infinite;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.node:hover {
+  transform: scale(1.08) translateY(-6px);
+  box-shadow: 0 0 40px #ff9b0090;
+  z-index: 10;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+/* Stagger */
+.n1 { left: -102px;  top: 106px;  animation-delay: 0s; }
+.n2 { left: 383px; top: 60px;  animation-delay: 1s; }
+.n3 { left: 433px; top: 217px; animation-delay: 2s; }
+.n4 { left: 260px; top: 413px; animation-delay: 3s; }
+.n5 { left: 144px; top: 450px; animation-delay: 1.5s; }
+.n6 { left: -38px;  top: 310px; animation-delay: 2.5s; }
+.n7 { left: -98px;  top: 242px; animation-delay: 3.5s; }
+.n8 { left: 102px; top: 19px;  animation-delay: 4s; }
+
+
+/* Lines */
+.lines {
+  position: absolute;
+  width: 480px;
+  height: 480px;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.lines path {
+  fill: none;
+  stroke: #ff9b00;
+  stroke-width: 2;
+  stroke-dasharray: 6 10;
+  opacity: 0.35;
+  animation: dashFlow 14s linear infinite;
+  transition: stroke 0.3s ease, opacity 0.3s ease;
+  filter: drop-shadow(0 0 6px #ff9b00aa);
+}
+
+@keyframes dashFlow {
+  to { stroke-dashoffset: -300; }
+}
+
+/* Per-node hover glow */
+.n1:hover ~ .lines path:nth-child(1),
+.n2:hover ~ .lines path:nth-child(2),
+.n3:hover ~ .lines path:nth-child(3),
+.n4:hover ~ .lines path:nth-child(4),
+.n5:hover ~ .lines path:nth-child(5),
+.n6:hover ~ .lines path:nth-child(6),
+.n7:hover ~ .lines path:nth-child(7),
+.n8:hover ~ .lines path:nth-child(8) {
+  stroke: #ffd36a;
+  opacity: 1;
+  stroke-width: 3;
+}
+
+/* Footer */
+footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 60px 10%;
+  background: #060300;
+  border-top: 1px solid #ff9b0020;
+}

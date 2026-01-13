@@ -1,0 +1,23 @@
+<?php
+
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserCopilotHistoryController;
+use Illuminate\Support\Facades\Route;
+
+
+Route::group(["prefix" => "v0.1"] , function(){
+    Route::get('/ping', function () {
+        return response()->json(['status' => 'ok']);
+    });
+    Route::group(["prefix"=>"copilot"] , function(){
+        Route::post("/ask" , [UserController::class, "ask"]);
+        Route::get("/ask-stream" , [UserController::class , "askStream"]);
+        Route::post("/satisfied", [UserController::class , "confirmWorkflow"]);
+        Route::get('/histories', [UserCopilotHistoryController::class, 'index']);
+        Route::get('/histories/{userCopilotHistory}', [UserCopilotHistoryController::class, 'show']);
+        Route::delete('/histories/{userCopilotHistory}', [UserCopilotHistoryController::class, 'destroy']);
+
+    });
+
+
+});
