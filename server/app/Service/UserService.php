@@ -25,7 +25,6 @@ class UserService{
     }
 
     private static function handleHistoryManagement(int $userId , ?int $historyId , array $messages , $answer){
-        Log::debug("saving messages");
         $history = self::saveHistory($historyId , $userId);
 
         self::saveCopilotHistories(
@@ -42,12 +41,10 @@ class UserService{
     private static function saveHistory($historyId , $userId){
         // ensure we have a history for this conversation
         if ($historyId) {
-            Log::debug("found old history");
             return UserCopilotHistory::where('id', $historyId)
                 ->where('user_id', $userId)
                 ->first();
         } else {
-            Log::debug("Creating new history");
             return UserCopilotHistory::create([
                 'user_id' => $userId,
             ]);
@@ -58,7 +55,7 @@ class UserService{
         $saved = SaveWorkflow::save($requestForm);
         return $saved; 
     }
-
+    // CLEAN
     public static function saveCopilotHistories(
         int $historyId,
         array $messages,
@@ -95,8 +92,6 @@ class UserService{
         $newMessage->user_message = $userContent;
 
         $newMessage->save();
-
-        Log::debug("Message saved");
     }
 
     public static function getChatHistory(int $userId){

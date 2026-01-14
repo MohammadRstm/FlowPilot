@@ -53,22 +53,43 @@ class LLMService{
         throw new Exception("LLMService: non-JSON response from model (logged raw content).");
     }
 
-    public static function intentAnalyzer(array $question){
+    public static function intentAnalyzer(array $messages){
+
+        // prompt-injection/creating a final user message
+        $prompt = Prompts::getSecureIntentCompilerPrompt($messages);
+        $analyzedQuestion = self::callOpenAI($prompt);
+
+        if($analyzedQuestion["attack"]){
+            throw new Exception("Prompt injection detected");
+        }else{
+            $question = $analyzedQuestion["question"];
+        }
+
+        Log::info("Analyzed question : " , ["question" => $question]);
+
         $prompt = Prompts::getAnalysisIntentAndtiggerPrompt($question);
+        $intentData = self::callOpenAI($prompt);
 
-        return self::callOpenAI($prompt);
-    }
+        Log::info("User's intent : " , ["intent" => $intentData["intent"] , "trigger" => $intentData["trigger"]]);
 
-    public static function nodeAnalyzer(string $question ,string $intent){
-        $prompt = Prompts::getAnalysisNodeExtractionPrompt($intent , $question);
+        $prompt = Prompts::getAnalysisNodeExtractionPrompt($intentData["intent"] , $question);
+        $nodeData = self::callOpenAI($prompt);
 
-        return self::callOpenAI($prompt);
-    }
-    
-    public static function workflowSchemaValidator(array $intentData , array $nodeData){
-        $prompt = Prompts::getAnalysisValidationAndPruningPrompt($intentData["trigger"] , json_encode($nodeData["nodes"]));
+        $prompt = Prompts::getAnalysisValidationAndPruningPrompt($question , $intentData["intent"] , $intentData["trigger"] , json_encode($nodeData["nodes"]));
+        $final = self::callOpenAI($prompt);
 
-        return self::callOpenAI($prompt);
+        Log::info("Extracted Nodes" , ["nodes" => $final["nodes"] , "min_nodes" => $final["min_nodes"]]);
+  
+        $final["intent"] = $intentData["intent"];
+        $final["trigger"] = $intentData["trigger"];
+        $final["question"] = $question;
+        $final["nodes"] = AnalyzeIntent::normalizeNodes($final["nodes"]);
+
+        $final["embedding_query"] = AnalyzeIntent::buildWorkflowEmbeddingQuery($final,$question);
+
+        Log::info("Embedding query" , ["query" => $final["embedding_query"]]);
+
+        return $final;
     }
 
     /** WORKFLOW GENERATION (CORE) */
