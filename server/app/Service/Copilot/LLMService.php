@@ -64,13 +64,14 @@ class LLMService{
 
         return self::callOpenAI($prompt);
     }
-
-    /** WORKFLOW GENERATION (CORE) */
+    
     public static function workflowSchemaValidator(array $intentData , array $nodeData){
         $prompt = Prompts::getAnalysisValidationAndPruningPrompt($intentData["trigger"] , json_encode($nodeData["nodes"]));
 
         return self::callOpenAI($prompt);
     }
+
+    /** WORKFLOW GENERATION (CORE) */
 
     public static function generateAnswer(string $question, array $topFlows ,?callable $stage ,  ?callable $trace) {
         $stage("generating");

@@ -121,7 +121,10 @@ export const Copilot =() => {
         file.name
       );
 
-      return commitHistory(prev, newHistoryId, updated);
+      const commited = commitHistory(prev, newHistoryId, updated);
+      delete commited["new"];
+      
+      return commited;
     });
 
     setCurrentHistoryId(newHistoryId);

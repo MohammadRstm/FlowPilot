@@ -24,6 +24,7 @@ class UserService{
     }
 
     private static function handleHistoryManagement(int $userId , ?int $historyId , array $messages , $answer){
+        Log::debug("saving messages");
         $history = self::saveHistory($historyId , $userId);
 
         self::saveCopilotHistories(
@@ -40,10 +41,12 @@ class UserService{
     private static function saveHistory($historyId , $userId){
         // ensure we have a history for this conversation
         if ($historyId) {
+            Log::debug("found old history");
             return UserCopilotHistory::where('id', $historyId)
                 ->where('user_id', $userId)
                 ->first();
         } else {
+            Log::debug("Creating new history");
             return UserCopilotHistory::create([
                 'user_id' => $userId,
             ]);
@@ -77,6 +80,7 @@ class UserService{
             ->first(fn ($m) => 
                 (is_array($m) ? $m['type'] : $m->type) === 'user'
             );
+        Log::debug("last message" , ["last message" => $lastUserMessage]);
 
 
         if (!$lastUserMessage) return;
@@ -86,6 +90,7 @@ class UserService{
             : ($lastUserMessage->content ?? null);
 
         if (!$userContent) return;
+        Log::debug("last message content" , ["last message content" => $userContent]);
 
         // get ai model 
         $model = AiModel::where("name" , $aiModel)
@@ -99,6 +104,8 @@ class UserService{
         $newMessage->user_message = $userContent;
 
         $newMessage->save();
+
+        Log::debug("Message saved");
     }
 
     public static function getChatHistory(int $userId){

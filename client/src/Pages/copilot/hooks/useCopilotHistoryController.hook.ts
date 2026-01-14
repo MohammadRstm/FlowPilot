@@ -80,6 +80,11 @@ export function useCopilotHistoryController({
     setStage("idle");
     setQuestion("");
     setTraceBlocks(prev => ({ ...prev, new: [] }));
+
+    setMessageStore(prev => ({
+      ...prev,
+      new: [], 
+    }));
   };
 
 

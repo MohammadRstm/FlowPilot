@@ -3,6 +3,7 @@
 namespace App\Service\Copilot;
 use Illuminate\Support\Facades\Log;
 // CURRENT ISSUES TO FIX :
+
 // N8N generation hallucinates with complex requests
 // Generation of non existing nodes (rare but happens)
 // Generation of old nodes or nodes no longer supported
@@ -11,22 +12,13 @@ use Illuminate\Support\Facades\Log;
 // Injecting unsupported options/parameters (rare but happens)
 
 // FEATURES YET TO BE DONE :
-// WE NEED TO SAVE WORKFLOWS THAT GET 100% IN RAG SYSTEM (BETTER YET ONLY SAVE IF USER APPROVES ON FLOW)
-// WE NEED TO FIND NEW SOURCES FOR BETTER RAG INJECTION
-// WE MUST ADD THE ABILITY FOR USERS TO CONTINUE THE CONVERSATION:
-// --> users might receive a workflow deemed functional by our system
-// --> users might want to edit the workflow so they send another message
-// --> we must hold the previously generated workflow and work on fixing it according to user's needs
-// I might need to implement some of the frontend for this to make sense
+// INHANCE THE ABILITY TO HOLD A CONVERSATION
 
 // THINGS WE DO THAT DOESN'T MAKE SENSE : 
-// WHEN A WORKFLOW IS DEEMED SUITABLE WE ONLY GIVE THE AI MODEL THE WORKFLOW DISCARDING THE N8N NODES AND SCHEMAS, THIS MIGHT CAUSE HALLUSCINATIONS INCASE THE AI WANTED TO ADD NEW NODES
 // IN RAG WE SAVE N8N NODES CATALOGS AND N8N NODES SCHEMAS ALTHOUGH SCHEMAS ALONE MIGHT SUFFICE
-// IN RAG WE HAVE NO CHUNKING
 // ANALYZE INTENT SERVICE GIVES US THE NODES NEEDED FOR THE WORFKLOW GENERATION, BUT THERE IS NO GURANTEE THAT AN AI MODEL ACTUALLY KNOWS ALL THE N8N NODES AVAILABLE
 
-
-
+// nlp 
 class GetAnswer{
     // Orchestrater
     public static function execute(array $messages , ?callable $stream = null){

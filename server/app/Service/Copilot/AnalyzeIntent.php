@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\Log;
 class AnalyzeIntent{
 
     // Orchestrater
-    public static function analyze(array $question , $stage , $trace): array {
-        $stage("analyzing");
+    public static function analyze(array $question ,?callable $stage ,?callable $trace): array {
+        $stage && $stage("analyzing");
 
         $intentData = LLMService::intentAnalyzer($question);
         $nodeData = LLMService::nodeAnalyzer($intentData["question"], $intentData["intent"]);
@@ -24,7 +24,7 @@ class AnalyzeIntent{
         Log::info("Intent" , ["intent" => $final["intent"]]);
         Log::info("embedding_query" , ["embedding" => $final["embedding_query"]]);
 
-        $trace("intent analysis", [
+        $trace && $trace("intent analysis", [
             "intent" => $final["intent"],
         ]);
 
