@@ -11,26 +11,8 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller{
     public function askStream(Request $req){
-        return response()->stream(function () use ($req){// we are telling laravel that we're sending chunks of data not everything at once
-
-            $messages = json_decode($req->query('messages'), true);
-            $historyId = $req->query('history_id');
-
-            if (!$messages || !is_array($messages)) {
-                abort(400, "Invalid messages payload");
-            }
-
-            $stream = UserService::initializeStream();
-
-            $result = UserService::getCopilotAnswer(
-                $messages,
-                $historyId,
-                $stream// the helper is sent further down the pipeline for detialed chunks
-            );
-
-            // finally we send the results
-            UserService::returnFinalWorkflowResult($result);
-
+        return response()->stream(function () use ($req){// initiate stream
+            $this->askCopilot($req);
         }, 200, UserService::returnSseHeaders());
     }
 
@@ -41,6 +23,26 @@ class UserController extends Controller{
         }catch(Exception $ex){
             return $this->errorResponse("Failed to save worfklow" , ["1" => $ex->getMessage()]);
         }
+    }
+
+    private function askCopilot($req){
+        $messages = json_decode($req->query('messages'), true);
+        $historyId = $req->query('history_id');
+
+        if (!$messages || !is_array($messages)) {
+            abort(400, "Invalid messages payload");
+        }
+
+        $stream = UserService::initializeStream();
+
+        $result = UserService::getCopilotAnswer(
+            $messages,
+            $historyId,
+            $stream// the helper is sent further down the pipeline for detialed chunks
+        );
+
+        // finally we send the results
+        UserService::returnFinalWorkflowResult($result);
     }
 
 

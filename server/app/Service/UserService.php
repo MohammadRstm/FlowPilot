@@ -7,6 +7,7 @@ use App\Models\Message;
 use App\Models\UserCopilotHistory;
 use App\Service\Copilot\GetAnswer;
 use App\Service\Copilot\SaveWorkflow;
+use Exception;
 use Illuminate\Support\Facades\Log;
 
 class UserService{
@@ -75,22 +76,12 @@ class UserService{
             ]);
         }
 
-        $lastUserMessage = collect($messages)
-            ->reverse()
-            ->first(fn ($m) => 
-                (is_array($m) ? $m['type'] : $m->type) === 'user'
-            );
-        Log::debug("last message" , ["last message" => $lastUserMessage]);
+        $lastUserMessage = collect($messages)->last();
+        if (!isset($lastUserMessage['content'])){
+            throw new Exception("No message content");
+        };
 
-
-        if (!$lastUserMessage) return;
-
-        $userContent = is_array($lastUserMessage)
-            ? ($lastUserMessage['content'] ?? null)
-            : ($lastUserMessage->content ?? null);
-
-        if (!$userContent) return;
-        Log::debug("last message content" , ["last message content" => $userContent]);
+        $userContent = $lastUserMessage['content'];
 
         // get ai model 
         $model = AiModel::where("name" , $aiModel)

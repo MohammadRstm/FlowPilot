@@ -102,10 +102,13 @@ export function useCopilotChatController({
         }));
 
         setQuestion("");
-        const lastTen = [...(messageStore[activeKey] ?? []), userMessage].slice(-10);
-
+        const nextMessages = [...(messageStore[activeKey] ?? []), userMessage];
+        const lastTenUserMessages = nextMessages
+        .filter((m): m is Extract<ChatMessage, { type: "user" }> => m.type === ChatMessageType.USER)
+        .slice(-10);
+        
         setActiveGenerationKey(activeKey);
-        run(lastTen, currentHistoryId, activeKey);
+        run(lastTenUserMessages, currentHistoryId, activeKey);
     };
 
     const cancelGeneration = () => {
