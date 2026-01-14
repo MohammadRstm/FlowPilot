@@ -83,11 +83,7 @@ class LLMService{
         $final["intent"] = $intentData["intent"];
         $final["trigger"] = $intentData["trigger"];
         $final["question"] = $question;
-        $final["nodes"] = AnalyzeIntent::normalizeNodes($final["nodes"]);
 
-        $final["embedding_query"] = AnalyzeIntent::buildWorkflowEmbeddingQuery($final,$question);
-
-        Log::info("Embedding query" , ["query" => $final["embedding_query"]]);
 
         return $final;
     }

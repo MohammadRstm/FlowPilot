@@ -12,6 +12,38 @@ class GetPoints{
     public static function execute(array $analysis ,?callable $stage ,?callable $trace): array {
         $stage && $stage("retrieving");
 
+        $densesVectors = self::getEmbeddingQueries($analysis);
+        $sparseVectors = self::getSpareEmbeddings($analysis);
+  
+        $results = self::searchQdrant($densesVectors , $sparseVectors , $analysis);
+
+        $trace && $trace("candidates",[
+            "workflow_count" => count($analysis["nodes"]),
+            "nodes" => $analysis["nodes"]
+        ]);
+
+        Log::info("Nodes From Qdrant : " , ["nodes"=> $results["nodes"]]);
+
+        return [
+            "workflows" => $results["workflows"],
+            "nodes"     => $results["nodes"],
+            "schemas"   => $results["schemas"]
+        ];
+    }
+
+    private static function searchQdrant($densesVectors , $sparseVectors , $analysis){
+        $workflows =  self::searchWorkflows($densesVectors["worfklowDense"], $sparseVectors["workflowSpars"]);
+        $nodes = self::searchNodes($densesVectors["nodeDense"], $sparseVectors["nodeSparse"], $analysis);
+        $schemas = self::searchSchemas($densesVectors["nodeDense"], $sparseVectors["nodeSparse"]);
+
+        return[
+            "workflows" => $workflows,
+            "nodes" => $nodes,
+            "schemas" => $schemas
+        ];
+    }
+
+    private static function getEmbeddingQueries($analysis){
         $workflowDense = IngestionService::embed(
            $analysis["embedding_query"]
         );
@@ -20,6 +52,13 @@ class GetPoints{
             self::buildNodeEmbeddingQuery($analysis)
         );
 
+        return [
+            "nodeDense" => $nodeDense,
+            "worfklowDense" => $workflowDense
+        ];
+    }
+
+    private static function getSpareEmbeddings($analysis){
         $workflowSparse = IngestionService::buildSparseVector($analysis["intent"]);
         $nodeSparse = IngestionService::buildSparseVector(
             $analysis["intent"] . " " .
@@ -27,21 +66,9 @@ class GetPoints{
             ($analysis["trigger"] ?? "")
         );
 
-        $workflows =  self::searchWorkflows($workflowDense, $workflowSparse);
-        $nodes = self::searchNodes($nodeDense, $nodeSparse, $analysis);
-        $schemas = self::searchSchemas($nodeDense, $nodeSparse);
-
-        $trace && $trace("candidates",[
-            "workflow_count" => count($analysis["nodes"]),
-            "nodes" => $analysis["nodes"]
-        ]);
-
-        Log::info("Nodes From Qdrant : " , ["nodes"=> $nodes]);
-
         return [
-            "workflows" => $workflows,
-            "nodes"     => $nodes,
-            "schemas"   => $schemas
+            "workflowSpars" => $workflowSparse,
+            "nodeSparse" => $nodeSparse
         ];
     }
 

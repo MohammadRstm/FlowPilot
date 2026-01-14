@@ -12,6 +12,8 @@ class AnalyzeIntent{
         $stage && $stage("analyzing");
 
         $final = LLMService::intentAnalyzer($messages);
+        $final["embedding_query"] = self::buildWorkflowEmbeddingQuery($final,$final["question"]);
+        $final["nodes"] = self::normalizeNodes($final["nodes"]);
 
         $trace && $trace("intent analysis", [
             "intent" => $final["intent"],
@@ -29,7 +31,6 @@ class AnalyzeIntent{
             );
         }, $nodes)));
     }
-
 
     public static function buildWorkflowEmbeddingQuery(array $analysis, string $question): string {
         $parts = [];
