@@ -29,7 +29,7 @@ class GetAnswer{
         $trace = self::initializeTrace($stream);
 
         $analysis = AnalyzeIntent::analyze($messages , $stage , $trace);
-        $question = $analysis["question"];
+        $question = $analysis["question"];// get analyzed question
 
         $points = GetPoints::execute($analysis , $stage , $trace);
         $finalPoints = RankingFlows::rank($analysis, $points , $stage);

@@ -7,10 +7,11 @@ use Illuminate\Support\Facades\Log;
 class RankingFlows{
 
     public static function rank(array $analysis, array $points , ?callable $stage): array{
-        $stage("ranking");
+        $stage && $stage("ranking");
 
         $workflowScores = self::rankWorkflows($analysis, $points["workflows"]);
         $best = $workflowScores[0] ?? null;
+
         $shouldReuse =
             $best &&
             $best["score"] > 0.5;
@@ -34,7 +35,7 @@ class RankingFlows{
     private static function rankWorkflows(array $analysis, array $hits): array {
         $scored = [];
 
-        foreach ($hits as $hit) {
+        foreach($hits as $hit){
             $p = $hit["payload"];
     
             $intentScore = self::intentScore($analysis["intent"]  , $p["nodes_used"] ?? []);
@@ -62,8 +63,6 @@ class RankingFlows{
         }
 
         usort($scored, fn($a,$b) => $b["score"] <=> $a["score"]);
-
-
         return $scored;
     }
 

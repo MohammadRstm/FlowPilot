@@ -93,7 +93,6 @@ class LLMService{
     }
 
     /** WORKFLOW GENERATION (CORE) */
-
     public static function generateAnswer(string $question, array $topFlows ,?callable $stage ,  ?callable $trace) {
         $stage("generating");
 
