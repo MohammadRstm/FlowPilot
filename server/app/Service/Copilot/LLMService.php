@@ -26,9 +26,7 @@ class LLMService{
                         ["role" => "user", "content" => $prompt["user"]]
                     ]
                 ]);
-
-        Log::debug("Raw response" , ["res" => $response]);
-            
+ 
         $results = trim($response->json("choices.0.message.content"));
         $decoded = json_decode($results , true);
 
@@ -115,9 +113,9 @@ class LLMService{
     }
 
     /** WORKFLOW LOGIC VALIDATOR/JUDGER */
-    public static function judgeResults(array $workflow, string $question){
+    public static function judgeResults(array $workflow, array $analysis){
         // functionalities
-        $reqPrompt = Prompts::getWorkflowFunctionalitiesPrompt($question);
+        $reqPrompt = Prompts::getWorkflowFunctionalitiesPrompt($analysis);
         $requirements = self::callOpenAI($reqPrompt);
 
         // what workflow actually does

@@ -130,7 +130,7 @@ class GetPoints{
                 "include" => $includes
             ];
         } else {
-            $withPayload = $includes; // true or false
+            $withPayload = $includes ?? true; // true or false
         }
 
 

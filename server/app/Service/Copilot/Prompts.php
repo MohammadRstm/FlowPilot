@@ -15,8 +15,6 @@ class Prompts{
 
     /** ANALYZE USER QUESTION PROMPTS */
     public static function getSecureIntentCompilerPrompt(array $messages){
-        Log::debug("here");
-
         $systemPrompt = <<<SYSTEM
         You are a SECURITY-CRITICAL INTENT COMPILER.
 
@@ -120,7 +118,6 @@ class Prompts{
     }
 
     public static function getAnalysisIntentAndtiggerPrompt(string $question){
-        Log::debug("here1");
         $systemPrompt = <<<SYSTEM
         You are an intent reconciliation and trigger analysis engine for n8n workflows.
 
@@ -183,10 +180,6 @@ class Prompts{
     }
 
     public static function getAnalysisNodeExtractionPrompt($intent , $question){
-
-        Log::debug("here2");
-
-
         $systemPrompt = <<<SYSTEM
         You are an n8n workflow node extraction engine.
 
@@ -240,8 +233,6 @@ class Prompts{
     }
 
     public static function getAnalysisValidationAndPruningPrompt(string $question , string $intent , $trigger , $nodes_json){
-        Log::debug("here3");
-
         $systemPrompt = <<<SYSTEM
         You are an n8n workflow validation and pruning engine.
 
@@ -260,7 +251,7 @@ class Prompts{
         Output schema (must match exactly):
 
         {
-        "nodes": string[],
+        "nodes": string[],(array of strings)
         "min_nodes": number,
         }
 
@@ -499,13 +490,28 @@ class Prompts{
     }
 
     /** JUDGEMENT PROMPTS */
-    public static function getWorkflowFunctionalitiesPrompt($question){
+    public static function getWorkflowFunctionalitiesPrompt($analysis){
+        $question = $analysis["question"];
+        $intent = $analysis["intent"];
+
         $systemPrompt = <<<SYSTEM
         You are a workflow requirements extractor.
         You convert user requests into atomic functional requirements.
         You do not design workflows.
         You only list what must exist.
+
+        Output JSON ONLY:
+        {
+        "requirements": [
+            {
+            "id": "R1",
+            "description": "..."
+            }
+        ]
+        }
+
         You must only return the JSON schema provided and only that.
+        No explanation, no markdown , only json;
         SYSTEM;
 
         $userPrompt = <<<USER
@@ -518,6 +524,9 @@ class Prompts{
 
         User request:
         $question
+
+        User intent: 
+        $intent
 
         Output JSON ONLY:
         {

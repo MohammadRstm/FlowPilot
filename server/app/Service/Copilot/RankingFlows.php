@@ -58,12 +58,6 @@ class RankingFlows{
                 "nodes" => $p["nodes_used"],
                 "raw" => $p["raw"]
             ];
-
-            Log::debug("Workflow score", [
-                "qdrant" => $hit["score"],
-                "complexity" => $complexityScore,
-                "final" => $score
-            ]);
         }
 
         usort($scored, fn($a,$b) => $b["score"] <=> $a["score"]);
@@ -72,14 +66,19 @@ class RankingFlows{
 
     private static function rankNodes(array $analysis, array $hits): array {
         $ranked = [];
+        $requestedNodes = array_flip(
+            AnalyzeIntent::normalizeNodes($analysis["nodes"])
+        );
 
         foreach ($hits as $hit) {
             $p = $hit["payload"];
 
             $score = $hit["score"];
 
-            if (in_array(AnalyzeIntent::normalizeNodes($p["key"]), array_map("strtolower",$analysis["nodes"]))){
-                $score *= 1.4; // 40% boost for explicitly requested nodes
+            $normalizedKey = AnalyzeIntent::normalizeNode($p["key"]);
+
+            if (isset($requestedNodes[$normalizedKey])) {
+                $score *= 1.4; // 40% boost
             }
 
             $ranked[] = [
@@ -134,14 +133,6 @@ class RankingFlows{
         foreach ($filtered as $hit) {
             $p = $hit["payload"];
             $score = $hit["score"]; // qdrant similarity
-
-            // 40% boost if node explicitly requested by user
-            if (in_array(
-                AnalyzeIntent::normalizeNodes($p["node_normalized"]),
-                array_map("strtolower", $analysis["nodes"])
-            )){
-                $score *= 1.4;
-            }
 
             // discard garbage matches early
             if ($score < 0.15) {

@@ -32,6 +32,15 @@ class AnalyzeIntent{
         }, $nodes)));
     }
 
+    public static function normalizeNode(string $node): string {
+        return preg_replace(
+            '/[^a-z0-9]/',
+            '',
+            strtolower(trim($node))
+        );
+    }
+
+
     public static function buildWorkflowEmbeddingQuery(array $analysis, string $question): string {
         $parts = [];
 

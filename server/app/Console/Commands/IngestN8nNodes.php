@@ -16,8 +16,7 @@ class IngestN8nNodes extends Command
     private int $ingested = 0;
     private int $skipped = 0;
 
-    public function handle()
-    {
+    public function handle(){
         $root = 'https://api.github.com/repos/n8n-io/n8n/contents/packages/nodes-base/nodes';
 
         $this->info('Starting recursive ingestion of n8n nodes...');
@@ -63,8 +62,7 @@ class IngestN8nNodes extends Command
     }
 
 
-    private function ingestNodeFile(string $url): void
-    {
+    private function ingestNodeFile(string $url): void{
         $this->line("→ {$url}");
 
         $data = Http::get($url)->json();
@@ -80,8 +78,7 @@ class IngestN8nNodes extends Command
     }
 
 
-    private function buildPayload(array $data): array
-    {
+    private function buildPayload(array $data): array{
         $node = $data['node'];
         $key = strtolower(str_replace('n8n-nodes-base.', '', $node));
 
@@ -91,20 +88,16 @@ class IngestN8nNodes extends Command
             'key'            => $key,
             'key_normalized' => preg_replace('/[^a-z0-9]/', '', $key),
             'categories'     => array_map('strtolower', $data['categories'] ?? []),
-            'docs'           => $data['resources']['primaryDocumentation'][0]['url'] ?? null,
-            'credentials'    => $data['resources']['credentialDocumentation'][0]['url'] ?? null,
-            'codex'          => $data['codexVersion'] ?? null,
         ];
     }
 
 
-    private function storeInQdrant(array $node): void
-    {
+    private function storeInQdrant(array $node): void{
+
         $text = implode(' ', [
             $node['node'],
             $node['key'],
-            implode(' ', $node['categories']),
-            $node['docs'] ?? '',
+            implode(' ', $node['categories'] ?? []),
         ]);
 
         $denseVector = IngestionService::embed($text);
