@@ -91,12 +91,12 @@ class LLMService{
     }
 
     /** WORKFLOW GENERATION (CORE) */
-    public static function generateAnswer(string $question, array $topFlows ,?callable $stage ,  ?callable $trace) {
+    public static function generateAnswer(array $analysis, array $finalPoints ,?callable $stage ,  ?callable $trace) {
         $stage("generating");
 
-        $context = self::buildContext($topFlows);
-        $planningPrompt = Prompts::getWorkflowBuildingPlanPrompt($question, $context);
-
+        $workflowContext = WorkflowGeneration::buildWorkflowContext($finalPoints["workflows"] ?? []);
+        $nodesContext = WorkflowGeneration::buildSchemasContext($finalPoints["schemas"]);
+        $planningPrompt = Prompts::getWorkflowBuildingPlanPrompt($analysis, $workflowContext);
         $plan = self::callOpenAI($planningPrompt);
 
         $trace("genration_plan", [
@@ -104,8 +104,7 @@ class LLMService{
         ]);
 
         // generate workflow
-        $compilerPrompt = Prompts::getWorkflowBuildingPrompt($question , $plan , $context);
-
+        $compilerPrompt = Prompts::getWorkflowBuildingPrompt($analysis , $plan , $workflowContext ,$nodesContext);
         $workflow = self::callOpenAI($compilerPrompt);
 
         $trace("workflow", [
@@ -113,55 +112,6 @@ class LLMService{
         ]);
 
         return $workflow;   
-    }
-
-    public static function extractAllowedNodes(array $topFlows): array {
-        $set = [];
-
-        foreach ($topFlows as $flow) {
-            if (isset($flow["payload"])) {
-                $flow = $flow["payload"];
-            }
-
-            foreach (($flow["nodes_used"] ?? []) as $n) {
-                $set[self::normalizeNodeName($n)] = true;
-            }
-        }
-
-        return array_keys($set);
-    }
-
-    private static function buildContext(array $flows): string{
-        $out = "";
-        $counter = 1;
-
-        foreach ($flows as $flow) {
-
-            // if this is a Qdrant result, extract payload
-            if (isset($flow["payload"])) {
-                $flow = $flow["payload"];
-            }
-
-            // if it's not an array now, skip it
-            if (!is_array($flow)) {
-                continue;
-            }
-
-            $name  = $flow["workflow"] ?? "Unknown Workflow";
-            $nodes = $flow["nodes_used"] ?? [];
-            $count = $flow["node_count"] ?? count($nodes);
-            $raw   = $flow["raw"] ?? $flow;
-
-            $out .= "\n--- Workflow {$counter} ---\n";
-            $out .= "Name: {$name}\n";
-            $out .= "Nodes: " . implode(", ", $nodes) . "\n";
-            $out .= "Node Count: {$count}\n";
-            $out .= "JSON:\n" . json_encode($raw, JSON_PRETTY_PRINT) . "\n";
-
-            $counter++;
-        }
-
-        return $out;
     }
 
     /** WORKFLOW LOGIC VALIDATOR/JUDGER */

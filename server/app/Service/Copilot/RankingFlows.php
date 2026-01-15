@@ -85,10 +85,8 @@ class RankingFlows{
             $ranked[] = [
                 "score" => round($score, 4),
                 "node" => $p["node"],
-                "key" => $p["key"],
+                "key" => $p["key"], 
                 "categories" => $p["categories"],
-                "docs" => $p["docs"],
-                "credentials" => $p["credentials"]
             ];
         }
 

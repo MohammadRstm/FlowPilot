@@ -299,7 +299,7 @@ class Prompts{
 
 
     /** WORKFLOW GENERATION PROMPTS */
-    public static function getWorkflowBuildingPlanPrompt($question , $context){
+    public static function getWorkflowBuildingPlanPrompt($analysis , $workflowContext){
         $systemPrompt = <<<SYSTEM
         You are an expert n8n workflow planner.
 
@@ -312,25 +312,41 @@ class Prompts{
 
         You DO NOT output n8n JSON.
         You ONLY output a compact planning JSON that describes structure and flow.
+        ONLY OUTPUT THE JSON SCHEMA PROVIDED
 
         You must never invent nodes that do not exist in the provided context.
         SYSTEM;
 
+        $question = $analysis["question"];
+        $intent = $analysis["intent"];
+        $trigger = $analysis["trigger"];
+        $analysedNodes = json_encode($analysis["nodes"]);
+        
         $userPrompt = <<<USER
         user goal:
         $question
 
-        AVAILABLE BUILDING BLOCKS (real exported n8n workflows):
-        $context
+        user's intent:
+        $intent
+
+        Workflow trigger:
+        $trigger
+        
+        Analyzed nodes: 
+        $analysedNodes
+
+        AVAILABLE Workflow Examples:
+        $workflowContext
 
         Your task:
         1. Decide which workflows and nodes are relevant
         2. Decide which nodes will be used
         3. Decide the execution order
         4. Decide what data flows between nodes
+        5. Figure out if the trigger fits into the user's needs, if not chose the correct trigger
 
         Output a JSON plan in this exact format:
-
+        Example output: 
         {
         "nodes": [
             { "name": "Cron", "role": "trigger", "from": null },
@@ -343,12 +359,11 @@ class Prompts{
         }
 
         Rules:
-        - Use only node names that appear in the context
-        - Use logical roles: trigger, read, filter, write, send, transform
+        - Use logical roles: trigger, read, filter, write, send, transform exct...
         - The "from" field must reference another node name or a branch like "If.true"
         - Do NOT output n8n JSON
         - Do NOT invent nodes
-        - Output JSON only
+        - You must only output the json schema provided
         USER;
 
         return self::returnFormat($userPrompt , $systemPrompt);
@@ -393,38 +408,66 @@ class Prompts{
         return self::returnFormat($userPrompt , $systemPrompt);
     }
 
-    public static function getWorkflowBuildingPrompt($question , $plan , $context){
+    public static function getWorkflowBuildingPrompt($analysis , $plan , $workflowContext , $nodesContext){
         $plan = json_encode($plan , JSON_PRETTY_PRINT);
-        $context = json_encode($context , JSON_PRETTY_PRINT);
-
+        $question = $analysis["question"];
+        $intent = $analysis["intent"];
+        $nodes = json_encode($analysis["nodes"]);
+        $trigger = $analysis["trigger"];
+        
         $systemPrompt = <<<SYSTEM
         You are an n8n workflow compiler.
 
         You receive:
         - A validated execution plan
         - Real example workflows
+        - Node schemas
 
         Your job is to convert the plan into a fully importable n8n workflow.
 
         You must:
         - Follow the plan exactly
         - Use only nodes that appear in the context
-        - Preserve credential names from the examples
+        - Preserve credential names from the examples (if non provided don't place any)
         - Produce valid n8n JSON
 
+        Notes:
+        The execution plan is authoritative.
+        You may not add, remove, merge, or split steps.
+        Each step must produce exactly one n8n node.
+        
+        Strict rules:
         You never explain anything.
-        You output JSON only.
+        No markdow allowed.
+        You only output a valid n8n JSON.
         SYSTEM;
 
         $userPrompt = <<<USER
         user's GOAL:
         $question
 
+        user's intent:
+        $intent
+
+        workflow analyzed trigger:
+        $trigger
+
+        workflow analyzed nodes:
+        $nodes
+
+        
+        AVAILABLE REAL WORKFLOWS:
+        $workflowContext
+        
+        AVALIABLE NODE SCHEMAS
+        $nodesContext
+        
         EXECUTION PLAN (must be followed exactly):
         $plan
 
-        AVAILABLE REAL WORKFLOWS:
-        $context
+        Each node you output must correspond 1:1 to a step in the execution plan.
+        The number of nodes must equal the number of plan steps.
+        Each plan step must map to exactly one n8n node.
 
         CRITICAL FORMAT:
         Return a full n8n workflow with this exact top-level structure:
@@ -442,6 +485,7 @@ class Prompts{
 
         Rules:
         - All nodes must come from the plan
+        - Make sure data flow matches the user's intent
         - Connections must match the plan flow
         - Triggers must exist
         - Credential names must match examples
