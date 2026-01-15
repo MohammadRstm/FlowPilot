@@ -26,6 +26,8 @@ class LLMService{
                         ["role" => "user", "content" => $prompt["user"]]
                     ]
                 ]);
+
+        Log::debug("Raw response" , ["res" => $response]);
             
         $results = trim($response->json("choices.0.message.content"));
         $decoded = json_decode($results , true);

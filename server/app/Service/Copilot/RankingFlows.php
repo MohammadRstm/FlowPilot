@@ -5,31 +5,38 @@ namespace App\Service\Copilot;
 use Illuminate\Support\Facades\Log;
 
 class RankingFlows{
+    private static $threshold = 0.75;
+    private static $workflowsToBeUsedIndex = 2;// choose top 3 workflows
 
     public static function rank(array $analysis, array $points , ?callable $stage): array{
         $stage && $stage("ranking");
 
         $workflowScores = self::rankWorkflows($analysis, $points["workflows"]);
-        $best = $workflowScores[0] ?? null;
+        $shouldReuse = self::shouldUseWorkflow($workflowScores);
 
-        $shouldReuse =
-            $best &&
-            $best["score"] > 0.5;
+        $rankedNodes =  self::rankNodes($analysis, $points["nodes"]); 
+        $rankedSchemas =  self::rankSchemas($analysis, $points["schemas"] , $rankedNodes);
 
         $results = [
-            "nodes" => self::rankNodes($analysis, $points["nodes"]),
-            "schemas" => self::rankSchemas($analysis, $points["schemas"])
+            "nodes" => $rankedNodes,
+            "schemas" => $rankedSchemas
         ];
 
         if ($shouldReuse) {
             $result = [
-                "workflows" => array_slice($workflowScores, 0, 5)
+                "workflows" => array_slice($workflowScores, 0, self::$workflowsToBeUsedIndex)
             ];
-            Log::info('Reusing existing workflow', ['best_workflow_score' => $best["score"]]);
+            Log::info('Reusing existing workflow', ['best_workflow_score' => $workflowScores[0]["score"]]);
             
             return $result;
         }
         return $results;
+    }
+
+    private static function shouldUseWorkflow($workflowScores){
+        $best = $workflowScores[0] ?? null;
+
+        return $best && $best["score"] > self::$threshold;
     }
 
     private static function rankWorkflows(array $analysis, array $hits): array {
@@ -38,13 +45,11 @@ class RankingFlows{
         foreach($hits as $hit){
             $p = $hit["payload"];
     
-            $intentScore = self::intentScore($analysis["intent"]  , $p["nodes_used"] ?? []);
             $complexityScore = self::complexityScore($analysis["min_nodes"]  , count($p["nodes_used"] ?? []));
 
             $score = 
                 ($hit["score"] * 0.7) +       
-                // ($intentScore * 0.2) +
-                ($complexityScore * 0.1);
+                ($complexityScore * 0.3);
 
 
             $scored[] = [
@@ -56,7 +61,6 @@ class RankingFlows{
 
             Log::debug("Workflow score", [
                 "qdrant" => $hit["score"],
-                "intent" => $intentScore,
                 "complexity" => $complexityScore,
                 "final" => $score
             ]);
@@ -74,8 +78,8 @@ class RankingFlows{
 
             $score = $hit["score"];
 
-            if (in_array(strtolower($p["key"]), array_map("strtolower",$analysis["nodes"]))) {
-                $score += 0.5; // strong boost for explicitly requested nodes
+            if (in_array(AnalyzeIntent::normalizeNodes($p["key"]), array_map("strtolower",$analysis["nodes"]))){
+                $score *= 1.4; // 40% boost for explicitly requested nodes
             }
 
             $ranked[] = [
@@ -90,44 +94,96 @@ class RankingFlows{
 
         usort($ranked, fn($a,$b) => $b["score"] <=> $a["score"]);
 
-        return array_slice($ranked, 0, 15);
+        $selected = [];
+        $top = $ranked[0]["score"] ?? 0;
+
+        foreach ($ranked as $node) {
+            if ($node["score"] >= $top * 0.65) {
+                $selected[] = $node;
+            }
+        }
+
+        
+        Log::info("Node ranking summary", [
+            "requested_nodes" => $analysis["nodes"],
+            "total_hits" => count($selected),
+            "top_scores" => array_column(array_slice($selected, 0, 5), "score"),
+        ]);
+            
+        Log::debug("Ranked nodes selected", [
+            "count" => count($selected),
+            "nodes" => array_map(fn ($n) => [
+                "key" => $n["key"],
+                "score" => $n["score"],
+            ], $selected),
+        ]);
+        return $selected;
     }
 
-    private static function rankSchemas(array $analysis, array $hits): array {
+   private static function rankSchemas(array $analysis, array $hits, array $nodes): array {
+        $allowedNodes = array_map(
+            fn($n) => strtolower($n["key"]),
+            $nodes
+        );
+
+        $filtered = array_filter($hits, function ($hit) use ($allowedNodes) {
+            $node = strtolower($hit["payload"]["node"]);
+            return in_array($node, $allowedNodes);
+        });
+
         $ranked = [];
 
-        foreach ($hits as $hit) {
+        foreach ($filtered as $hit) {
             $p = $hit["payload"];
+            $score = $hit["score"]; // qdrant similarity
 
-            $score = $hit["score"];
+            // 40% boost if node explicitly requested by user
+            if (in_array(
+                AnalyzeIntent::normalizeNodes($p["node_normalized"]),
+                array_map("strtolower", $analysis["nodes"])
+            )){
+                $score *= 1.4;
+            }
 
-            if (in_array(strtolower($p["node"]), array_map("strtolower",$analysis["nodes"]))) {
-                $score += 0.4;
+            // discard garbage matches early
+            if ($score < 0.15) {
+                continue;
             }
 
             $ranked[] = [
-                "score" => round($score, 4),
-                "node" => $p["node"],
-                "resource" => $p["resource"],
-                "operation" => $p["operation"],
-                "fields" => $p["fields"]
+                "score"  => round($score, 4),
+                "schema" => $p
             ];
         }
 
-        usort($ranked, fn($a,$b) => $b["score"] <=> $a["score"]);
+        usort($ranked, fn($a, $b) => $b["score"] <=> $a["score"]);
 
-        return array_slice($ranked, 0, 30);
-    }
+        // group by node 
+        $byNode = [];
+        foreach ($ranked as $row) {
+            $node = strtolower($row["schema"]["node"]);
+            $byNode[$node][] = $row;
+        }
 
+        // enforce top-K per node (prevents hallucination)
+        $final = [];
+        foreach ($byNode as $nodeSchemas) {
+            $final = array_merge($final, array_slice($nodeSchemas, 0, 3)); // max 3 ops per node
+        }
 
-    // needs modification
-    private static function intentScore(string $intent, array $nodes): float {
-        $hasTrigger = collect($nodes)->contains(fn($n) => str_contains(strtolower($n), "trigger"));
-        return match ($intent) {
-            "triggered" => $hasTrigger ? 1.0 : 0.6,
-            "batch"     => $hasTrigger ? 0.6 : 1.0,
-            default     => 0.5,
-        };
+        usort($final, fn($a, $b) => $b["score"] <=> $a["score"]);
+
+        Log::info("Schemas selected for LLM", [
+            "nodes" => array_keys($byNode),
+            "count" => count($final),
+            "top"   => array_map(fn($s) => [
+                "node" => $s["schema"]["node"],
+                "op"   => $s["schema"]["operation"] ?? null,
+                "score"=> $s["score"]
+            ], array_slice($final, 0, 5))
+        ]);
+
+        return $final;
     }
 
 

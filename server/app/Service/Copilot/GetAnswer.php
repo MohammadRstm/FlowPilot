@@ -28,6 +28,7 @@ class GetAnswer{
         $stage = self::initializeStage($stream);
         $trace = self::initializeTrace($stream);
 
+
         $analysis = AnalyzeIntent::analyze($messages , $stage , $trace);
         $question = $analysis["question"];// get analyzed question
 
