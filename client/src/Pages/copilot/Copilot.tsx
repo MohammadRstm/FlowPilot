@@ -29,7 +29,7 @@ export const Copilot =() => {
   const chatRef = useRef<HTMLDivElement>(null);
 
   const [activeGenerationKey, setActiveGenerationKey] =
-  useState<number | "new" | null>(null);
+  useState<number | "new" | null>(null);// check why I put this null 
 
   const [traceBlocks, setTraceBlocks] = useState<Record<number | "new", TraceBlock[]>>(
     { new: [] }

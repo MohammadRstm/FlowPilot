@@ -69,7 +69,7 @@ class IngestN8nSchemas extends Command
             return 0;
         }
 
-        $collection = 'test';
+        $collection = 'node_schemas';
         $upsertUrl = "{$endpointBase}/collections/{$collection}/points?wait=true";
 
         $this->info("📤 Target collection: {$collection}");

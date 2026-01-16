@@ -14,11 +14,9 @@ class RankingFlows{
         $workflowScores = self::rankWorkflows($analysis, $points["workflows"]);
         $shouldReuse = self::shouldUseWorkflow($workflowScores);
 
-        $rankedNodes =  self::rankNodes($analysis, $points["nodes"]); 
-        $rankedSchemas =  self::rankSchemas($analysis, $points["schemas"] , $rankedNodes);
+        $rankedSchemas =  self::rankSchemas($analysis, $points["schemas"]);
 
         $results = [
-            "nodes" => $rankedNodes,
             "schemas" => $rankedSchemas
         ];
 
@@ -117,63 +115,180 @@ class RankingFlows{
         return $selected;
     }
 
-   private static function rankSchemas(array $analysis, array $hits, array $nodes): array {
-        $allowedNodes = array_map(
-            fn($n) => strtolower($n["key"]),
-            $nodes
-        );
+private static function rankSchemas(array $analysis, array $hits): array {
+    // helpers
+    $normalize = function(string $s): string {
+        return strtolower(preg_replace('/[^a-z0-9]/i', '', (string)$s));
+    };
 
-        $filtered = array_filter($hits, function ($hit) use ($allowedNodes) {
-            $node = strtolower($hit["payload"]["node"]);
-            return in_array($node, $allowedNodes);
-        });
+    $tokenize = function(string $s): array {
+        $splitCamel = preg_replace('/([a-z])([A-Z])/', '$1 $2', $s);
+        $lower = strtolower($splitCamel);
+        $parts = preg_split('/[^a-z0-9]+/', $lower, -1, PREG_SPLIT_NO_EMPTY);
+        return $parts ?: [];
+    };
 
-        $ranked = [];
+    // prepare allowed terms from analysis
+    $allowedRaw = $analysis['nodes'] ?? [];
+    $allowedNodes = array_values(array_filter(array_map('trim', $allowedRaw)));
+    $allowedMeta = [];
+    foreach ($allowedNodes as $n) {
+        $nstr = (string)$n;
+        $allowedMeta[] = [
+            'orig' => $nstr,
+            'norm' => $normalize($nstr),
+            'tokens' => $tokenize($nstr),
+        ];
+    }
 
-        foreach ($filtered as $hit) {
-            $p = $hit["payload"];
-            $score = $hit["score"]; // qdrant similarity
+    // Flatten nested hits (array of arrays). Keep origin group index for tracing.
+    $flatHits = [];
+    foreach ($hits as $groupIdx => $group) {
+        // If this group itself is a list of hits (typical case)
+        if (is_array($group) && isset($group[0]) && is_array($group[0])) {
+            foreach ($group as $hit) {
+                if (!is_array($hit)) continue;
+                $hit['__origin_group'] = $groupIdx;
+                $flatHits[] = $hit;
+            }
+        } elseif (is_array($group) && isset($group['payload'])) {
+            // single hit provided directly (rare)
+            $group['__origin_group'] = $groupIdx;
+            $flatHits[] = $group;
+        } else {
+            // unknown shape: skip defensively
+            continue;
+        }
+    }
 
-            // discard garbage matches early
-            if ($score < 0.15) {
-                continue;
+    Log::debug("rankSchemas: flattened hits", [
+        'groups' => count($hits),
+        'flattened' => count($flatHits),
+    ]);
+
+    $ranked = [];
+
+    foreach ($flatHits as $hit) {
+        $payload = $hit['payload'] ?? [];
+        if (!is_array($payload) || empty($payload)) continue;
+
+        // Build the canonical text to match against (try multiple payload fields)
+        $parts = [];
+        foreach (['node_normalized', 'node', 'node_id', 'display_name', 'displayName', 'description', 'service'] as $f) {
+            if (!empty($payload[$f]) && is_string($payload[$f])) $parts[] = $payload[$f];
+        }
+        $schemaCombined = trim(implode(' ', $parts));
+
+        if ($schemaCombined === '') continue;
+
+        $schemaNorm = $normalize($schemaCombined);
+        $schemaTokens = $tokenize($schemaCombined);
+
+        $qdrScore = isset($hit['score']) ? (float)$hit['score'] : (isset($payload['score']) ? (float)$payload['score'] : 0.0);
+
+        // quick garbage discard (keep consistent with earlier behaviour)
+        if ($qdrScore < 0.15) continue;
+
+        // matching logic vs allowed nodes
+        $matched = false;
+        $matchReason = null;
+        $boost = 1.0;
+
+        foreach ($allowedMeta as $meta) {
+            $allowedNorm = $meta['norm'];
+            if ($allowedNorm === '') continue;
+
+            // 1) substring checks (either side)
+            if ($allowedNorm !== '' && (strpos($schemaNorm, $allowedNorm) !== false || strpos($allowedNorm, $schemaNorm) !== false)) {
+                $matched = true;
+                $matchReason = 'substring';
+                $boost = max($boost, 1.6);
+                break;
             }
 
-            $ranked[] = [
-                "score"  => round($score, 4),
-                "schema" => $p
-            ];
+            // 2) token intersection
+            $inter = array_intersect($schemaTokens, $meta['tokens']);
+            if (!empty($inter)) {
+                $matched = true;
+                $matchReason = 'token_intersection';
+                $boost = max($boost, 1.4);
+                break;
+            }
+
+            // 3) permissive levenshtein fallback (for short typos)
+            $len = max(strlen($schemaNorm), strlen($allowedNorm));
+            if ($len > 0) {
+                $dist = levenshtein($schemaNorm, $allowedNorm);
+                $threshold = max(3, (int)floor($len * 0.25));
+                if ($dist <= $threshold) {
+                    $matched = true;
+                    $matchReason = 'levenshtein';
+                    $boost = max($boost, 1.25);
+                    break;
+                }
+            }
         }
 
-        usort($ranked, fn($a, $b) => $b["score"] <=> $a["score"]);
-
-        // group by node 
-        $byNode = [];
-        foreach ($ranked as $row) {
-            $node = strtolower($row["schema"]["node"]);
-            $byNode[$node][] = $row;
+        // If no textual match but qdrant score is very high, still include (recall)
+        if (!$matched && $qdrScore >= 0.9) {
+            $matched = true;
+            $matchReason = 'high_similarity';
+            $boost = max($boost, 1.1);
         }
 
-        // enforce top-K per node (prevents hallucination)
-        $final = [];
-        foreach ($byNode as $nodeSchemas) {
-            $final = array_merge($final, array_slice($nodeSchemas, 0, 3)); // max 3 ops per node
-        }
+        if (!$matched) continue;
 
-        usort($final, fn($a, $b) => $b["score"] <=> $a["score"]);
+        $finalScore = round($qdrScore * $boost, 4);
 
-        Log::info("Schemas selected for LLM", [
-            "nodes" => array_keys($byNode),
-            "count" => count($final),
-            "top"   => array_map(fn($s) => [
-                "node" => $s["schema"]["node"],
-                "op"   => $s["schema"]["operation"] ?? null,
-                "score"=> $s["score"]
-            ], array_slice($final, 0, 5))
-        ]);
-
-        return $final;
+        $ranked[] = [
+            'score' => $finalScore,
+            'schema' => $payload,
+            'raw_score' => $qdrScore,
+            'match_reason' => $matchReason,
+            'origin_group' => $hit['__origin_group'] ?? null,
+        ];
     }
+
+    // sort descending by score
+    usort($ranked, fn($a, $b) => $b['score'] <=> $a['score']);
+
+    // group by canonical schema node name (use normalized node or node field)
+    $byNode = [];
+    foreach ($ranked as $row) {
+        $nodeKey = strtolower((string)($row['schema']['node_normalized'] ?? $row['schema']['node'] ?? $row['schema']['node_id'] ?? 'unknown'));
+        if (!isset($byNode[$nodeKey])) $byNode[$nodeKey] = [];
+        $byNode[$nodeKey][] = $row;
+    }
+
+    // enforce top-K per node
+    $final = [];
+    $maxPerNode = 3;
+    foreach ($byNode as $nodeSchemas) {
+        $final = array_merge($final, array_slice($nodeSchemas, 0, $maxPerNode));
+    }
+
+    // final sort
+    usort($final, fn($a, $b) => $b['score'] <=> $a['score']);
+
+    Log::info("Schemas selected for LLM", [
+        "requested_nodes" => $allowedNodes,
+        "groups_probed" => count($hits),
+        "flattened_hits" => count($flatHits),
+        "selected_count" => count($final),
+        "sample" => array_map(fn($s) => [
+            "node" => $s["schema"]["node"] ?? null,
+            "node_normalized" => $s["schema"]["node_normalized"] ?? null,
+            "op" => $s["schema"]["operation"] ?? null,
+            "score" => $s["score"],
+            "match" => $s["match_reason"] ?? null,
+            "origin_group" => $s["origin_group"] ?? null,
+        ], array_slice($final, 0, 10))
+    ]);
+
+    return $final;
+}
+
+
 
 
     private static function complexityScore(int $minRequired, int $actual): float {

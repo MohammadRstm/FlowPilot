@@ -11,14 +11,12 @@ class GetAnswer{
     public static function execute(array $messages , ?callable $stream = null){
         set_time_limit(300); // 5 minutes max
 
-        // streaming services
+        // intialize streaming services
         $stage = self::initializeStage($stream);
         $trace = self::initializeTrace($stream);
 
 
         $analysis = AnalyzeIntent::analyze($messages , $stage , $trace);
-        $question = $analysis["question"];// get analyzed question
-
         $points = GetPoints::execute($analysis , $stage , $trace);
         $finalPoints = RankingFlows::rank($analysis, $points , $stage);
         $workflow = LLMService::generateAnswer($analysis, $finalPoints , $stage , $trace);

@@ -40,7 +40,6 @@ class AnalyzeIntent{
         );
     }
 
-
     public static function buildWorkflowEmbeddingQuery(array $analysis, string $question): string {
         $parts = [];
 
