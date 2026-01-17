@@ -114,7 +114,7 @@ class IngestN8nSchemas extends Command
                 "payload" => $schema
             ];
         }
-
+        /** @var Response */
         $response = Http::withHeaders(['api-key' => $apiKey])
             ->timeout(1000)
             ->put($endpoint . '/collections/n8n_node_schemas/points?wait=true', [

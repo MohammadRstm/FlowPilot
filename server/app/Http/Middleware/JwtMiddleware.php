@@ -16,8 +16,7 @@ class JwtMiddleware
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next): Response
-    {
+    public function handle(Request $request, Closure $next): Response{
         $header = $request->header('Authorization');
 
         if (! $header || ! str_starts_with($header, 'Bearer ')) {
@@ -29,23 +28,23 @@ class JwtMiddleware
         try {
             $secret = env('JWT_SECRET');
 
-            if (! $secret) {
+            if(!$secret){
                 throw new \RuntimeException('JWT_SECRET environment variable is not set');
             }
 
             $decoded = JWT::decode($token, new Key($secret, 'HS256'));
             $userId  = $decoded->sub ?? null;
 
-            if (! $userId) {
+            if(!$userId){
                 return response()->json(['message' => 'Unauthorized'], 401);
             }
 
             $user = User::find($userId);
 
-            if (! $user) {
+            if(!$user){
                 return response()->json(['message' => 'Unauthorized'], 401);
             }
-
+            
             auth()->setUser($user);
             $request->setUserResolver(fn () => $user);
         } catch (\Throwable $e) {

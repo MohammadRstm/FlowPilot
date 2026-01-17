@@ -4,6 +4,7 @@ import n8nMediaImage from "../assets/n8n-media.png";
 import FakeWorkflow from "./components/FakeWorkflow";
 
 export default function LandingPage() {
+  console.log(localStorage.getItem("flowpilot_token"));
 
   return (
     <div className="landing-root">

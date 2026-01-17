@@ -32,8 +32,8 @@ const Signup: React.FC = () => {
         email,
         password,
       });
-      localStorage.setItem("flowpilot_token", token);
-      navigate("/copilot");
+      localStorage.setItem("token", token);
+      navigate("/");
     } catch (err: any) {
       setError(err.message || "Failed to create account");
     } finally {
