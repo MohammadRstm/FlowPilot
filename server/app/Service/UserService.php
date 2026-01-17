@@ -10,9 +10,11 @@ use App\Service\Copilot\SaveWorkflow;
 use Illuminate\Support\Facades\Log;
 
 class UserService{
+    
+
 
     public static function getCopilotAnswer(array $messages, ?int $historyId = null , ?callable $stream = null): array{
-        $userId = auth()->id() ?? 1; // fallback to user 1 if auth is not set
+        $userId = auth()->id();
         $answer = GetAnswer::execute($messages , $stream);
         $history = self::handleHistoryManagement($userId , $historyId , $messages , $answer);
 
