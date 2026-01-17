@@ -1,0 +1,142 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, sans-serif;
+}
+
+body {
+  background: radial-gradient(circle at top, #2b1208, #000);
+  color: #fff;
+}
+
+.community-page {
+  min-height: 100vh;
+}
+
+/* NAVBAR */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  border-bottom: 1px solid #222;
+}
+
+.logo {
+  font-weight: 600;
+  color: #f5b642;
+}
+
+.nav-links {
+  display: flex;
+  gap: 24px;
+}
+
+.nav-links a {
+  cursor: pointer;
+  color: #ccc;
+  font-size: 14px;
+}
+
+.nav-links .login {
+  color: #fff;
+}
+
+/* FEED */
+.feed {
+  max-width: 720px;
+  margin: 40px auto;
+  padding: 0 16px;
+}
+
+/* POST CARD */
+.post-card {
+  background: #0b0b0b;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  border: 1px solid #1f1f1f;
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.post-header img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.post-author {
+  font-weight: 600;
+}
+
+.post-username {
+  font-size: 12px;
+  color: #888;
+}
+
+.post-imports {
+  margin-left: auto;
+  font-size: 12px;
+  color: #aaa;
+}
+
+.post-content {
+  margin: 16px 0;
+  font-size: 15px;
+}
+
+/* Preview placeholder */
+.post-preview {
+  height: 180px;
+  background: #141414;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+/* ACTIONS */
+.post-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.post-actions button {
+  flex: 1;
+  padding: 8px;
+  background: #121212;
+  border: 1px solid #222;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.post-actions button:hover {
+  background: #1a1a1a;
+}
+
+.post-stats {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #888;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 16px;
+  }
+
+  .nav-links {
+    display: none;
+  }
+
+  .post-preview {
+    height: 140px;
+  }
+}

@@ -16,6 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->prepend(HandleCors::class);
         $middleware->prepend(ForceSseHeaders::class);
+
+        $middleware->alias([
+            'jwt.auth' => \App\Http\Middleware\JwtMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

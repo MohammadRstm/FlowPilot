@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserCopilotHistoryController;
 use Illuminate\Support\Facades\Route;
@@ -9,6 +10,13 @@ Route::group(["prefix" => "v0.1"] , function(){
     Route::get('/ping', function () {
         return response()->json(['status' => 'ok']);
     });
+
+    Route::group(["prefix" => "auth"] , function(){
+        Route::post('/register', [AuthController::class, 'register']);
+        Route::post('/login', [AuthController::class, 'login']);
+        Route::get('/me', [AuthController::class, 'me'])->middleware('jwt.auth');
+    });
+
     Route::group(["prefix"=>"copilot"] , function(){
         Route::post("/ask" , [UserController::class, "ask"]);
         Route::get("/ask-stream" , [UserController::class , "askStream"]);

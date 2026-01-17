@@ -16,13 +16,13 @@ const Header: React.FC = () => {
         </div>
 
         <nav className="header__nav">
-          <Link to="/">Community</Link>
+          <Link to="/community">Community</Link>
           <Link to="/copilot">Copilot</Link>
           <a href="#about">About Us</a>
-          <a href="#get-started">Get Started</a>
-          <a href="#login" className="login">
+          <Link to="/signup">Get Started</Link>
+          <Link to="/login" className="login">
             Login
-          </a>
+          </Link>
         </nav>
       </div>
     </header>

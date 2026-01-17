@@ -2,6 +2,9 @@ import './App.css'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Landing from './Pages/Landing'
 import { Copilot } from './Pages/copilot/Copilot'
+import CommunityPage from './Pages/Community'
+import Login from './Pages/Login'
+import Signup from './Pages/Signup'
 
 /**
  * TIME CALENDER:
@@ -38,6 +41,9 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/copilot" element={<Copilot />} />
+        <Route path="/community" element={<CommunityPage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
       </Routes>
     </BrowserRouter>
   )
