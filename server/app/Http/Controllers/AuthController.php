@@ -9,7 +9,7 @@ use App\Http\Requests\SetPasswordRequest;
 use App\Service\AuthService;
 use Exception;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller{
 
@@ -37,6 +37,8 @@ class AuthController extends Controller{
 
     public function me(Request $request){
         $user = $request->user();
+
+        Log::debug("user" , ["user" => $user]);
         
         return $this->successResponse([
             'id'         => $user->id,

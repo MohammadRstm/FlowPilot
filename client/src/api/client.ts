@@ -19,14 +19,17 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) =>response,
   (error) => {
     if (error.response?.status === 401){// token expired/ unauthenticated
       clearToken();
-      window.location.href = "/login";
     }
     return Promise.reject(error);
   }
 );
+
+export const returnDataFormat = (resp : any) =>{
+  return resp.data.data;
+}
 
 

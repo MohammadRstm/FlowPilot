@@ -25,7 +25,7 @@ const Signup: React.FC = () => {
 
     setLoading(true);
 
-    try {
+    try{
       const { token } = await registerRequest({
         first_name: firstName,
         last_name: lastName,
@@ -34,9 +34,10 @@ const Signup: React.FC = () => {
       });
       localStorage.setItem("token", token);
       navigate("/");
-    } catch (err: any) {
+      
+    }catch(err: any){
       setError(err.message || "Failed to create account");
-    } finally {
+    }finally{
       setLoading(false);
     }
   };

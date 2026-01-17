@@ -1,4 +1,4 @@
-import { api } from "./client";
+import { api, returnDataFormat } from "./client";
 
 export interface AuthUser {
   id: number;
@@ -19,29 +19,24 @@ export interface RegisterPayload{
   password: string;
 }
 
-export async function login(email: string, password: string){
+export async function login({email , password} : { password : string , email : string}){
   const res =await  api.post<AuthResponse>("auth/login" , { email , password});
-  return res.data;
+  return returnDataFormat(res);
 }
 
 export async function googleLogin(response : any){
-  const res = api.post("auth/google" , {idToken: response.credential});
-  
-  return res.data;
+  const res = await api.post("auth/google" , {idToken: response.credential});
+  return returnDataFormat(res);
 }
 
 export async function register(payload: RegisterPayload): Promise<AuthResponse> {
   const res = await api.post<AuthResponse>("auth/register" , payload);
-  return res.data;
+  return returnDataFormat(res);
 }
 
 export async function me(){
   const res = await api.get("auth/me");
-
-  if(!res.ok){
-    throw new Error("Unauthenticated");
-  }
-  return res.json();
+  return returnDataFormat(res);
 }
 
 export const getToken = () => {

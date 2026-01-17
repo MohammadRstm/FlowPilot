@@ -8,6 +8,8 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class JwtMiddleware
 {
@@ -19,9 +21,14 @@ class JwtMiddleware
     public function handle(Request $request, Closure $next): Response{
         $header = $request->header('Authorization');
 
+        Log::debug("here");
+
         if (! $header || ! str_starts_with($header, 'Bearer ')) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
+
+        Log::debug("here");
+        
 
         $token = substr($header, 7);
 
@@ -31,6 +38,8 @@ class JwtMiddleware
             if(!$secret){
                 throw new \RuntimeException('JWT_SECRET environment variable is not set');
             }
+        Log::debug("here");
+
 
             $decoded = JWT::decode($token, new Key($secret, 'HS256'));
             $userId  = $decoded->sub ?? null;
@@ -38,16 +47,19 @@ class JwtMiddleware
             if(!$userId){
                 return response()->json(['message' => 'Unauthorized'], 401);
             }
+        Log::debug("here");
 
             $user = User::find($userId);
 
             if(!$user){
                 return response()->json(['message' => 'Unauthorized'], 401);
             }
+        Log::debug("here");
             
-            auth()->setUser($user);
+            Auth::setUser($user);
             $request->setUserResolver(fn () => $user);
         } catch (\Throwable $e) {
+            Log::debug($e->getMessage());
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 

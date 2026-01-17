@@ -8,6 +8,7 @@ use Firebase\JWT\JWT;
 use Google_Client;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class AuthService{
 
@@ -24,15 +25,7 @@ class AuthService{
 
         $token = self::createToken($user);
         
-        return[
-            "token" => $token,
-            "user"  => [
-                'id'         => $user->id,
-                'first_name' => $user->first_name,
-                'last_name'  => $user->last_name,
-                'email'      => $user->email,
-            ],
-        ];
+        return self::authenticationReturnFormat($user , $token);
     }
 
     public static function login(array $credentials){
@@ -41,6 +34,7 @@ class AuthService{
         if (!$user) {
             throw new Exception("Invalid credentials");
         }
+
 
         if (!$user->password) {
             throw new Exception("This account uses Google login. Please continue with Google");
@@ -52,15 +46,8 @@ class AuthService{
 
         $token = self::createToken($user);
 
-        return [
-            "token" => $token,
-            'user'  => [
-                'id'         => $user->id,
-                'first_name' => $user->first_name,
-                'last_name'  => $user->last_name,
-                'email'      => $user->email,
-            ],
-        ];
+
+        return self::authenticationReturnFormat($user , $token);
     }
 
     public static function googleLogin(array $data){
@@ -92,17 +79,10 @@ class AuthService{
             $user->update(['google_id' => $googleId]);
         }
 
-        $token = $this->createToken($user);
+        $token = self::createToken($user);
 
-        return[
-            "token" => $token,
-            'user'  => [
-                'id'         => $user->id,
-                'first_name' => $user->first_name,
-                'last_name'  => $user->last_name,
-                'email'      => $user->email,
-            ],
-        ];
+
+        return self::authenticationReturnFormat($user, $token);
     }
 
     public static function setPassword(Model $user , array $data){
@@ -134,7 +114,19 @@ class AuthService{
         return $payload;
     }
 
-    private function createToken(User $user): string{
+    private static function authenticationReturnFormat(array | Model $user , string $token){
+        return[
+            "token" => $token,
+            'user'  => [
+                'id'         => $user->id,
+                'first_name' => $user->first_name,
+                'last_name'  => $user->last_name,
+                'email'      => $user->email,
+            ],
+        ];
+    }
+
+    private static function createToken(User $user): string{
         $now = time();
 
         $payload = [
@@ -144,10 +136,10 @@ class AuthService{
             'exp' => $now + (60 * 60 * 24 * 7), // 7 days
         ];
 
-        return JWT::encode($payload, $this->getJwtSecret(), 'HS256');
+        return JWT::encode($payload, self::getJwtSecret(), 'HS256');
     }
 
-    private function getJwtSecret(): string{
+    private static function getJwtSecret(): string{
         $secret = env('JWT_SECRET');
 
         if (! $secret) {
@@ -156,8 +148,8 @@ class AuthService{
 
         return $secret;
     }
-    
-    private static function googleAccountAlreadyLinkedWithDifferentUser(Model $user , int $googleId){
+
+    private static function googleAccountAlreadyLinkedWithDifferentUser(Model $user , string | int $googleId){
         return User::where('google_id', $googleId)
                 ->where('id', '!=', optional($user)->id)
                 ->exists();
