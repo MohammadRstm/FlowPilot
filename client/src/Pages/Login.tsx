@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../styles/Auth.css";
 import Header from "./components/Header";
 import { useNavigate, Link } from "react-router-dom";
@@ -9,6 +9,13 @@ import wf2 from "../assets/workflows/wf2.png";
 import wf3 from "../assets/workflows/wf3.webp";
 import wf5 from "../assets/workflows/wf5.webp";
 
+declare global {
+  interface Window {
+    google: any;
+  }
+}
+
+
 const workflowImages = [wf1, wf2, wf3, wf5];
 
 const Login: React.FC = () => {
@@ -18,11 +25,44 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    let interval: number;
+
+    const initGoogle = () => {
+      if (!window.google) return;
+
+      window.google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        callback: handleGoogleLogin,
+        auto_select: false,
+      });
+
+      const btn = document.getElementById("google-login-btn");
+      if (btn) {
+        window.google.accounts.id.renderButton(btn, {
+          theme: "outline",
+          size: "large",
+          text: "continue_with",
+          shape: "rectangular",
+          width: 320,
+        });
+      }
+
+      window.google.accounts.id.disableAutoSelect();
+      clearInterval(interval);
+    };
+
+    interval = window.setInterval(initGoogle, 100);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
-
+  
     try {
       const { token } = await loginRequest(email, password);
       localStorage.setItem("token", token);
@@ -33,6 +73,38 @@ const Login: React.FC = () => {
       setLoading(false);
     }
   };
+
+
+  const handleGoogleLogin = async (response: any) => {
+    try {
+      setError(null);
+      setLoading(true);
+
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/auth/google`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            idToken: response.credential,
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Google login failed");
+      }
+
+      const { token } = await res.json();
+      localStorage.setItem("token", token);
+      navigate("/");
+    } catch (err: any) {
+      setError(err.message || "Google login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   return (
     <div className="auth-page">
@@ -49,6 +121,12 @@ const Login: React.FC = () => {
 
             {error && <div className="auth-error">{error}</div>}
 
+            <div id="google-login-btn" className="google-login-btn" />
+
+            <div className="auth-divider">
+              <span>or</span>
+            </div>
+            
             <form className="auth-form" onSubmit={handleSubmit}>
               <label className="auth-label">
                 Email

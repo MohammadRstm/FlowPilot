@@ -6,6 +6,7 @@ use App\Models\User;
 use Firebase\JWT\JWT;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Google\Client as GoogleClient;
 
 class AuthController extends Controller{
     public function register(Request $request){
@@ -78,6 +79,63 @@ class AuthController extends Controller{
             'email'      => $user->email,
         ]);
     }
+
+    public function googleLogin(Request $request){
+        $data = $request->validate([
+            'idToken' => ['required', 'string'],
+        ]);
+
+        $client = new GoogleClient([
+            'client_id' => env('GOOGLE_CLIENT_ID'),
+        ]);
+
+        $payload = $client->verifyIdToken($data['idToken']);
+
+        if (!$payload) {
+            return $this->errorResponse('Invalid Google token', [], 401);
+        }
+
+        $email = $payload['email'];
+        $googleId = $payload['sub'];
+        $firstName = $payload['given_name'] ?? '';
+        $lastName = $payload['family_name'] ?? '';
+
+        $user = User::where('google_id', $googleId)->first();
+
+        if(!$user){
+            $user = User::where('email', $email)->first();
+        }
+
+        if(!$user){
+            $user = User::create([
+                'user_role_id'      => env('USER_ROLE_ID'),
+                'first_name'        => $firstName,
+                'last_name'         => $lastName,
+                'email'             => $email,
+                'google_id'         => $googleId,
+                'password'          => null, // Google-only account
+                'photo_url'         => $payload['picture'] ?? '',
+                'email_verified_at' => now(),
+            ]);
+        }
+
+        if (!$user->google_id) {
+            $user->update(['google_id' => $googleId]);
+        }
+
+        $token = $this->createToken($user);
+
+        return $this->successResponse([
+            'token' => $token,
+            'user' => [
+                'id'         => $user->id,
+                'first_name' => $user->first_name,
+                'last_name'  => $user->last_name,
+                'email'      => $user->email,
+            ],
+        ]);
+    }
+
 
     private function getJwtSecret(): string{
         $secret = env('JWT_SECRET');

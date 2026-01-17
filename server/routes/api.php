@@ -7,11 +7,9 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::group(["prefix" => "v0.1"] , function(){
-    Route::get('/ping', function () {
-        return response()->json(['status' => 'ok']);
-    });
 
     Route::group(["prefix" => "auth"] , function(){
+        Route::post('/google', [AuthController::class, 'googleLogin']);
         Route::post('/register', [AuthController::class, 'register']);
         Route::post('/login', [AuthController::class, 'login']);
         Route::get('/me', [AuthController::class, 'me'])->middleware('jwt.auth');
