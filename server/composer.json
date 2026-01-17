@@ -7,7 +7,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "doctrine/dbal": "*",
+        "doctrine/dbal": "^4.4",
         "firebase/php-jwt": "^7.0",
         "google/apiclient": "^2.19",
         "laravel/framework": "^12.0",

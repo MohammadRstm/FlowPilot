@@ -48,10 +48,21 @@ class AuthController extends Controller{
 
         $user = User::where('email', $credentials['email'])->first();
 
-        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+        if (!$user) {
             return $this->errorResponse('Invalid credentials', [], 401);
         }
 
+        if (!$user->password) {
+            return $this->errorResponse(
+                'This account uses Google login. Please continue with Google.',
+                [],
+                401
+            );
+        }
+
+        if (!Hash::check($credentials['password'], $user->password)) {
+            return $this->errorResponse('Invalid credentials', [], 401);
+        }
         $token = $this->createToken($user);
 
         return $this->successResponse([
@@ -89,11 +100,17 @@ class AuthController extends Controller{
             'client_id' => env('GOOGLE_CLIENT_ID'),
         ]);
 
+
         $payload = $client->verifyIdToken($data['idToken']);
 
-        if (!$payload) {
+        if(!$payload){
             return $this->errorResponse('Invalid Google token', [], 401);
         }
+
+        if (!($payload['email_verified'] ?? false)) {
+            return $this->errorResponse('Google email not verified', [], 401);
+        }
+
 
         $email = $payload['email'];
         $googleId = $payload['sub'];
@@ -101,6 +118,14 @@ class AuthController extends Controller{
         $lastName = $payload['family_name'] ?? '';
 
         $user = User::where('google_id', $googleId)->first();
+
+        if(
+            User::where('google_id', $googleId)
+                ->where('id', '!=', optional($user)->id)
+                ->exists()
+        ) {
+            return $this->errorResponse('Google account already linked', [], 409);
+        }
 
         if(!$user){
             $user = User::where('email', $email)->first();
@@ -135,6 +160,25 @@ class AuthController extends Controller{
             ],
         ]);
     }
+
+    public function setPassword(Request $request){
+        $user = $request->user();
+
+        if ($user->password) {
+            return $this->errorResponse('Password already set', [], 400);
+        }
+
+        $data = $request->validate([
+            'password' => ['required', 'string', 'min:8'],
+        ]);
+
+        $user->update([
+            'password' => Hash::make($data['password']),
+        ]);
+
+        return $this->successResponse([], 'Password set successfully');
+    }
+
 
 
     private function getJwtSecret(): string{

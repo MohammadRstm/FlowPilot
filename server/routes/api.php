@@ -13,6 +13,7 @@ Route::group(["prefix" => "v0.1"] , function(){
         Route::post('/register', [AuthController::class, 'register']);
         Route::post('/login', [AuthController::class, 'login']);
         Route::get('/me', [AuthController::class, 'me'])->middleware('jwt.auth');
+        Route::put("/setPassword" , [AuthController::class , 'setPassword'])->middleware('jwt.auth');
     });
 
     Route::group(["prefix"=>"copilot"] , function(){

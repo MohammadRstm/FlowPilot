@@ -33,7 +33,6 @@ export async function login(email: string, password: string){
       password,
     }
   );
-  console.log(res);
   return res.data;
 }
 
@@ -46,3 +45,36 @@ export async function register(payload: RegisterPayload): Promise<AuthResponse> 
 
   return res.data.data;
 }
+
+export async function me() {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(
+    `${import.meta.env.VITE_BASE_URL}/auth/me`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error("Unauthenticated");
+  }
+
+  return res.json();
+}
+
+
+
+export const getToken = () => {
+  return localStorage.getItem("token");
+};
+
+export const setToken = (token: string) => {
+  localStorage.setItem("token", token);
+};
+
+export const clearToken = () => {
+  localStorage.removeItem("token");
+};

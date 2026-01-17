@@ -26,6 +26,12 @@ const Login: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) navigate("/");
+  }, []);
+
+
+  useEffect(() => {
     let interval: number;
 
     const initGoogle = () => {
@@ -79,9 +85,8 @@ const Login: React.FC = () => {
     try {
       setError(null);
       setLoading(true);
-
       const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/auth/google`,
+        `${import.meta.env.VITE_BASE_URL}/auth/google`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -5,6 +5,7 @@ import { Copilot } from './Pages/copilot/Copilot'
 import CommunityPage from './Pages/Community'
 import Login from './Pages/Login'
 import Signup from './Pages/Signup'
+import ProtectedRoutes from './Pages/components/ProtectedRoutes'
 
 /**
  * TIME CALENDER:
@@ -40,10 +41,19 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route path="/copilot" element={<Copilot />} />
-        <Route path="/community" element={<CommunityPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+
+        <Route path="/copilot" element={
+          <ProtectedRoutes>
+            <Copilot />
+          </ProtectedRoutes>
+        }/>
+        <Route path="/community" element={
+          <ProtectedRoutes>
+            <CommunityPage />
+          </ProtectedRoutes>
+        }/>
       </Routes>
     </BrowserRouter>
   )

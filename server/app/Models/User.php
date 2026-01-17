@@ -17,6 +17,7 @@ class User extends Authenticatable{
         'email',
         'password',
         'photo_url',
+        'google_id',
         'email_verified_at',
     ];
 
