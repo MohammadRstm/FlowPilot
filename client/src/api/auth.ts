@@ -1,4 +1,4 @@
-import axios from "axios";
+import { api } from "./client";
 
 export interface AuthUser {
   id: number;
@@ -12,60 +12,37 @@ export interface AuthResponse {
   user: AuthUser;
 }
 
-export interface RegisterPayload {
+export interface RegisterPayload{
   first_name: string;
   last_name: string;
   email: string;
   password: string;
 }
 
-
-const BASE_URL = import.meta.env.VITE_BASE_URL;
-const prefix = "auth";
-
-export const authUrl = `${BASE_URL}/${prefix}`;
-
 export async function login(email: string, password: string){
-  const res = await axios.post<AuthResponse>(
-    `${authUrl}/login`,
-    {
-      email,
-      password,
-    }
-  );
+  const res =await  api.post<AuthResponse>("auth/login" , { email , password});
+  return res.data;
+}
+
+export async function googleLogin(response : any){
+  const res = api.post("auth/google" , {idToken: response.credential});
+  
   return res.data;
 }
 
 export async function register(payload: RegisterPayload): Promise<AuthResponse> {
- const res = await axios.post<AuthResponse>(
-    `${authUrl}/register`,
-    payload 
-  );
-
-
-  return res.data.data;
+  const res = await api.post<AuthResponse>("auth/register" , payload);
+  return res.data;
 }
 
-export async function me() {
-  const token = localStorage.getItem("token");
+export async function me(){
+  const res = await api.get("auth/me");
 
-  const res = await fetch(
-    `${import.meta.env.VITE_BASE_URL}/auth/me`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
-  if (!res.ok) {
+  if(!res.ok){
     throw new Error("Unauthenticated");
   }
-
   return res.json();
 }
-
-
 
 export const getToken = () => {
   return localStorage.getItem("token");

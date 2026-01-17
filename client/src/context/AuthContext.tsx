@@ -16,7 +16,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     me()
-      .then((res) => {
+      .then((res) =>{
+        console.log(res)
         setUser(res);
       })
       .catch(() => {

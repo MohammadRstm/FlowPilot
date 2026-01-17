@@ -18,7 +18,6 @@ const Login: React.FC = () => {
   return (
     <div className="auth-page">
       <Header />
-
       <main className="auth-layout">
         {/* LEFT */}
         <section className="auth-left">
@@ -69,7 +68,6 @@ const Login: React.FC = () => {
             </p>
           </div>
         </section>
-
         <section className="auth-right">
           <WorkflowMarquee />
         </section>

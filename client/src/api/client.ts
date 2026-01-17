@@ -1,13 +1,14 @@
 import axios from "axios";
+import { clearToken, getToken } from "./auth";
 
-const api = axios.create({
+export const api = axios.create({
   baseURL: import.meta.env.VITE_BASE_URL,
   withCredentials: false, 
 });
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = getToken();
 
     if(token){
       config.headers.Authorization = `Bearer ${token}`;
@@ -20,8 +21,8 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem("token");
+    if (error.response?.status === 401){// token expired/ unauthenticated
+      clearToken();
       window.location.href = "/login";
     }
     return Promise.reject(error);
