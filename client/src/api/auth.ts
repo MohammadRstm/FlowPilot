@@ -1,4 +1,5 @@
-import { api, returnDataFormat } from "./client";
+import { api } from "./client";
+import { returnDataFormat } from "./utils";
 
 export interface AuthUser {
   id: number;

@@ -1,11 +1,10 @@
 // src/pages/profile/ProfilePage.tsx
 import React, { useContext, useMemo, useState } from "react";
-import "../styles/Profile.css";
+import "../../styles/Profile.css";
 import Header from "../components/Header";
 import { AuthContext } from "../../context/AuthContext";
 import { useParams, useNavigate } from "react-router-dom";
 import type { UserLite } from "./types";
-import { useProfile } from "./hooks/useProfile";
 import ProfileHeader from "./components/ProfileHeader";
 import StatsCard from "./components/StatsCard";
 import PostsList from "./components/PostsList";
@@ -14,6 +13,8 @@ import { getCounts } from "./utils/postScoring";
 import WorkflowsList from "./components/WorkflowList";
 import LoadingPage from "./components/LoadingPage";
 import ErrorPage from "./components/ErrorPage";
+import { useProfileQuery } from "./hook/useFetchProfileDetails";
+import { useDownloadHistory } from "./hook/useGetDownloadContent";
 
 const ProfilePage: React.FC = () => {
     const auth = useContext(AuthContext);
@@ -21,7 +22,19 @@ const ProfilePage: React.FC = () => {
     const { userId } = useParams<{ userId?: string }>();
     const navigate = useNavigate();
 
-    const { profile, loading, error } = useProfile(userId);
+    const {
+    data: profile,
+    isLoading,
+    isError,
+    error,
+    } = useProfileQuery(userId);
+
+    
+    const { mutate: downloadHistory, isLoading: isDownloading } =
+    useDownloadHistory();
+
+    const { mutate: followUser } = useFollowUser();
+
 
     const [modalType, setModalType] = useState<"followers" | "following" | null>(null);
     const [tab, setTab] = useState<"posts" | "workflows">("posts");
@@ -31,7 +44,6 @@ const ProfilePage: React.FC = () => {
     const isOwnProfile = !userId || Number(userId) === authUser?.id;
 
     const baseUser = (profile?.user as any) ?? (authUser as any) ?? {};
-//   const fullName = `${baseUser.first_name ?? ""} ${baseUser.last_name ?? ""}`.trim();
     const initials = (
         (baseUser.first_name?.[0] ?? "") + (baseUser.last_name?.[0] ?? "")
     ).toUpperCase() || "U";
@@ -55,49 +67,30 @@ const ProfilePage: React.FC = () => {
     const followers = profile?.followers ?? [];
     const following = profile?.following ?? [];
 
-    const downloadHistory = async (url?: string) => {
-        if (!url) return;
-        try {
-        const res = await (await import("../../api/client")).api.get(url, { responseType: "blob" });
-        const blob = new Blob([res.data], { type: "application/json" });
-        const downloadUrl = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = downloadUrl;
-        a.download = "history.json";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(downloadUrl);
-        } catch (err) {
-        console.error("Download failed", err);
-        alert("Download failed. Try again.");
-        }
-    };
-
-    if (loading) {
+    if (isLoading) {
         return <LoadingPage />
     }
 
-    if (error) {
-    return (
-        <ErrorPage
-        error={error}
-        baseUser={baseUser}
-        initials={initials}
-        imgError={imgError}
-        setImgError={setImgError}
-        isOwnProfile={isOwnProfile}
-        followersCount={followers.length}
-        followingCount={following.length}
-        totals={totals}
-        postsCount={posts.length}
-        tab={tab}
-        setTab={setTab}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
-        onSettingsClick={() => navigate("/settings")}
-        />
-    );
+    if (isError) {
+        return (
+            <ErrorPage
+            error={(error as Error).message}
+            baseUser={baseUser}
+            initials={initials}
+            imgError={imgError}
+            setImgError={setImgError}
+            isOwnProfile={isOwnProfile}
+            followersCount={followers.length}
+            followingCount={following.length}
+            totals={totals}
+            postsCount={posts.length}
+            tab={tab}
+            setTab={setTab}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            onSettingsClick={() => navigate("/settings")}
+            />
+        );
 
     }
 
@@ -121,7 +114,7 @@ const ProfilePage: React.FC = () => {
           <StatsCard totals={totals as any} postsCount={posts.length} tab={tab} setTab={setTab} sortBy={sortBy} setSortBy={setSortBy} />
 
           <div className="profile-column content-column" style={{ gridArea: "content" }}>
-            {tab === "posts" ? <PostsList posts={posts} sortBy={sortBy} /> : <WorkflowsList workflows={workflows} downloadHistory={downloadHistory} />}
+            {tab === "posts" ? <PostsList posts={posts} sortBy={sortBy} /> : <WorkflowsList workflows={workflows} onDownload={(url : string) => downloadHistory(url)} isDownloading={isDownloading} />}
           </div>
         </section>
       </main>

@@ -1,4 +1,3 @@
-// src/pages/profile/components/PostsList.tsx
 import React, { useMemo } from "react";
 import { getCounts, getScore } from "../utils/postScoring";
 

@@ -1,12 +1,12 @@
-// src/pages/profile/components/WorkflowsList.tsx
 import React from "react";
 
 type Props = {
   workflows: any[];
-  downloadHistory: (url?: string) => void;
+  onDownload: (url: string) => void;
+  isDownloading?: boolean;
 };
 
-const WorkflowsList: React.FC<Props> = ({ workflows, downloadHistory }) => {
+const WorkflowsList: React.FC<Props> = ({ workflows, onDownload , isDownloading }) => {
   if (!workflows || workflows.length === 0) {
     return <div className="empty">No workflows / history available.</div>;
   }
@@ -22,8 +22,15 @@ const WorkflowsList: React.FC<Props> = ({ workflows, downloadHistory }) => {
               <span className="wf-date">{new Date(w.created_at ?? w.date ?? "").toLocaleString()}</span>
             </div>
 
-            <button className="btn-download" onClick={() => downloadHistory(w.download_url ?? w.file_url)} title="Download JSON">
-              📄
+            <button
+              className="btn-download"
+              onClick={() =>
+                onDownload(w.download_url ?? w.file_url)
+              }
+              disabled={isDownloading}
+              title="Download JSON"
+            >
+              {isDownloading ? "⏳" : "📄"}
             </button>
           </li>
         ))}

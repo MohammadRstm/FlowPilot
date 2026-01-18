@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getToken, googleLogin, login as loginRequest, setToken } from "../../../api/auth";
-import { api } from "../../../api/client";
 
 declare global {
   interface Window {

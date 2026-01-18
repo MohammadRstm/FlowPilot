@@ -1,4 +1,3 @@
-// src/pages/profile/components/ProfileHeader.tsx
 import React from "react";
 import { FiSettings } from "react-icons/fi";
 import type { UserLite } from "../types";

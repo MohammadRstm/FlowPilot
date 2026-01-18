@@ -1,4 +1,3 @@
-// src/pages/profile/components/StatsCard.tsx
 import React from "react";
 
 type Props = {

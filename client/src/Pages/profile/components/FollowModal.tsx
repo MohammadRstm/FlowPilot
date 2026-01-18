@@ -1,4 +1,3 @@
-// src/pages/profile/components/FollowModal.tsx
 import React, { useMemo, useState } from "react";
 import type { UserLite } from "../types";
 
@@ -12,6 +11,7 @@ type FollowModalProps = {
 const FollowModal: React.FC<FollowModalProps> = ({ title, users, onClose, onUserClick }) => {
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLowerCase();
+  const use
 
   const scoredUsers = useMemo(() => {
     if (!normalizedQuery) return users;
@@ -31,8 +31,7 @@ const FollowModal: React.FC<FollowModalProps> = ({ title, users, onClose, onUser
 
   const handleFollowBack = (e: React.MouseEvent, user: any) => {
     e.stopPropagation();
-    // TODO: implement follow-back API
-    console.log("Follow back clicked:", user);
+    
   };
 
   return (
