@@ -61,19 +61,21 @@ class AuthService{
         ];
 
         $user = User::where('google_id', $googleId)->first();
-
-        if(self::googleAccountAlreadyLinkedWithDifferentUser($user , $googleId)){
+        if($user && self::googleAccountAlreadyLinkedWithDifferentUser($user , $googleId)){
             throw new Exception("Google account already linked");
         }
+
 
         if(!$user){
             $user = self::getUserByEmail($userData);
         }
 
+
         if(!$user){
             $isFromGoogle = 1;
             self::createUser($userData ,$isFromGoogle);
         }
+
 
         if (!$user->google_id) {
             $user->update(['google_id' => $googleId]);

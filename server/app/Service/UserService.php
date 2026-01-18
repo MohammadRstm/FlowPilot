@@ -7,12 +7,11 @@ use App\Models\Message;
 use App\Models\UserCopilotHistory;
 use App\Service\Copilot\GetAnswer;
 use App\Service\Copilot\SaveWorkflow;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class UserService{
     
-
-
     public static function getCopilotAnswer(array $messages, ?int $historyId = null , ?callable $stream = null): array{
         $userId = auth()->id();
         $answer = GetAnswer::execute($messages , $stream);

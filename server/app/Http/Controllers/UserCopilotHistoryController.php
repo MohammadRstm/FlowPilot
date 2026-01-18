@@ -7,12 +7,11 @@ use App\Models\Message;
 use App\Http\Controllers\Controller;
 use App\Service\UserService;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 class UserCopilotHistoryController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+  
     public function index(){
         try {
             $userId = 1; // TODO: replace with authenticated user id
@@ -26,12 +25,9 @@ class UserCopilotHistoryController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(UserCopilotHistory $userCopilotHistory){
         try {
-            $userId = 1; // TODO: replace with authenticated user id
+            $userId = auth()->id(); 
             if ($userCopilotHistory->user_id !== $userId) {
                 return $this->errorResponse('History not found', [], 404);
             }
@@ -48,9 +44,6 @@ class UserCopilotHistoryController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(UserCopilotHistory $userCopilotHistory){
         try {
             $userId = 1; // TODO: replace with authenticated user id
@@ -68,5 +61,27 @@ class UserCopilotHistoryController extends Controller
         } catch (Exception $ex) {
             return $this->errorResponse('Failed to delete history', ['1' => $ex->getMessage()]);
         }
+    }
+
+    public function download(UserCopilotHistory $history){
+        if ($history->user_id !== auth()->id()){
+            abort(403); 
+        }
+
+        $lastMessage = $history->messages()
+            ->latest('created_at')
+            ->first();
+
+        if (!$lastMessage || !$lastMessage->ai_response) {
+            abort(404, 'No AI response found');
+        }
+
+        return response()->json(
+            $lastMessage->ai_response,
+            200,
+            [
+                'Content-Disposition' => 'attachment; filename="history.json"',
+            ]
+        );
     }
 }

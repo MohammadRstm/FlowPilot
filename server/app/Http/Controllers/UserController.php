@@ -5,38 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ConfirmWorkflowRequest;
 use App\Http\Requests\CopilotPayload;
+use App\Service\ProfileService;
 use App\Service\UserService;
 use Exception;
+use Google\Service\Analytics\Profiles;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller{
-    public function ask(CopilotPayload $req){
-        try{
-            $payload = $req->validated();
-            $messages = $payload['messages'];
-            $historyId = $payload['history_id'] ?? null;
-
-            $result = UserService::getCopilotAnswer($messages, $historyId);
-
-            $answer = $result['answer'];
-            $historyId = $result['history_id'];
-
-            if (is_string($answer)) {
-                $decoded = json_decode($answer, true);
-                $response = $decoded === null ? $answer : $decoded;
-            } else {
-                $response = $answer;
-            }
-
-            return $this->successResponse([
-                'answer' => $response,
-                'historyId' => $historyId,
-            ]);
-        }catch(Exception $ex){
-            return $this->errorResponse("Failed to ask copilot" , ["1" => $ex->getMessage()]);
-        }
-    }
 
     public function askStream(Request $req){
         return response()->stream(function () use ($req){// we are telling laravel that we're sending chunks of data not everything at once
@@ -86,5 +62,27 @@ class UserController extends Controller{
         }catch(Exception $ex){
             return $this->errorResponse("Failed to save worfklow" , ["1" => $ex->getMessage()]);
         }
+    }
+
+    public function getProfileDetails(Request $request){
+        try{
+            $viewerId = auth()->id();
+            $userId = (int) ($request->query('user_id') ?? $viewerId);
+
+            $profileDetails = ProfileService::getProfileDetails(
+                userId: $userId,
+                viewerId: $viewerId
+            );// for testing
+
+               if (!$profileDetails) {
+                    return response()->json([
+                        'message' => 'User not found'
+                    ], 404);
+                }
+
+            return $this->successResponse($profileDetails);
+        }catch(Exception $ex){
+            return $this->errorResponse("Failed to get user profile" , ["1" => $ex->getMessage()]);
+        }     
     }
 }
