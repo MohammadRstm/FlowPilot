@@ -4,6 +4,6 @@ import { followUser } from "../../../api/profile/followUser";
 
 export const useFollowUser = () =>{
     return useMutation({
-        mutationFn: (userId: number) => followUser(userId),
+        mutationFn: (userId: number | undefined) => followUser(userId),
     })
 }

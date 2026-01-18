@@ -1,4 +1,3 @@
-// src/pages/profile/ProfilePage.tsx
 import React, { useContext, useMemo, useState } from "react";
 import "../../styles/Profile.css";
 import Header from "../components/Header";
@@ -16,6 +15,7 @@ import ErrorPage from "./components/ErrorPage";
 import { useProfileQuery } from "./hook/useFetchProfileDetails";
 import { useDownloadHistory } from "./hook/useGetDownloadContent";
 import { useFollowUser } from "./hook/useFollowUser";
+import { useIsBeingFollowedByUser } from "./hook/useIsFollowedByUser";
 
 const ProfilePage: React.FC = () => {
     const auth = useContext(AuthContext);
@@ -36,13 +36,14 @@ const ProfilePage: React.FC = () => {
 
     const { mutate: followUser } = useFollowUser();
 
-
     const [modalType, setModalType] = useState<"followers" | "following" | null>(null);
     const [tab, setTab] = useState<"posts" | "workflows">("posts");
     const [sortBy, setSortBy] = useState<"score" | "likes" | "comments" | "imports">("likes");
     const [imgError, setImgError] = useState(false);
 
     const isOwnProfile = !userId || Number(userId) === authUser?.id;
+
+    const isBeingFollowed = isOwnProfile ? useIsBeingFollowedByUser(Number(userId)) : null;
 
     const baseUser = (profile?.user as any) ?? (authUser as any) ?? {};
     const initials = (
@@ -101,6 +102,7 @@ const ProfilePage: React.FC = () => {
       <main className="profile-main">
         <section className="profile-card wide-grid">
           <ProfileHeader
+            userId={Number(userId)}
             baseUser={baseUser}
             initials={initials}
             imgError={imgError}
@@ -108,6 +110,8 @@ const ProfilePage: React.FC = () => {
             isOwnProfile={isOwnProfile}
             followersCount={followers.length}
             followingCount={following.length}
+            isBeingFollowed={isBeingFollowed}
+            followUser={followUser}
             onOpenModal={(t) => setModalType(t)}
             onSettingsClick={() => navigate("/settings")}
           />

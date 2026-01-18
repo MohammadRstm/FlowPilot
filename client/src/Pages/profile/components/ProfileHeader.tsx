@@ -3,6 +3,7 @@ import { FiSettings } from "react-icons/fi";
 import type { UserLite } from "../types";
 
 type Props = {
+  userId: number | undefined;
   baseUser: Partial<UserLite> & { first_name?: string; last_name?: string };
   initials: string;
   imgError: boolean;
@@ -10,11 +11,14 @@ type Props = {
   isOwnProfile: boolean;
   followersCount: number;
   followingCount: number;
+  isBeingFollowed: any;
+  followUser: (userId: number| undefined) => void; 
   onOpenModal: (type: "followers" | "following") => void;
   onSettingsClick: () => void;
 };
 
 const ProfileHeader: React.FC<Props> = ({
+  userId,
   baseUser,
   initials,
   imgError,
@@ -22,6 +26,8 @@ const ProfileHeader: React.FC<Props> = ({
   isOwnProfile,
   followersCount,
   followingCount,
+  isBeingFollowed,
+  followUser,
   onOpenModal,
   onSettingsClick,
 }) => {
@@ -62,6 +68,14 @@ const ProfileHeader: React.FC<Props> = ({
           <strong>{followingCount}</strong>
           <span>Following</span>
         </button>
+      </div>
+      <div className="follow-btns">
+        {isBeingFollowed && !isBeingFollowed.isFollowing && !isBeingFollowed.isBeingFollowed && (
+            <button onClick={() => followUser(userId)}>Follow</button>
+        )}
+        {isBeingFollowed && !isBeingFollowed.isFollowing && isBeingFollowed.isBeingFollowed && (
+            <button onClick={() => followUser(userId)}>Follow Back</button>
+        )}
       </div>
     </div>
   );

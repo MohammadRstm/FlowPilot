@@ -156,4 +156,20 @@ class ProfileService{
             "followed_id" => $toBeFollowed
         ]);
     }
+
+   public static function isFollowingUser(int $userId, int $viewerId): array{
+        $isViewerFollowing = Follower::where('follower_id', $viewerId)
+            ->where('following_id', $userId)
+            ->exists();
+
+        $isUserFollowed = Follower::where('follower_id', $userId)
+            ->where('following_id', $viewerId)
+            ->exists();
+
+        return [
+            'isFollowing' => $isViewerFollowing,
+            'isBeingFollowed' => $isUserFollowed,
+        ];
+    }
+
 }

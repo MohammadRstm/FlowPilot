@@ -30,6 +30,7 @@ Route::group(["prefix" => "v0.1"] , function(){
             Route::get('/histories/{history}/download',[UserCopilotHistoryController::class, 'download'])->name('user.histories.download');
             Route::get("/profileDetails" , [UserController::class , "getProfileDetails"]);
             Route::post("/follow/{userId}" , [UserController::class] , "followUser");
+            Route::get("/isFollowed/{userId}" , [UserController::class] , "isFollowed");
         });
 
     });
