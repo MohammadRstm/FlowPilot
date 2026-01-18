@@ -3,10 +3,10 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Landing from './Pages/Landing'
 import { Copilot } from './Pages/copilot/Copilot'
 import CommunityPage from './Pages/Community'
-import ProfilePage from './Pages/Profile'
 import Login from './Pages/Login/Login'
 import Signup from './Pages/Signup'
 import ProtectedRoutes from './Pages/components/ProtectedRoutes'
+import ProfilePage from './Pages/profile/Profile'
 
 /**
  * TIME CALENDER:

@@ -235,13 +235,13 @@ const { userId } = useParams<{ userId?: string }>();
       <main className="profile-main">
         <section className="profile-card wide-grid">
             {isOwnProfile && (
-              <button
-                className="profile-settings-btn"
-                onClick={() => navigate("/settings")}
-              >
-                <FiSettings size={20} />
-              </button>
-            )}
+      <button
+        className="profile-settings-btn"
+        onClick={() => navigate("/settings")}
+      >
+        <FiSettings size={20} />
+      </button>
+    )}
 
           {/* profile area */}
           <div className="profile-column profile-left" style={{ gridArea: "profile" }}>
