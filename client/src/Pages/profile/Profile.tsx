@@ -15,6 +15,7 @@ import LoadingPage from "./components/LoadingPage";
 import ErrorPage from "./components/ErrorPage";
 import { useProfileQuery } from "./hook/useFetchProfileDetails";
 import { useDownloadHistory } from "./hook/useGetDownloadContent";
+import { useFollowUser } from "./hook/useFollowUser";
 
 const ProfilePage: React.FC = () => {
     const auth = useContext(AuthContext);
@@ -128,6 +129,7 @@ const ProfilePage: React.FC = () => {
             navigate(`/profile/${u.id}`);
             setModalType(null);
           }}
+          followUser={followUser}
         />
       )}
     </div>

@@ -1,13 +1,9 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-
+import { useMutation } from "@tanstack/react-query"
+import { followUser } from "../../../api/profile/followUser";
 
 
 export const useFollowUser = () =>{
-    const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (userId: number) => followUser(userId),
-        onSuccess: () =>{
-            
-        }
     })
 }

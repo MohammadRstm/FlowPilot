@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Models\Follower;
 use App\Models\User;
 use App\Models\UserPost;
 use Illuminate\Support\Facades\DB;
@@ -147,5 +148,12 @@ class ProfileService{
             'workflows' => $historiesPayload,
             'viewer_follows' => $viewerFollows,
         ];
+    }
+
+    public static function followUser(int $userId , int $toBeFollowed){
+        Follower::create([
+            "follower_id" => $userId,
+            "followed_id" => $toBeFollowed
+        ]);
     }
 }

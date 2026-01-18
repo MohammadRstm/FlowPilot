@@ -85,4 +85,15 @@ class UserController extends Controller{
             return $this->errorResponse("Failed to get user profile" , ["1" => $ex->getMessage()]);
         }     
     }
+
+    public function followUser(int $toBeFollowed){
+        try{
+            $userId = auth()->id();
+            ProfileService::followUser($userId, $toBeFollowed);
+
+            return $this->successResponse([] , "User followed successfully");
+        }catch(Exception $ex){
+            return $this->errorResponse("Failed to follow user" , ["1" => $ex->getMessage()]);
+        }
+    }
 }

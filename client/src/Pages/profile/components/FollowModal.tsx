@@ -6,12 +6,12 @@ type FollowModalProps = {
   users: UserLite[];
   onClose: () => void;
   onUserClick: (user: UserLite) => void;
+  followUser: (userId: number) => void;
 };
 
-const FollowModal: React.FC<FollowModalProps> = ({ title, users, onClose, onUserClick }) => {
+const FollowModal: React.FC<FollowModalProps> = ({ title, users, onClose, onUserClick, followUser }) => {
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLowerCase();
-  const use
 
   const scoredUsers = useMemo(() => {
     if (!normalizedQuery) return users;
@@ -31,7 +31,7 @@ const FollowModal: React.FC<FollowModalProps> = ({ title, users, onClose, onUser
 
   const handleFollowBack = (e: React.MouseEvent, user: any) => {
     e.stopPropagation();
-    
+    followUser(user.id);
   };
 
   return (
