@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PostsLike;
 use App\Models\UserPost;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CommunityController extends Controller
 {
@@ -87,6 +90,38 @@ class CommunityController extends Controller
                 'total' => $paginated->total(),
                 'last_page' => $paginated->lastPage(),
             ],
+        ]);
+    }
+
+    public function toggleLike($postId){
+        $userId = auth()->id();
+
+        $post = UserPost::where('id' , $postId)->first();
+        Log::debug($post);
+        if(!$post) abort(404);
+
+        DB::transaction(function () use ($post, $userId, &$liked) {
+            $existing = PostsLike::where('post_id', $post->id)
+                ->where('user_id', $userId)
+                ->first();
+
+            if ($existing) {
+                $existing->delete();
+                $post->decrement('likes');
+                $liked = false;
+            } else {
+                PostsLike::create([
+                    'post_id' => $post->id,
+                    'user_id' => $userId,
+                ]);
+                $post->increment('likes');
+                $liked = true;
+            }
+        });
+
+        return $this->successResponse([
+            'liked' => $liked,
+            'likes' => $post->fresh()->likes,
         ]);
     }
 }

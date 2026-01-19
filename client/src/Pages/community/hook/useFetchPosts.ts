@@ -13,6 +13,7 @@ export type PostDto = {
   exports: number;
   score?: number;
   created_at?: string | null;
+  liked_by_me: boolean;
 };
 
 type ApiResponse = {

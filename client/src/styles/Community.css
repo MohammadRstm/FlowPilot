@@ -126,6 +126,21 @@ body {
   color: #888;
 }
 
+.like-btn.liked {
+  background: #f5b642;
+  color: #000;
+  border-color: #f5b642;
+}
+
+.like-btn {
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.like-btn.liked:hover {
+  background: #ffcb66;
+}
+
+
 /* RESPONSIVE */
 @media (max-width: 768px) {
   .navbar {

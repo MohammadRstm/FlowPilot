@@ -3,9 +3,12 @@ import "../../styles/Community.css";
 import Header from "../components/Header";
 import { useFetchPosts, type PostDto } from "./hook/useFetchPosts";
 import { useInfiniteScroll } from "./hook/useInfiniteScroll";
+import { useToggleLike } from "./hook/useToggleLike";
 
 
 const PostCard: React.FC<{ post: PostDto }> = ({ post }) => {
+  const likeMutation = useToggleLike();
+
   return (
     <div className="post-card">
       <div className="post-header">
@@ -20,7 +23,14 @@ const PostCard: React.FC<{ post: PostDto }> = ({ post }) => {
       <div className="post-content">{post.content}</div>
 
       <div className="post-actions">
-        <button>👍 Like</button>
+        <button
+          className={`like-btn ${post.liked_by_me ? "liked" : ""}`}
+          onClick={() => likeMutation.mutate(post.id)}
+          disabled={likeMutation.isLoading}
+        >
+          👍 Like
+        </button>
+
         <button>💬 Comment</button>
         <button>⬇ Export</button>
       </div>
@@ -31,6 +41,7 @@ const PostCard: React.FC<{ post: PostDto }> = ({ post }) => {
     </div>
   );
 };
+
 
 const CommunityPage: React.FC = () => {
   const {

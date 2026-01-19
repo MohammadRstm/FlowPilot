@@ -36,6 +36,7 @@ Route::group(["prefix" => "v0.1"] , function(){
 
         Route::group(["prefix" => "community"] , function(){
             Route::get("/posts" , [CommunityController::class , "fetchPosts"]);
+            Route::post("/toggleLike/{postId}" , [CommunityController::class , "toggleLike"]);
         });
 
     });
