@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserCopilotHistoryController;
 use Illuminate\Support\Facades\Route;
@@ -12,7 +13,7 @@ Route::group(["prefix" => "v0.1"] , function(){
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
 
-    Route::group(["prefix" => "auth", "middlware" => "jwt.auth"] , function(){
+    Route::group(["prefix" => "auth", "middleware" => "jwt.auth"] , function(){
         Route::get('/me', [AuthController::class, 'me']);
         Route::put("/setPassword" , [AuthController::class , 'setPassword']);
 
@@ -31,6 +32,10 @@ Route::group(["prefix" => "v0.1"] , function(){
             Route::get("/profileDetails" , [UserController::class , "getProfileDetails"]);
             Route::post("/follow/{userId}" , [UserController::class] , "followUser");
             Route::get("/isFollowed/{userId}" , [UserController::class] , "isFollowed");
+        });
+
+        Route::group(["prefix" => "community"] , function(){
+            Route::get("/posts" , [CommunityController::class , "fetchPosts"]);
         });
 
     });

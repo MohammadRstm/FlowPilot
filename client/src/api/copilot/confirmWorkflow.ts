@@ -1,10 +1,10 @@
-import axios from "axios";
 import { url, type ConfirmWorkflowPayload, type ConfirmWorkflowResponse } from "./types";
+import { api } from "../client";
 
 export const confirmWorkflow = async (
   payload: ConfirmWorkflowPayload
 ): Promise<ConfirmWorkflowResponse> => {
-  const response = await axios.post<ConfirmWorkflowResponse>(
+  const response = await api.post<ConfirmWorkflowResponse>(
     `${url}/satisfied`,
     payload
   );

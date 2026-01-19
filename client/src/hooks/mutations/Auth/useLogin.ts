@@ -79,7 +79,7 @@ export function useLogin() {
     try{
       const { token } = await apiCall(apiCallData);
       setToken(token);
-      navigate("/");
+      window.location.href = "/";
     }catch(err : any){
       const message = err.response?.data?.message || err.message || defaultErrorMessage;
       setError(message);

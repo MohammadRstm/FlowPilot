@@ -57,4 +57,4 @@ export interface ConfirmWorkflowResponse {
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 const prefix = "copilot";
 
-export const url = BASE_URL + "/" + prefix;
+export const url = BASE_URL + "/auth/" + prefix;

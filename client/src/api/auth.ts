@@ -21,17 +21,17 @@ export interface RegisterPayload{
 }
 
 export async function login({email , password} : { password : string , email : string}){
-  const res =await  api.post<AuthResponse>("auth/login" , { email , password});
+  const res = await  api.post<AuthResponse>("login" , { email , password});
   return returnDataFormat(res);
 }
 
 export async function googleLogin(response : any){
-  const res = await api.post("auth/google" , {idToken: response.credential});
+  const res = await api.post("google" , {idToken: response.credential});
   return returnDataFormat(res);
 }
 
 export async function register(payload: RegisterPayload): Promise<AuthResponse> {
-  const res = await api.post<AuthResponse>("auth/register" , payload);
+  const res = await api.post<AuthResponse>("register" , payload);
   return returnDataFormat(res);
 }
 

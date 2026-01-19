@@ -8,7 +8,6 @@ export const streamCopilotQuestion = (
   onTrace?: (trace: any) => void,
   onResult?: (answer: WorkflowAnswer, historyId: number) => void
 ) => {
-  // sending query params (GET)
   const params = new URLSearchParams();
   params.append("messages", JSON.stringify(messages));
   if (historyId) params.append("history_id", historyId.toString());

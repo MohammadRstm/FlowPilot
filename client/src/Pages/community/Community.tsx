@@ -1,46 +1,15 @@
 import React from "react";
-import "../styles/Community.css";
-import Header from "./components/Header";
+import "../../styles/Community.css";
+import Header from "../components/Header";
+import { useFetchPosts, type PostDto } from "./hook/useFetchPosts";
+import { useInfiniteScroll } from "./hook/useInfiniteScroll";
 
-type Post = {
-  id: number;
-  author: string;
-  username: string;
-  avatar: string;
-  content: string;
-  likes: number;
-  comments: number;
-  exports: number;
-};
 
-const posts: Post[] = [
-  {
-    id: 1,
-    author: "Mohammad Rostom",
-    username: "@mhmdrstm",
-    avatar: "https://i.pravatar.cc/100?img=1",
-    content: "No body talks about this goated duo 😂",
-    likes: 33,
-    comments: 4,
-    exports: 20,
-  },
-  {
-    id: 2,
-    author: "Jane Doe",
-    username: "@janedoe",
-    avatar: "https://i.pravatar.cc/100?img=2",
-    content: "This automation setup saved me hours 🔥",
-    likes: 21,
-    comments: 3,
-    exports: 12,
-  },
-];
-
-const PostCard: React.FC<{ post: Post }> = ({ post }) => {
+const PostCard: React.FC<{ post: PostDto }> = ({ post }) => {
   return (
     <div className="post-card">
       <div className="post-header">
-        <img src={post.avatar} alt={post.author} />
+        <img src={post.avatar ?? ""} alt={post.author} />
         <div>
           <div className="post-author">{post.author}</div>
           <div className="post-username">{post.username}</div>
@@ -49,10 +18,6 @@ const PostCard: React.FC<{ post: Post }> = ({ post }) => {
       </div>
 
       <div className="post-content">{post.content}</div>
-
-      <div className="post-preview">
-        {/* Placeholder for workflow / image */}
-      </div>
 
       <div className="post-actions">
         <button>👍 Like</button>
@@ -68,14 +33,36 @@ const PostCard: React.FC<{ post: Post }> = ({ post }) => {
 };
 
 const CommunityPage: React.FC = () => {
+  const {
+    posts,
+    isLoading,
+    isFetchingMore,
+    hasMore,
+    loadMore,
+    error,
+  } = useFetchPosts();
+
+  const loadMoreRef = useInfiniteScroll({
+    hasMore,
+    isLoading: isFetchingMore,
+    onLoadMore: loadMore,
+  });
+
   return (
     <div className="community-page">
       <Header />
 
       <main className="feed">
+        {isLoading && <div>Loading...</div>}
+        {error && <div>Error loading posts</div>}
+
         {posts.map((post) => (
           <PostCard key={post.id} post={post} />
         ))}
+
+        <div ref={loadMoreRef} />
+
+        {isFetchingMore && <div className="loading-more">Loading more…</div>}
       </main>
     </div>
   );

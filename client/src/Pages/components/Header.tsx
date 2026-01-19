@@ -31,7 +31,6 @@ const Header: React.FC = () => {
           <Link to="/community">Community</Link>
           <Link to="/copilot">Copilot</Link>
           <a href="#about">About Us</a>
-          <Link to="/signup">Get Started</Link>
 
           {user ? (
             <Link to="/profile" className="header__user-chip">
