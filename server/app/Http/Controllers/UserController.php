@@ -72,14 +72,8 @@ class UserController extends Controller{
             $profileDetails = ProfileService::getProfileDetails(
                 userId: $userId,
                 viewerId: $viewerId
-            );// for testing
-
-               if (!$profileDetails) {
-                    return response()->json([
-                        'message' => 'User not found'
-                    ], 404);
-                }
-
+            );
+            
             return $this->successResponse($profileDetails);
         }catch(Exception $ex){
             return $this->errorResponse("Failed to get user profile" , ["1" => $ex->getMessage()]);
