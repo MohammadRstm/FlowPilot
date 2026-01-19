@@ -1,46 +1,9 @@
 import React from "react";
 import "../../styles/Community.css";
 import Header from "../components/Header";
-import { useFetchPosts, type PostDto } from "./hook/useFetchPosts";
+import { useFetchPosts } from "./hook/useFetchPosts";
 import { useInfiniteScroll } from "./hook/useInfiniteScroll";
-import { useToggleLike } from "./hook/useToggleLike";
-
-
-const PostCard: React.FC<{ post: PostDto }> = ({ post }) => {
-  const likeMutation = useToggleLike();
-
-  return (
-    <div className="post-card">
-      <div className="post-header">
-        <img src={post.avatar ?? ""} alt={post.author} />
-        <div>
-          <div className="post-author">{post.author}</div>
-          <div className="post-username">{post.username}</div>
-        </div>
-        <div className="post-imports">{post.exports} exports</div>
-      </div>
-
-      <div className="post-content">{post.content}</div>
-
-      <div className="post-actions">
-        <button
-          className={`like-btn ${post.liked_by_me ? "liked" : ""}`}
-          onClick={() => likeMutation.mutate(post.id)}
-          disabled={likeMutation.isLoading}
-        >
-          👍 Like
-        </button>
-
-        <button>💬 Comment</button>
-        <button>⬇ Export</button>
-      </div>
-
-      <div className="post-stats">
-        {post.likes} likes · {post.comments} comments
-      </div>
-    </div>
-  );
-};
+import PostCard from "./components/PostCard";
 
 
 const CommunityPage: React.FC = () => {

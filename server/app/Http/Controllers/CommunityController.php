@@ -19,7 +19,7 @@ class CommunityController extends Controller{
         }
     }
 
-    public function toggleLike($postId){
+    public function toggleLike(int $postId){
         try{
             $userId = auth()->id();
 
@@ -27,6 +27,17 @@ class CommunityController extends Controller{
             return $this->successResponse($likeResp);
         }catch(Exception $ex){
             return $this->errorResponse("Failed to like post" , ["error" => $ex->getMessage()]);
+        }
+    }
+
+    public function export(int $postId){
+        try{
+            $userId = auth()->id();
+
+            $exportResp = CommunityService::export($userId , $postId);
+            return $this->successResponse($exportResp);
+        }catch(Exception $ex){
+            return $this->errorResponse("Failed to export post" , ["error" => $ex->getMessage()]);
         }
     }
 }

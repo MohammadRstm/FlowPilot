@@ -9,8 +9,7 @@ use App\Service\UserService;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
-class UserCopilotHistoryController extends Controller
-{
+class UserCopilotHistoryController extends Controller{
   
     public function index(){
         try {

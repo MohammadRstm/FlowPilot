@@ -8,9 +8,7 @@ use App\Http\Requests\CopilotPayload;
 use App\Service\ProfileService;
 use App\Service\UserService;
 use Exception;
-use Google\Service\Analytics\Profiles;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller{
 
@@ -73,7 +71,7 @@ class UserController extends Controller{
                 userId: $userId,
                 viewerId: $viewerId
             );
-            
+
             return $this->successResponse($profileDetails);
         }catch(Exception $ex){
             return $this->errorResponse("Failed to get user profile" , ["1" => $ex->getMessage()]);

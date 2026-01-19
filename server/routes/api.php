@@ -5,7 +5,7 @@ use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserCopilotHistoryController;
 use Illuminate\Support\Facades\Route;
-
+use phpseclib3\Crypt\EC\Formats\Keys\Common;
 
 Route::group(["prefix" => "v0.1"] , function(){
     
@@ -37,6 +37,7 @@ Route::group(["prefix" => "v0.1"] , function(){
         Route::group(["prefix" => "community"] , function(){
             Route::get("/posts" , [CommunityController::class , "fetchPosts"]);
             Route::post("/toggleLike/{postId}" , [CommunityController::class , "toggleLike"]);
+            Route::get("/export/{postId}" , [CommunityController::class , "export"]);
         });
 
     });

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 class CommunityService{
 
-    public static function toggleLike(int $userId , int $postId){
+    public static function toggleLike(int $userId , int $postId ){
         $post = self::getPost($postId);
 
         DB::transaction(function () use ($post, $userId, &$liked) {
@@ -44,7 +44,6 @@ class CommunityService{
         $query = self::executeFetchPaginatedPostsQuery($userId);
 
         $paginated = $query->paginate($perPage, ['*'], 'page', $page);
-        Log::debug("post users" , ["context" => $paginated]);
 
         $data = self::buildPostsData($paginated);
 
@@ -58,6 +57,29 @@ class CommunityService{
             ],
         ];
     }
+
+    public static function export(int $postId){
+        $post = self::getPost($postId);
+
+        $jsonContent = $post->json_content ?? [];
+
+        $filename = 'post-' . $post->id . '.json';
+        $headers = [
+            'Content-Type' => 'application/json',
+            'Content-Disposition' => "attachment; filename={$filename}",
+        ];
+
+        $post->increment('imports');
+
+        return [
+            "json_content" => $jsonContent,
+            "headers" => $headers,
+            "imports" => $post->imports + 1// model isn't updated in real time here so we have to manually increment
+        ];
+    }
+
+    public static function toggleCommentsLike
+
 
     private static function executeFetchPaginatedPostsQuery($userId){
         $weightLikes = 1;
@@ -137,7 +159,7 @@ class CommunityService{
         END
     ) AS score';
     }
-    
+
     private static function getPost(int $postId){
         $post = UserPost::where('id' , $postId)->first();
 
