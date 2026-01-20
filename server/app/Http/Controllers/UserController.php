@@ -99,4 +99,13 @@ class UserController extends Controller{
             return $this->errorResponse("Failed to check if followed by user" , ["1" => $ex->getMessage()]);
         }
     }
+
+    public function getFriends(string $name){
+        try{
+            $suggestions = UserService::getFriends($name);
+            return $this->successResponse($suggestions);
+        }catch(Exception $ex){
+            return $this->errorResponse("Failed to get friends" , ["1" => $ex->getMessage()]);
+        }
+    }
 }

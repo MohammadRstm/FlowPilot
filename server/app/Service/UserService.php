@@ -4,9 +4,11 @@ namespace App\Service;
 
 use App\Models\AiModel;
 use App\Models\Message;
+use App\Models\User;
 use App\Models\UserCopilotHistory;
 use App\Service\Copilot\GetAnswer;
 use App\Service\Copilot\SaveWorkflow;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -108,6 +110,63 @@ class UserService{
             ->where('user_id', $userId)
             ->orderByDesc('created_at')
             ->get();
+    }
+
+    public static function getFriends(string $name , int $userId){
+        if(empty($name)){
+            throw new Exception("Name is empty");
+        }
+
+        $parts = preg_split('/\s+/', $name);
+
+        $query = User::query()
+            ->where('id', '!=', $userId)
+
+            // exclude already followed users
+            ->whereNotIn('id', function ($q) use ($userId) {
+                $q->select('followed_id')
+                ->from('followers')
+                ->where('follower_id', $userId);
+            })
+
+            ->where(function ($q) use ($name, $parts) {
+                // full name contains
+                $q->whereRaw(
+                    "LOWER(CONCAT(first_name, ' ', last_name)) LIKE ?",
+                    ['%' . strtolower($name) . '%']
+                );
+
+                // first / last name partials
+                foreach ($parts as $part) {
+                    $q->orWhere('first_name', 'LIKE', "%{$part}%")
+                    ->orWhere('last_name', 'LIKE', "%{$part}%");
+                }
+            })
+
+            ->select([
+                'id',
+                'first_name',
+                'last_name',
+                'photo_url',
+                DB::raw("CONCAT(first_name, ' ', last_name) AS full_name"),
+            ])
+
+            ->orderByRaw("
+                CASE
+                    WHEN LOWER(CONCAT(first_name, ' ', last_name)) LIKE ? THEN 1
+                    WHEN LOWER(first_name) LIKE ? THEN 2
+                    WHEN LOWER(last_name) LIKE ? THEN 3
+                    ELSE 4
+                END
+            ", [
+                strtolower($name) . '%',
+                strtolower($name) . '%',
+                strtolower($name) . '%',
+            ])
+
+            ->limit(10);
+
+        return $query->get();
     }
 
 }
