@@ -33,7 +33,7 @@ Route::group(["prefix" => "v0.1"] , function(){
             Route::get("/profileDetails" , [UserController::class , "getProfileDetails"]);
             Route::post("/follow/{userId}" , [UserController::class] , "followUser");
             Route::get("/isFollowed/{userId}" , [UserController::class] , "isFollowed");
-            Route::get("/searchFriends" , [UserController::class , "getFriends"]);
+            Route::get("/searchFriends/{name}" , [UserController::class , "getFriends"]);
         });
 
         Route::group(["prefix" => "community"] , function(){
