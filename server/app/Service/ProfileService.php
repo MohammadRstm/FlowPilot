@@ -134,7 +134,7 @@ class ProfileService{
     }
 
     private static function getFollowingList($user){
-        $user->followings()
+        return $user->followings()
         ->select('users.id','users.first_name','users.last_name','users.photo_url' , 'users.email')
         ->get()
         ->map(fn($f) => [
