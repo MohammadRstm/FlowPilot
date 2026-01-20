@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\UserPost;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 
 class ProfileService{
@@ -71,7 +72,9 @@ class ProfileService{
             ->first();
 
         if ($existing) {
-            $existing->delete();
+           Follower::where('follower_id', $userId)
+            ->where('followed_id', $toBeFollowed)
+            ->delete();
             return [
                 'following' => false,
             ];
@@ -90,11 +93,12 @@ class ProfileService{
 
     public static function isFollowingUser(int $userId, int $viewerId): array{
         $isViewerFollowing = Follower::where('follower_id', $viewerId)
-            ->where('following_id', $userId)
+            ->where('followed_id', $userId)
             ->exists();
-
+ 
+        // for "follow back"
         $isUserFollowed = Follower::where('follower_id', $userId)
-            ->where('following_id', $viewerId)
+            ->where('followed_id', $viewerId)
             ->exists();
 
         return [
@@ -102,6 +106,7 @@ class ProfileService{
             'isBeingFollowed' => $isUserFollowed,
         ];
     }
+
 
     private static function getNumberOfImports(int $userId){
         return User::select('id','first_name','last_name','email','photo_url','created_at')

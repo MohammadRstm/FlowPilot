@@ -21,13 +21,11 @@ class JwtMiddleware
     public function handle(Request $request, Closure $next): Response{
         $header = $request->header('Authorization');
 
-        Log::debug("here");
 
         if (! $header || ! str_starts_with($header, 'Bearer ')) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        Log::debug("here");
         
 
         $token = substr($header, 7);
@@ -38,7 +36,6 @@ class JwtMiddleware
             if(!$secret){
                 throw new \RuntimeException('JWT_SECRET environment variable is not set');
             }
-        Log::debug("here");
 
 
             $decoded = JWT::decode($token, new Key($secret, 'HS256'));
@@ -47,14 +44,12 @@ class JwtMiddleware
             if(!$userId){
                 return response()->json(['message' => 'Unauthorized'], 401);
             }
-        Log::debug("here");
 
             $user = User::find($userId);
 
             if(!$user){
                 return response()->json(['message' => 'Unauthorized'], 401);
             }
-        Log::debug("here");
             
             Auth::setUser($user);
             $request->setUserResolver(fn () => $user);

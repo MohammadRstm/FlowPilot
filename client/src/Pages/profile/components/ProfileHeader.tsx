@@ -11,7 +11,10 @@ type Props = {
   isOwnProfile: boolean;
   followersCount: number;
   followingCount: number;
-  isBeingFollowed: any;
+  isBeingFollowed:  {
+  isFollowing: boolean;
+  isBeingFollowed: boolean;
+} | undefined;
   followUser: (userId: number| undefined) => void; 
   onOpenModal: (type: "followers" | "following") => void;
   onSettingsClick: () => void;
@@ -32,6 +35,7 @@ const ProfileHeader: React.FC<Props> = ({
   onSettingsClick,
 }) => {
   const fullName = `${baseUser.first_name ?? ""} ${baseUser.last_name ?? ""}`.trim();
+ console.log("isBeingFollowed:", isBeingFollowed);
   return (
     <div className="profile-column profile-left" style={{ gridArea: "profile" }}>
       {isOwnProfile && (
@@ -68,24 +72,30 @@ const ProfileHeader: React.FC<Props> = ({
           <span>Following</span>
         </button>
       </div>
-     {!isOwnProfile && isBeingFollowed && (
-        <div className="profile-follow-cta">
-            {!isBeingFollowed.isFollowing && (
-            <button
-                className={`follow-cta-btn ${isBeingFollowed.isBeingFollowed ? "secondary" : ""}`}
-                onClick={() => followUser(userId)}
-            >
-                {isBeingFollowed.isBeingFollowed ? "Follow Back" : "Follow"}
-            </button>
-            )}
+{!isOwnProfile && isBeingFollowed && (
+  <div className="profile-follow-cta">
+    {!isBeingFollowed.isFollowing && (
+      <button
+        className={`follow-cta-btn ${
+          isBeingFollowed.isBeingFollowed ? "secondary" : ""
+        }`}
+        onClick={() => followUser(userId)}
+      >
+        {isBeingFollowed.isBeingFollowed ? "Follow Back" : "Follow"}
+      </button>
+    )}
 
-            {isBeingFollowed.isFollowing && (
-            <button onClick={() => followUser(userId)}className="follow-cta-btn following" disabled>
-                Following
-            </button>
-            )}
-        </div>
-        )}
+    {isBeingFollowed.isFollowing && (
+      <button
+        onClick={() => followUser(userId)}
+        className="follow-cta-btn"
+      >
+        Unfollow
+      </button>
+    )}
+  </div>
+)}
+
 
     </div>
   );
