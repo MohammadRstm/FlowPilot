@@ -1,7 +1,7 @@
 import { useToggleCommentLike } from "../hook/useToggleCommentLike";
 
 const CommentItem: React.FC<{ comment: any }> = ({ comment }) => {
-  const toggleLike = useToggleCommentLike();
+  const toggleLike = useToggleCommentLike(comment.post_id);
 
   return (
     <div className="comment">

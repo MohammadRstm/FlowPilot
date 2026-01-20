@@ -6,11 +6,11 @@ export const usePostComment = () =>{
     return useMutation({
         mutationFn: ({ postId , content } : {postId : number , content : string}) => postComment(postId , content),
         onMutate: async () => {
-            await queryClient.cancelQueries({ queryKey: ["post-comments"] });
+            await queryClient.cancelQueries({ queryKey: ["post-a-comment"] });
         },
         onSuccess: () => {
           queryClient.invalidateQueries({
-            queryKey : ["post-comments"]
+            queryKey : ["post-a-comment"]
         })
         },
     })
