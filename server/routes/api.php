@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserCopilotHistoryController;
+use App\Service\UserService;
 use Illuminate\Support\Facades\Route;
 use phpseclib3\Crypt\EC\Formats\Keys\Common;
 
@@ -32,6 +33,7 @@ Route::group(["prefix" => "v0.1"] , function(){
             Route::get("/profileDetails" , [UserController::class , "getProfileDetails"]);
             Route::post("/follow/{userId}" , [UserController::class] , "followUser");
             Route::get("/isFollowed/{userId}" , [UserController::class] , "isFollowed");
+            Route::get("/searchFriends" , [UserController::class , "getFriends"]);
         });
 
         Route::group(["prefix" => "community"] , function(){

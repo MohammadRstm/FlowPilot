@@ -102,7 +102,8 @@ class UserController extends Controller{
 
     public function getFriends(string $name){
         try{
-            $suggestions = UserService::getFriends($name);
+            $userId = auth()->id();
+            $suggestions = UserService::getFriends($name , $userId);
             return $this->successResponse($suggestions);
         }catch(Exception $ex){
             return $this->errorResponse("Failed to get friends" , ["1" => $ex->getMessage()]);
