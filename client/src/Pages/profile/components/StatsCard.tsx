@@ -8,9 +8,11 @@ type Props = {
   setTab: (t: "posts" | "workflows") => void;
   sortBy: "score" | "likes" | "comments" | "imports";
   setSortBy: (s: "score" | "likes" | "comments" | "imports") => void;
+  isOwnProfile : boolean;
+  isBeingFollowed: any;
 };
 
-const StatsCard: React.FC<Props> = ({ totals, postsCount, tab, setTab, sortBy, setSortBy }) => {
+const StatsCard: React.FC<Props> = ({ totals, postsCount, tab, setTab, sortBy, setSortBy , isOwnProfile , isBeingFollowed}) => {
     const [friendsOpen, setFriendsOpen] = useState(false);
 
   return (
@@ -36,7 +38,6 @@ const StatsCard: React.FC<Props> = ({ totals, postsCount, tab, setTab, sortBy, s
               </div>
             </div>
 
-            {/* FRIENDS BUTTON */}
             <button
               className="friends-btn"
               title="Friends"
@@ -46,15 +47,22 @@ const StatsCard: React.FC<Props> = ({ totals, postsCount, tab, setTab, sortBy, s
             </button>
           </div>
 
-          {/* ACTIONS */}
           <div className="stats-actions">
             <div className="segmented-buttons">
               <button className={`seg-btn ${tab === "posts" ? "active" : ""}`} onClick={() => setTab("posts")}>
                 Posts
               </button>
-              <button className={`seg-btn ${tab === "workflows" ? "active" : ""}`} onClick={() => setTab("workflows")}>
-                Workflows
-              </button>
+              {isOwnProfile && (
+                <button className={`seg-btn ${tab === "workflows" ? "active" : ""}`} onClick={() => setTab("workflows")}>
+                    Workflows
+                </button>
+              )}
+             {!isOwnProfile && isBeingFollowed?.isFollowing && (
+                <button className={`seg-btn ${tab === "workflows" ? "active" : ""}`} onClick={() => setTab("workflows")}>
+                    Workflows
+                </button>
+              )}
+              
             </div>
 
             {tab === "posts" && (

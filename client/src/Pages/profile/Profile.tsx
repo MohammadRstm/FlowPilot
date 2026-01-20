@@ -118,11 +118,31 @@ const ProfilePage: React.FC = () => {
             onSettingsClick={() => navigate("/settings")}
           />
 
-          <StatsCard totals={totals as any} postsCount={posts.length} tab={tab} setTab={setTab} sortBy={sortBy} setSortBy={setSortBy} />
+          <StatsCard isOwnProfile={isOwnProfile} isBeingFollowed={isBeingFollowed} totals={totals as any} postsCount={posts.length} tab={tab} setTab={setTab} sortBy={sortBy} setSortBy={setSortBy} />
 
           <div className="profile-column content-column" style={{ gridArea: "content" }}>
-            {tab === "posts" ? <PostsList posts={posts} sortBy={sortBy} /> : <WorkflowsList workflows={workflows} onDownload={(url : string) => downloadHistory(url)} isDownloading={isDownloading} />}
-          </div>
+            {tab === "posts" ? (
+                <PostsList posts={posts} sortBy={sortBy} />
+            ) : (
+                isOwnProfile ? (
+                <WorkflowsList
+                    workflows={workflows}
+                    onDownload={(url: string) => downloadHistory(url)}
+                    isDownloading={isDownloading}
+                />
+                ) : (
+                    isBeingFollowed?.isFollowing && (
+                        <WorkflowsList
+                            workflows={workflows}
+                            onDownload={(url: string) => downloadHistory(url)}
+                            isDownloading={isDownloading}
+                        />
+                    )
+                )
+
+            )}
+            </div>
+
         </section>
       </main>
 
