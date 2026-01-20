@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import FriendsModal from "./FriendModal";
 
 type Props = {
   totals: { likes?: number; imports?: number; posts_count?: number } | { likes: number; imports: number };

@@ -483,8 +483,8 @@
 
 .profile-settings-btn {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 0px;
+  right: 1px;
 
   background: transparent;
   border: none;
@@ -504,5 +504,86 @@
 .profile-settings-btn:hover {
   background: rgba(167, 164, 164, 0.05);
   color: #ffffff; /* gray-900 */
+}
+
+.friends-btn {
+  background-color: transparent;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.stats-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.friends-modal {
+  width: 420px;
+  max-height: 70vh;
+  background: #0b0b0b;
+  border-radius: 14px;
+  border: 1px solid #1f1f1f;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+.friends-modal h3 {
+  margin-bottom: 12px;
+  color: #f5b642;
+}
+
+.friends-search {
+  background: #121212;
+  border: 1px solid #222;
+  border-radius: 8px;
+  padding: 10px;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.friends-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.friend-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 10px;
+  background: #111;
+  border: 1px solid #1f1f1f;
+}
+.friend-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f5b642;
+  color: #111;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.friend-meta {
+  display: flex;
+  flex-direction: column;
+}
+.friend-name {
+  font-weight: 600;
+}
+
+.friend-username {
+  font-size: 12px;
+  color: #888;
 }
 
