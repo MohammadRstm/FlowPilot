@@ -69,14 +69,25 @@ const ProfileHeader: React.FC<Props> = ({
           <span>Following</span>
         </button>
       </div>
-      <div className="follow-btns">
-        {isBeingFollowed && !isBeingFollowed.isFollowing && !isBeingFollowed.isBeingFollowed && (
-            <button onClick={() => followUser(userId)}>Follow</button>
+     {!isOwnProfile && isBeingFollowed && (
+        <div className="profile-follow-cta">
+            {!isBeingFollowed.isFollowing && (
+            <button
+                className={`follow-cta-btn ${isBeingFollowed.isBeingFollowed ? "secondary" : ""}`}
+                onClick={() => followUser(userId)}
+            >
+                {isBeingFollowed.isBeingFollowed ? "Follow Back" : "Follow"}
+            </button>
+            )}
+
+            {isBeingFollowed.isFollowing && (
+            <button className="follow-cta-btn following" disabled>
+                Following
+            </button>
+            )}
+        </div>
         )}
-        {isBeingFollowed && !isBeingFollowed.isFollowing && isBeingFollowed.isBeingFollowed && (
-            <button onClick={() => followUser(userId)}>Follow Back</button>
-        )}
-      </div>
+
     </div>
   );
 };

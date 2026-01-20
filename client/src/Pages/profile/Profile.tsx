@@ -43,7 +43,7 @@ const ProfilePage: React.FC = () => {
 
     const isOwnProfile = !userId || Number(userId) === authUser?.id;
 
-    const isBeingFollowed = isOwnProfile ? useIsBeingFollowedByUser(Number(userId)) : null;
+    const isBeingFollowed = isOwnProfile ? null : useIsBeingFollowedByUser(Number(userId)) ;
 
     const baseUser = (profile?.user as any) ?? (authUser as any) ?? {};
     const initials = (
