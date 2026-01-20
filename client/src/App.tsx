@@ -7,6 +7,7 @@ import Login from './Pages/Login/Login'
 import Signup from './Pages/Signup'
 import ProtectedRoutes from './Pages/components/ProtectedRoutes'
 import ProfilePage from './Pages/profile/Profile'
+import AboutPage from './Pages/AboutUs'
 
 // ADD THE ABILITY TO SEND USER WORKFLOWS TO ADD ON IT/FIX IT - HARD - BACKEND HEAVY
 // ENHANCE THE ABILITY TO CONTINUE THE CONVERSATION - HARD - BACKEND HEAVY
@@ -43,6 +44,7 @@ function App() {
             <ProfilePage />
           </ProtectedRoutes>
         }/>
+        <Route path="/aboutus" element={<AboutPage />} />
       </Routes>
     </BrowserRouter>
   )
