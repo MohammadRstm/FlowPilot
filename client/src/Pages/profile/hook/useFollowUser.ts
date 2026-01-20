@@ -1,9 +1,44 @@
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { followUser } from "../../../api/profile/followUser";
 
 
 export const useFollowUser = () =>{
+    const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (userId: number | undefined) => followUser(userId),
+        onMutate: async (userId) => {
+            await queryClient.cancelQueries({ queryKey: ["is-being-followed", userId] });
+
+            const previous = queryClient.getQueryData(["is-being-followed", userId]);
+
+            queryClient.setQueryData(["is-being-followed", userId], (old: any) => {
+                if (!old) return old;
+                return {
+                ...old,
+                isFollowing: !old.isFollowing,
+                };
+            });
+
+            return { previous };
+            },
+        onError: (_, userId, context) => {
+            queryClient.setQueryData(
+                ["is-being-followed", userId],
+                context?.previous
+            );
+        },
+        onSuccess: (_, userId) => {
+        if (!userId) return;
+
+        // 🔥 invalidate follow status
+        queryClient.invalidateQueries({
+            queryKey: ["is-being-followed", userId],
+        });
+
+        // (optional but recommended)
+        queryClient.invalidateQueries({
+            queryKey: ["profile", userId],
+        });
+        },
     })
 }
