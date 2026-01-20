@@ -38,8 +38,11 @@ Route::group(["prefix" => "v0.1"] , function(){
             Route::get("/posts" , [CommunityController::class , "fetchPosts"]);
             Route::post("/toggleLike/{postId}" , [CommunityController::class , "toggleLike"]);
             Route::get("/export/{postId}" , [CommunityController::class , "export"]);
-        });
 
+            Route::get("/comments/{postId}" , [CommunityController::class , "getPostComments"]);
+            Route::post("/submitComment/{postId}" , [CommunityController::class , "postComment"]);
+            Route::post("/toggelCommentLike/{commentId}" , [CommunityController::class , "toggleCommentLike"]);
+        });
     });
 
 

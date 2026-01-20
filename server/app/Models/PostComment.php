@@ -12,6 +12,7 @@ class PostComment extends Model{
         'post_id',
         'user_id',
         'content',
+        'likes'
     ];
 
     protected function casts(): array{

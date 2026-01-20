@@ -1,12 +1,19 @@
+import { useState } from "react";
 import { useExportPost } from "../hook/useExportPost";
 import type { PostDto } from "../hook/useFetchPosts";
 import { useToggleLike } from "../hook/useToggleLike";
+import CommentsModal from "./CommentsModal";
 
 const PostCard: React.FC<{ post: PostDto }> = ({ post }) => {
-  const likeMutation = useToggleLike();
-  const exportContent = useExportPost();
+
+    const [open, setOpen] = useState(false);
+
+    const likeMutation = useToggleLike();
+    const exportContent = useExportPost();
+
 
   return (
+    <>
     <div className="post-card">
       <div className="post-header">
         <img src={post.avatar ?? ""} alt={post.author} />
@@ -28,7 +35,7 @@ const PostCard: React.FC<{ post: PostDto }> = ({ post }) => {
           👍 Like
         </button>
 
-        <button>💬 Comment</button>
+        <button onClick={() => setOpen(true)}>💬 Comment</button>
         <button 
         onClick={() => exportContent.mutate(post.id)}
         disabled={exportContent.isLoading}
@@ -41,6 +48,13 @@ const PostCard: React.FC<{ post: PostDto }> = ({ post }) => {
         {post.likes} likes · {post.comments} comments
       </div>
     </div>
+
+    <CommentsModal
+        post={post}
+        isOpen={open}
+        onClose={() => setOpen(false)}
+    />
+    </>
   );
 };
 
