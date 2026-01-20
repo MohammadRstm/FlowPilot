@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
+import { fetchFriendsSuggestions } from "../../../api/profile/fetchFriendsSuggestions";
 
-export const useProfileQuery = (name : string) => {
+export const useSearchForFriends = (name : string) => {
   return useQuery({
     queryKey: ["fetch-friends-suggestions"],
-    queryFn: () => fetchFriendsSuggestion(name),
+    queryFn: () => fetchFriendsSuggestions(name),
     enabled: true,
   });
 };

@@ -1,31 +1,25 @@
 import React, { useState } from "react";
+import { useSearchForFriends } from "../hook/useSearchFriends";
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
 };
 
-const mockUsers = [
-  { id: 1, name: "John Doe", username: "@john", avatar: "" },
-  { id: 2, name: "Jane Smith", username: "@jane", avatar: "" },
-  { id: 3, name: "Alex Hydra", username: "@hydra", avatar: "" },
-];
-
 const FriendsModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const [search, setSearch] = useState("");
 
-  if (!isOpen) return null;
+  const {
+    data: suggestions = [],
+    isLoading,
+  } = useSearchForFriends(search);
 
-  const filtered = mockUsers.filter(
-    (u) =>
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.username.toLowerCase().includes(search.toLowerCase())
-  );
+  if (!isOpen) return null;
 
   return (
     <div className="comments-modal-overlay" onClick={onClose}>
       <div className="friends-modal" onClick={(e) => e.stopPropagation()}>
-        <h3>Friends</h3>
+        <h3>Find Friends</h3>
 
         <input
           className="friends-search"
@@ -35,20 +29,28 @@ const FriendsModal: React.FC<Props> = ({ isOpen, onClose }) => {
         />
 
         <div className="friends-list">
-          {filtered.map((u) => (
+          {/* Loading */}
+          {isLoading && <div className="loading">Searching...</div>}
+
+          {/* Results */}
+          {suggestions.map((u: any) => (
             <div key={u.id} className="friend-item">
               <div className="friend-avatar">
-                {u.avatar ? <img src={u.avatar} /> : u.name[0]}
+                {u.photo_url ? (
+                  <img src={`${import.meta.env.VITE_PHOTO_BASE_URL}/${u.photo_url}`} />
+                ) : (
+                  u.full_name?.[0]
+                )}
               </div>
 
               <div className="friend-meta">
-                <div className="friend-name">{u.name}</div>
-                <div className="friend-username">{u.username}</div>
+                <div className="friend-name">{u.full_name}</div>
               </div>
             </div>
           ))}
 
-          {filtered.length === 0 && (
+          {/* Empty state */}
+          {!isLoading && suggestions.length === 0 && search !== "" && (
             <div className="empty">No users found</div>
           )}
         </div>
