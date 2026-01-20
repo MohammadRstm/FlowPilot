@@ -21,7 +21,6 @@ import AboutPage from './Pages/AboutUs'
 // 7 days left to have a fully functioning and clean website
 // objectives for today before hitting 12 am:
 // - Fix linting issues which includes cleaning types
-// - Finish following logic
 // - Fix profile image defaults
 // - Add the ability to change profile image
 // - Add setting page which includes
