@@ -1,0 +1,88 @@
+.about-page {
+  background: linear-gradient(to bottom, #050300 0%, #271300 40%, #050300 100%);
+  color: #ffffff;
+}
+
+.about-hero {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 140, 26, 0.35) 0%,
+    rgba(10, 5, 0, 0.95) 65%
+  );
+}
+
+.about-hero-content h1 {
+  font-size: 3.6rem;
+  margin-bottom: 12px;
+}
+
+.about-hero-content p {
+  font-size: 1.4rem;
+  opacity: 0.85;
+}
+
+.about-section {
+  padding: 120px 10%;
+}
+
+.about-section.alt {
+  background: rgba(15, 8, 3, 0.7);
+}
+
+.about-container {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.about-container h2 {
+  font-size: 2.4rem;
+  margin-bottom: 20px;
+}
+
+.about-container p {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  opacity: 0.85;
+  margin-bottom: 16px;
+}
+
+.about-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+}
+
+.about-list li {
+  padding-left: 20px;
+  margin-bottom: 12px;
+  position: relative;
+  opacity: 0.85;
+}
+
+.about-list li::before {
+  content: "–";
+  position: absolute;
+  left: 0;
+  color: #ff9b00;
+}
+
+.about-footer {
+  padding: 80px 10%;
+  border-top: 1px solid rgba(255, 155, 0, 0.15);
+  background: #060300;
+}
+
+.about-footer h3 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.about-footer p {
+  margin-top: 6px;
+  opacity: 0.7;
+}
