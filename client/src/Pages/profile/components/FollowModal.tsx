@@ -27,13 +27,6 @@ const FollowModal: React.FC<FollowModalProps> = ({ title, users, onClose, onUser
     });
   }, [users, normalizedQuery]);
 
-  const isFollowingModal = title.toLowerCase().includes("following");
-
-  const handleFollowBack = (e: React.MouseEvent, user: any) => {
-    e.stopPropagation();
-    followUser(user.id);
-  };
-
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
@@ -62,12 +55,6 @@ const FollowModal: React.FC<FollowModalProps> = ({ title, users, onClose, onUser
                     <div className="follow-email">{u.email ?? "—"}</div>
                   </div>
                 </div>
-
-                {isFollowingModal && (
-                  <button className="follow-back-btn" onClick={(e) => handleFollowBack(e, u)}>
-                    + Follow back
-                  </button>
-                )}
               </div>
             ))
           )}
