@@ -10,11 +10,8 @@ class AnalyzeIntent{
     // Orchestrater
     public static function analyze(array $question): array {
         $intentData = LLMService::intentAnalyzer($question);
-        Log::debug("intent data" , ["intent data" => $intentData]);
         $nodeData = LLMService::nodeAnalyzer($intentData["question"], $intentData["intent"]);
-        Log::debug("node Data " , ["node data" => $nodeData]);
         $final = LLMService::workflowSchemaValidator($intentData, $nodeData);
-        Log::debug("final Data " , ["final" => $final]);
 
         $final["intent"] = $intentData["intent"];
         $final["trigger"] = $intentData["trigger"];

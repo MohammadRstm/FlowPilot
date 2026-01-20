@@ -27,7 +27,7 @@ class ValidateFlowLogicService{
     public function execute($workflow, $question, $totalPoints, $trace ,  $retries = 0){
         $judgement = LLMService::judgeResults($workflow , $question);
 
-        Log::debug('Workflow judgement', [
+        Log::info('Workflow judgement', [
             'attempt' => $retries,
             'judgement' => $judgement
         ]);

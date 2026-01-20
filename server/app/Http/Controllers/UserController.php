@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AvatarUploadRequest;
 use App\Http\Requests\ConfirmWorkflowRequest;
 use App\Http\Requests\CopilotPayload;
 use App\Service\ProfileService;
@@ -108,6 +109,18 @@ class UserController extends Controller{
             return $this->successResponse($suggestions);
         }catch(Exception $ex){
             return $this->errorResponse("Failed to get friends" , ["1" => $ex->getMessage()]);
+        }
+    }
+
+    public function uploadAvatar(AvatarUploadRequest $request){
+        try{
+            $user = auth()->user();
+            $avatar = $request->file("avatar");
+            Log::debug("kill me" , ["file" => $avatar]);
+            ProfileService::uploadFile($user , $avatar);
+            return $this->successResponse([] , "uploaded successfully");
+        }catch(Exception $ex){
+            return $this->errorResponse("Failed to upload file" , ["1" => $ex->getMessage()]);
         }
     }
 }

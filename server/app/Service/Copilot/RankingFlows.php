@@ -54,7 +54,7 @@ class RankingFlows{
                 "raw" => $p["raw"]
             ];
 
-            Log::debug("Workflow score", [
+            Log::info("Workflow score", [
                 "qdrant" => $hit["score"],
                 "intent" => $intentScore,
                 "complexity" => $complexityScore,

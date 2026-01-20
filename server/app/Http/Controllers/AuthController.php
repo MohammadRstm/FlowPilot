@@ -38,7 +38,6 @@ class AuthController extends Controller{
     public function me(Request $request){
         $user = $request->user();
 
-        Log::debug("user" , ["user" => $user]);
         
         return $this->successResponse([
             'id'         => $user->id,

@@ -34,6 +34,7 @@ Route::group(["prefix" => "v0.1"] , function(){
             Route::post("/follow/{toBeFollowed}" , [UserController::class, "followUser"]);
             Route::get("/isFollowed/{userId}" , [UserController::class , "isFollowed"]);
             Route::get("/searchFriends/{name}" , [UserController::class , "getFriends"]);
+            Route::post("/avatar" , [UserController::class , "uploadAvatar"]);
         });
 
         Route::group(["prefix" => "community"] , function(){

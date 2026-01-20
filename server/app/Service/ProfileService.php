@@ -6,9 +6,13 @@ use App\Models\Follower;
 use App\Models\User;
 use App\Models\UserPost;
 use Exception;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class ProfileService{
     public static function getProfileDetails(int $userId, ?int $viewerId = null, int $perPage = 20){
@@ -105,6 +109,34 @@ class ProfileService{
             'isFollowing' => $isViewerFollowing,
             'isBeingFollowed' => $isUserFollowed,
         ];
+    }
+
+    public static function uploadFile(Model $user , UploadedFile $file){
+         try {
+            $folder = 'avatar_photos';
+
+            if (!Storage::exists($folder)) {
+                Storage::makeDirectory($folder);
+            }
+
+            if ($user->photo_url) {
+                $oldPath = $folder . '/' . $user->id . '-' . basename($user->photo_url);
+                if (Storage::exists($oldPath)) {
+                    Storage::delete($oldPath);
+                }
+            }
+
+            $extension = $file->getClientOriginalExtension();
+            $filename = $user->id . '-' . Str::uuid() . '.' . $extension;
+
+            $path = Storage::disk('public')->putFileAs($folder, $file, $filename);
+
+            $user->photo_url = '/storage' .  $path;
+            $user->save();
+            Log::debug("Success" , ["context" => $path]);
+        } catch (Exception $e) {
+            throw new Exception($e->getMessage());
+        }
     }
 
 
