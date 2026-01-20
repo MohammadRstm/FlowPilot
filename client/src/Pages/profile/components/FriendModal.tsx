@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { useSearchForFriends } from "../hook/useSearchFriends";
+import { useNavigate } from "react-router-dom";
+import { Search } from "lucide-react";
+import { useSearchFriendsMutation } from "../hook/useSearchFriends";
 
 type Props = {
   isOpen: boolean;
@@ -8,11 +10,20 @@ type Props = {
 
 const FriendsModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const [search, setSearch] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
 
-  const {
-    data: suggestions = [],
-    isLoading,
-  } = useSearchForFriends(search);
+  const navigate = useNavigate();
+  const searchMutation = useSearchFriendsMutation();
+
+  const handleSubmit = () => {
+    if (!search.trim()) return;
+
+    searchMutation.mutate(search, {
+      onSuccess: (data) => {
+        setSuggestions(data);
+      },
+    });
+  };
 
   if (!isOpen) return null;
 
@@ -21,23 +32,43 @@ const FriendsModal: React.FC<Props> = ({ isOpen, onClose }) => {
       <div className="friends-modal" onClick={(e) => e.stopPropagation()}>
         <h3>Find Friends</h3>
 
-        <input
-          className="friends-search"
-          placeholder="Search users..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        {/* Search Bar */}
+        <div className="friends-search-wrapper">
+          <input
+            className="friends-search"
+            placeholder="Search users..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+          />
+
+          <button
+            className="friends-search-btn"
+            onClick={handleSubmit}
+            disabled={searchMutation.isLoading}
+            aria-label="Search"
+          >
+            <Search size={18} />
+          </button>
+        </div>
 
         <div className="friends-list">
-          {/* Loading */}
-          {isLoading && <div className="loading">Searching...</div>}
+          {searchMutation.isLoading && (
+            <div className="loading">Searching...</div>
+          )}
 
-          {/* Results */}
           {suggestions.map((u: any) => (
-            <div key={u.id} className="friend-item">
+            <div
+              key={u.id}
+              className="friend-item clickable"
+              onClick={() => navigate(`/profile/${u.id}`)}
+            >
               <div className="friend-avatar">
                 {u.photo_url ? (
-                  <img src={`${import.meta.env.VITE_PHOTO_BASE_URL}/${u.photo_url}`} />
+                  <img
+                    src={`${import.meta.env.VITE_PHOTO_BASE_URL}/${u.photo_url}`}
+                    alt={u.full_name}
+                  />
                 ) : (
                   u.full_name?.[0]
                 )}
@@ -49,10 +80,11 @@ const FriendsModal: React.FC<Props> = ({ isOpen, onClose }) => {
             </div>
           ))}
 
-          {/* Empty state */}
-          {!isLoading && suggestions.length === 0 && search !== "" && (
-            <div className="empty">No users found</div>
-          )}
+          {!searchMutation.isLoading &&
+            suggestions.length === 0 &&
+            search === "" &&(
+              <div className="empty">No users found</div>
+            )}
         </div>
       </div>
     </div>
