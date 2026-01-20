@@ -553,6 +553,7 @@ body {
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid #1f1f1f;
+  margin-bottom:6px;
 }
 
 .post-image {

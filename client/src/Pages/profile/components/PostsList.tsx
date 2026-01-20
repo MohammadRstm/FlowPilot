@@ -1,5 +1,7 @@
 import React, { useMemo } from "react";
 import { getCounts, getScore } from "../utils/postScoring";
+import PostCard from "../../community/components/PostCard";
+import { adaptListPost } from "../../../api/adapters/ProfilePostAdapter";
 
 type Props = {
   posts: any[];
@@ -25,27 +27,16 @@ const PostsList: React.FC<Props> = ({ posts, sortBy }) => {
     return <div className="empty">No posts yet.</div>;
   }
 
-  return (
+   return (
     <section className="posts-list">
-      {sortedPosts.map((p: any) => {
-        const { likes, imports, comments } = getCounts(p);
-        return (
-          <article className="post-card" key={p.id ?? p.post_id ?? `${Math.random()}`}>
-            <div className="post-header">
-              <h3 className="post-title">{p.title ?? p.description ?? p.text ?? "Untitled post"}</h3>
-              <div className="post-meta">Score: {Math.round(getScore(p) * 10) / 10}</div>
-            </div>
-
-            <div className="post-body">{p.description ?? p.excerpt ?? p.body ?? ""}</div>
-
-            <div className="post-stats">
-              <span>❤️ {likes}</span>
-              <span>💬 {comments}</span>
-              <span>📥 {imports}</span>
-            </div>
-          </article>
-        );
-      })}
+      {sortedPosts.map((p) => (
+        <PostCard
+          key={p.id}
+          post={adaptListPost(p)}
+          showHeader={false}
+          showActions={true}
+        />
+      ))}
     </section>
   );
 };
