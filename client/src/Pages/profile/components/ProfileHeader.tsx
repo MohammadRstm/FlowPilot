@@ -32,7 +32,6 @@ const ProfileHeader: React.FC<Props> = ({
   onSettingsClick,
 }) => {
   const fullName = `${baseUser.first_name ?? ""} ${baseUser.last_name ?? ""}`.trim();
-
   return (
     <div className="profile-column profile-left" style={{ gridArea: "profile" }}>
       {isOwnProfile && (
@@ -81,7 +80,7 @@ const ProfileHeader: React.FC<Props> = ({
             )}
 
             {isBeingFollowed.isFollowing && (
-            <button className="follow-cta-btn following" disabled>
+            <button onClick={() => followUser(userId)}className="follow-cta-btn following" disabled>
                 Following
             </button>
             )}

@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Models\Follower;
 use App\Models\User;
 use App\Models\UserPost;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 
@@ -54,12 +55,38 @@ class ProfileService{
         ];
     }
 
-    public static function followUser(int $userId , int $toBeFollowed){
+
+    public static function toggeleFollow(int $userId, int $toBeFollowed){
+        if ($userId === $toBeFollowed) {
+            throw new Exception("You cannot follow yourself");
+        }
+
+        // Ensure target user exists
+        if (!User::where('id', $toBeFollowed)->exists()) {
+            throw new Exception("User not found");
+        }
+
+        $existing = Follower::where('follower_id', $userId)
+            ->where('followed_id', $toBeFollowed)
+            ->first();
+
+        if ($existing) {
+            $existing->delete();
+            return [
+                'following' => false,
+            ];
+        }
+
         Follower::create([
-            "follower_id" => $userId,
-            "followed_id" => $toBeFollowed
+            'follower_id' => $userId,
+            'followed_id' => $toBeFollowed,
         ]);
+
+        return [
+            'following' => true,
+        ];
     }
+
 
     public static function isFollowingUser(int $userId, int $viewerId): array{
         $isViewerFollowing = Follower::where('follower_id', $viewerId)

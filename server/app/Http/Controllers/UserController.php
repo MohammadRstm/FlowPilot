@@ -81,7 +81,7 @@ class UserController extends Controller{
     public function followUser(int $toBeFollowed){
         try{
             $userId = auth()->id();
-            ProfileService::followUser($userId, $toBeFollowed);
+            ProfileService::toggeleFollow($userId, $toBeFollowed);
 
             return $this->successResponse([] , "User followed successfully");
         }catch(Exception $ex){
