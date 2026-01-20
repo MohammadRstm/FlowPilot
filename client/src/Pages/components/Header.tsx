@@ -30,7 +30,7 @@ const Header: React.FC = () => {
         <nav className="header__nav">
           <Link to="/community">Community</Link>
           <Link to="/copilot">Copilot</Link>
-          <a href="#about">About Us</a>
+          <Link to="/aboutus">About Us</Link>
 
           {user ? (
             <Link to="/profile" className="header__user-chip">
