@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../../api/client";
+import { returnDataFormat } from "../../../api/utils";
 
 interface CreatePostInputs {
   title: string;
@@ -26,7 +27,7 @@ export const useCreatePost = () => {
         },
       });
 
-      return resp.data;
+      return returnDataFormat(resp);
     },
 
     // optional: optimistic UI / caching

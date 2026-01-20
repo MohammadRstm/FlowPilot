@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CommentPostRequest;
+use App\Http\Requests\CreatePostRequest;
 use App\Models\UserPost;
 use App\Service\CommunityService;
 use Exception;
@@ -71,6 +72,17 @@ class CommunityController extends Controller{
             return $this->successResponse($submitResp);
         }catch(Exception $ex){
             return $this->errorResponse("Failed to post comment" , ["error" => $ex->getMessage()]);
+        }
+    }
+
+    public function createPost(CreatePostRequest $request){
+        try{
+            $userId = auth()->id();
+            $form = $request->validated();
+            $createdResp = CommunityService::createPost($userId , $form);
+            return $this->successResponse(["post_id" => $createdResp]);
+        }catch(Exception $ex){
+            return $this->errorResponse("Failed to create post" , ["error" => $ex->getMessage()]);
         }
     }
 }

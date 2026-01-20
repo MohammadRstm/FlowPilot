@@ -42,6 +42,7 @@ Route::group(["prefix" => "v0.1"] , function(){
             Route::get("/comments/{postId}" , [CommunityController::class , "getPostComments"]);
             Route::post("/postComment/{postId}" , [CommunityController::class , "postComment"]);
             Route::post("/toggleCommentLike/{commentId}" , [CommunityController::class , "toggleCommentLike"]);
+            Route::post("/createPost" , [CommunityController::class , "createPost"]);
         });
     });
 
