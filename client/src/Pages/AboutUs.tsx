@@ -1,6 +1,6 @@
-import "../../styles/About.css";
 import Header from "./components/Header";
 import "../styles/AboutUs.css";
+import logo from "../assets/Logo.png";
 
 export default function AboutPage() {
   return (
@@ -8,9 +8,15 @@ export default function AboutPage() {
       <Header />
 
       <section className="about-hero">
-        <div className="about-hero-content">
-          <h1>About FlowPilot</h1>
-          <p>We turn intent into automation.</p>
+        <div className="about-hero-inner">
+          <div className="about-hero-text">
+            <h1>About FlowPilot</h1>
+            <p>We turn intent into automation.</p>
+          </div>
+
+          <div className="about-hero-logo">
+            <img src={logo} alt="FlowPilot logo" />
+          </div>
         </div>
       </section>
 
