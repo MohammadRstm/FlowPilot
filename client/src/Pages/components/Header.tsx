@@ -2,6 +2,7 @@ import React, { useContext } from "react";
 import "../../styles/Header.css";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
+import Logo from "../../assets/Logo.png";
 
 const Header: React.FC = () => {
   const auth = useContext(AuthContext);
@@ -20,9 +21,8 @@ const Header: React.FC = () => {
       <div className="header__container">
         <div className="header__logo">
           <Link to="/">
-            <span className="logo-icon">⟡</span>
-            <span className="logo-text">
-                <strong>Flow</strong> Pilot
+            <span className="logo-icon">
+            <img style={{width:"75px"}} className="logo-image" src={Logo} alt="FP" />
             </span>
           </Link>
         </div>

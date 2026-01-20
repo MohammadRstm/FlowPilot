@@ -425,6 +425,23 @@ body {
   width: 100%;
 }
 
+.image-dropzone {
+  border: 2px dashed #f5b642;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  color: #f5b642;
+  margin-top: 8px;
+  margin-bottom: 16px;
+  transition: background 0.15s ease;
+}
+
+.image-dropzone:hover {
+  background: rgba(245, 182, 66, 0.1);
+}
+
+
 @media (max-width: 1024px) {
   .community-layout {
     flex-direction: column;
