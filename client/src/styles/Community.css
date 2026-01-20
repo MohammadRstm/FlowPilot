@@ -362,7 +362,7 @@ body {
   position: sticky;
 }
 
-.profile-card {
+.sticky-profile-card {
   top: -20px;
   position:sticky;
   background: #0b0b0b;

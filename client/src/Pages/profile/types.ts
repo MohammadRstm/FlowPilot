@@ -20,3 +20,22 @@ export type ProfileApiShape = {
   viewer_follows?: boolean;
   following_count?: number;
 };
+
+export type PostCardData = {
+  id: number;
+
+  title?: string | null;
+  content?: string | null;
+  photo?: string | null;
+
+  author?: string | null;
+  username?: string | null;
+  avatar?: string | null;
+
+  likes?: number;
+  comments?: number;
+  imports?: number;
+
+  liked_by_me?: boolean;
+};
+

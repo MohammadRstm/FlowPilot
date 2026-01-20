@@ -6,6 +6,7 @@ import { useInfiniteScroll } from "./hook/useInfiniteScroll";
 import PostCard from "./components/PostCard";
 import { AuthContext } from "../../context/AuthContext";
 import CreatePostModal from "./components/CreatePostModal";
+import { adaptCommunityPost } from "../../api/adapters/CommunityPostAdapter";
 
 const CommunityPage: React.FC = () => {
   const auth = useContext(AuthContext);
@@ -34,7 +35,6 @@ const CommunityPage: React.FC = () => {
     onLoadMore: loadMore,
   });
 
-  console.log(posts);
 
   return (
     <>
@@ -58,7 +58,7 @@ const CommunityPage: React.FC = () => {
             {error && <div className="error">Error loading posts</div>}
 
             {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
+              <PostCard key={post.id} post={adaptCommunityPost(post)} />
             ))}
 
             <div ref={loadMoreRef} />
@@ -68,7 +68,7 @@ const CommunityPage: React.FC = () => {
 
           {/* RIGHT: sticky profile card */}
           <aside className="community-sidebar">
-            <div className="profile-card">
+            <div className="sticky-profile-card">
               <div className="profile-header">
                 {user?.profile_pic ? (
                   <img
