@@ -1,11 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import { uploadAvatar } from "../../../api/profile/uploadAvatar";
 
 export const useUploadAvatar = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (file: File) =>,
+    mutationFn: (file: File) => uploadAvatar(file),
     onSuccess: () => {
       // invalidate profile query to refetch the updated photo
       queryClient.invalidateQueries({ queryKey: ["profile"] });
