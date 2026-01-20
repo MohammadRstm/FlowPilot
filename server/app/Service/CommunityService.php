@@ -126,42 +126,32 @@ class CommunityService{
     }
 
     public static function createPost(int $userId , array $form){
-        Log::debug("sdf");
         $jsonContent = null;
         $photoUrl = null;
 
-        // Handle JSON file
         if (isset($form['file'])) {
-            Log::debug("file");
 
             $file = $form['file'];
             if ($file->getClientOriginalExtension() === 'json') {
                 $jsonContent = json_decode(file_get_contents($file->getRealPath()), true);
             }
-            Log::debug("json content" , ["content" => $jsonContent]);
         }
 
-        // Handle Image Upload
         if (isset($form['image'])) {
             $image = $form['image'];
             $storagePath = 'upload/post_images';
 
-            // ensure directory exists
             if (!Storage::disk('public')->exists($storagePath)) {
                 Storage::disk('public')->makeDirectory($storagePath);
             }
 
-            // create unique filename
             $filename = Str::uuid()->toString() . '.' . $image->getClientOriginalExtension();
 
-            // save image to storage/app/public/upload/post_images
             $image->storeAs($storagePath, $filename, 'public');
 
-            // store URL path
             $photoUrl = 'storage/' . $storagePath . '/' . $filename;
         }
 
-        // create post record
         $post = UserPost::create([
             'user_id' => $userId,
             'title' => $form['title'],
@@ -223,7 +213,9 @@ class CommunityService{
 
                 'username' => '@' . $username,
                 'avatar' => $user->photo_url,
-                'content' => $post->description ?? $post->title ?? '',
+                'content' => $post->description ?? null,
+                'title' => $post->title,
+                'photo' => $post->photo_url,
                 'likes' => (int) $post->likes,
                 'comments' => (int) $post->comments_count,
                 'exports' => (int) $post->imports,

@@ -34,6 +34,8 @@ const CommunityPage: React.FC = () => {
     onLoadMore: loadMore,
   });
 
+  console.log(posts);
+
   return (
     <>
       <div className="community-page">
