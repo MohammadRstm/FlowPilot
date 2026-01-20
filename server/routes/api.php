@@ -40,7 +40,7 @@ Route::group(["prefix" => "v0.1"] , function(){
             Route::get("/export/{postId}" , [CommunityController::class , "export"]);
 
             Route::get("/comments/{postId}" , [CommunityController::class , "getPostComments"]);
-            Route::post("/submitComment/{postId}" , [CommunityController::class , "postComment"]);
+            Route::post("/postComment/{postId}" , [CommunityController::class , "postComment"]);
             Route::post("/toggleCommentLike/{commentId}" , [CommunityController::class , "toggleCommentLike"]);
         });
     });

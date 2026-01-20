@@ -57,7 +57,10 @@ const CommentsModal: React.FC<Props> = ({ post, isOpen, onClose }) => {
 
               if (!textarea.value.trim()) return;
 
-              createComment.mutate(post.id , textarea.value);
+              createComment.mutate({
+                postId : post.id ,
+                content:  textarea.value
+            });
               textarea.value = "";
             }}
           >
