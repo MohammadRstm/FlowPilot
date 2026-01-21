@@ -251,7 +251,7 @@
 
 /* workflows */
 .workflows-list ul { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
-.workflow-item { display:flex; justify-content:space-between; align-items:center; padding:12px; border-radius:8px; background:rgba(255,255,255,0.02); }
+.profile-workflow-item { display:flex; justify-content:space-between; align-items:center; padding:12px; border-radius:8px; background:rgba(255,255,255,0.02); }
 .btn-download { padding:8px 12px; border-radius:8px; background:linear-gradient(90deg,#ff9b00,#ffb84d); color:#1a0c00; text-decoration:none; font-weight:600; }
 .no-file { opacity:0.6; }
 
@@ -291,7 +291,7 @@
   .stats-inner { flex-wrap:wrap; gap:12px; }
   .stat-circle { width: 92px; height:92px; }
 }
-.workflow-item {
+.profile-workflow-item {
   display: flex;
   align-items: center;
   justify-content: space-between;

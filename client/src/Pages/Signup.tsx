@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "../styles/Auth.css";
+import "../styles/Login.css";
 import Header from "./components/Header";
 import { useNavigate, Link } from "react-router-dom";
 import { register as registerRequest } from "../api/auth";

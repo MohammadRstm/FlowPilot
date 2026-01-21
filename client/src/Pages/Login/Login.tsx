@@ -1,4 +1,4 @@
-import "../../styles/Auth.css";
+import "../../styles/Login.css";
 import Header from "../components/Header";
 import { Link } from "react-router-dom";
 import { useLogin } from "../../hooks/mutations/Auth/useLogin";
@@ -42,6 +42,7 @@ const Login: React.FC = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
                   className="auth-input"
                   required
                 />
@@ -54,6 +55,7 @@ const Login: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="auth-input"
+                  placeholder="Enter your password"
                   required
                 />
               </label>
