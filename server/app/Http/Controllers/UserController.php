@@ -123,4 +123,14 @@ class UserController extends Controller{
             return $this->errorResponse("Failed to upload file" , ["1" => $ex->getMessage()]);
         }
     }
+
+    public function getUserAccount(){
+        try{
+            $userId = auth()->id();
+            $userAccountInfo = UserService::getUserAccount($userId);
+            return $this->successResponse($userAccountInfo);
+        }catch(Exception $ex){
+            return $this->errorResponse("Failed to get user's account" , ["1" => $ex->getMessage()]);
+        }
+    }
 }

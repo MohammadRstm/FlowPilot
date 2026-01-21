@@ -169,4 +169,22 @@ class UserService{
         return $query->get();
     }
 
+    public static function getUserAccount(int $userId){
+        $user = User::findorFail($userId);
+
+        if($user->password && !$user->google_id || $user->password && $user->google_id){// normal account or both
+            return[
+                "normalAccount" => true,
+                "googleAccount" => false
+            ];
+        }else if(!$user->password && $user->google_id){// google account
+            return[
+                "normalAccount" => false,
+                "googleAccount" => true
+            ];
+        }else{// impossible 
+            return null;
+        }
+    }
+
 }

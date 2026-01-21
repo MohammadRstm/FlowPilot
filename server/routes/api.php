@@ -6,7 +6,6 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserCopilotHistoryController;
 use App\Service\UserService;
 use Illuminate\Support\Facades\Route;
-use phpseclib3\Crypt\EC\Formats\Keys\Common;
 
 Route::group(["prefix" => "v0.1"] , function(){
     
@@ -17,6 +16,7 @@ Route::group(["prefix" => "v0.1"] , function(){
     Route::group(["prefix" => "auth", "middleware" => "jwt.auth"] , function(){
         Route::get('/me', [AuthController::class, 'me']);
         Route::put("/setPassword" , [AuthController::class , 'setPassword']);
+        Route::get("/userAccount" , [UserController::class , "getUserAccount"]);
 
 
         Route::group(["prefix"=>"copilot"] , function(){
