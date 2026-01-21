@@ -1,5 +1,5 @@
 import type { AxiosError } from "axios";
-import type { ToastType } from "../components/toast/toast.types";
+import { ToastMessage, type ToastType } from "../components/toast/toast.types";
 
 export const handleApiError = (
   error: unknown,
@@ -13,6 +13,6 @@ export const handleApiError = (
 
   showToast(
     apiMessage ?? "Something went wrong. Please try again.",
-    "error"
+    ToastMessage.ERROR
   );
 };

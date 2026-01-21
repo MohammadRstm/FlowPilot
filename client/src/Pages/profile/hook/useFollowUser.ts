@@ -1,9 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { followUser } from "../../../api/profile/followUser";
+import { useToast } from "../../../context/toastContext";
+import { ToastMessage } from "../../components/toast/toast.types";
+import { handleApiError } from "../../utls/handleErrorMessage";
 
 
 export const useFollowUser = () =>{
     const queryClient = useQueryClient();
+    const { showToast } = useToast();
     return useMutation({
         mutationFn: (userId: number | undefined) => followUser(userId),
         onMutate: async (userId) => {
@@ -21,24 +25,25 @@ export const useFollowUser = () =>{
 
             return { previous };
             },
-        onError: (_, userId, context) => {
+        onError: (err, userId, context) => {
             queryClient.setQueryData(
                 ["is-being-followed", userId],
                 context?.previous
             );
+            handleApiError(err , showToast);
         },
         onSuccess: (_, userId) => {
         if (!userId) return;
 
-        // 🔥 invalidate follow status
         queryClient.invalidateQueries({
             queryKey: ["is-being-followed", userId],
         });
 
-        // (optional but recommended)
         queryClient.invalidateQueries({
             queryKey: ["profile", userId],
         });
+        
+        showToast("Followed user successfully" , ToastMessage.SUCCESS)
         },
     })
 }

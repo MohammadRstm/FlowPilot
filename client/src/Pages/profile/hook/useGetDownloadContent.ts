@@ -20,9 +20,5 @@ export const useDownloadHistory = () => {
 
       URL.revokeObjectURL(downloadUrl);
     },
-    onError: (err) => {
-      console.error("Download failed", err);
-      alert("Download failed. Try again.");
-    },
   });
 };
