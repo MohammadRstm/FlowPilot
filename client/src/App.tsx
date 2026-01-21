@@ -21,8 +21,6 @@ import AboutPage from './Pages/AboutUs'
 // 7 days left to have a fully functioning and clean website
 // objectives for today before hitting 12 am:
 // - Fix linting issues which includes cleaning types
-// - Fix profile image defaults
-// - Add the ability to change profile image
 // - Add setting page which includes
 // -- Setting/resetting password
 // -- Linking user's n8n account
@@ -39,6 +37,9 @@ import AboutPage from './Pages/AboutUs'
 // Create CI / CD
 // push to main
 // victory dance
+
+// FIXES:
+// FIX AVATAR UPLOADS I CAN'T BE ASSED MAN
 
 function App() {
   return (
