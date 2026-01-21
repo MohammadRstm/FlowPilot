@@ -7,6 +7,6 @@ export type UserAccountType = {
 };
 
 export const getUserAccount = async (): Promise<UserAccountType> => {
-  const resp = await api.get("auth/profile/account-type");
+  const resp = await api.get("auth/account");
   return returnDataFormat(resp);
 };

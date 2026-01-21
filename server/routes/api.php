@@ -16,7 +16,7 @@ Route::group(["prefix" => "v0.1"] , function(){
     Route::group(["prefix" => "auth", "middleware" => "jwt.auth"] , function(){
         Route::get('/me', [AuthController::class, 'me']);
         Route::put("/setPassword" , [AuthController::class , 'setPassword']);
-        Route::get("/userAccount" , [UserController::class , "getUserAccount"]);
+        Route::get("/account" , [UserController::class , "getUserAccount"]);
 
 
         Route::group(["prefix"=>"copilot"] , function(){

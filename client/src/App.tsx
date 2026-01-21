@@ -8,7 +8,7 @@ import Signup from './Pages/Signup'
 import ProtectedRoutes from './Pages/components/ProtectedRoutes'
 import ProfilePage from './Pages/profile/Profile'
 import AboutPage from './Pages/AboutUs'
-import SettingsPage from './Pages/Settings'
+import SettingsPage from './Pages/Settings/Settings'
 
 // ADD THE ABILITY TO SEND USER WORKFLOWS TO ADD ON IT/FIX IT - HARD - BACKEND HEAVY
 
