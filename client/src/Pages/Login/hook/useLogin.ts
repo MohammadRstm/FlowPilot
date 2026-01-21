@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getToken } from "../../../api/auth";
 import { useLoginMutation } from "./useLoginMutation";
@@ -12,9 +12,6 @@ declare global {
 
 export function useLogin() {
   const navigate = useNavigate();
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
 
   const loginMutation = useLoginMutation();
   const googleMutation = useLoginGoogleMutation();
@@ -55,9 +52,8 @@ export function useLogin() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    loginMutation.mutate({ email, password });
+  const handleLogin = (data: { email: string; password: string }) => {
+    loginMutation.mutate(data);
   };
 
   const handleGoogleLogin = (response: any) => {
@@ -65,12 +61,8 @@ export function useLogin() {
   };
 
   return {
-    email,
-    password,
-    setEmail,
-    setPassword,
     loading: loginMutation.isPending || googleMutation.isPending,
     error: loginMutation.error || googleMutation.error,
-    handleSubmit,
+    handleLogin,
   };
 }

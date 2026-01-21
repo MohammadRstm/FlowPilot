@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import "./signup.css";
 import { useSignup } from "./hook/useSignup.hook";
 import { useForm } from "react-hook-form";
-import { signupSchema, type SignupFormValues } from "../../validation/signup.schema";
+import { signupSchema, type SignupFormValues } from "./validation/signup.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { setToken } from "../../api/auth";
 import { useMemo } from "react";

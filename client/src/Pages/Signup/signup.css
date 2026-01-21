@@ -11,7 +11,7 @@
 }
 
 .signup-main {
-  height: calc(100vh - 80px); /* header height */
+  height: calc(100vh - 80px); 
   display: flex;
   align-items: center;
   justify-content: center;

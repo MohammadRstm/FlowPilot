@@ -13,7 +13,7 @@
 .auth-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  height: calc(100vh - 80px); /* header height */
+  height: calc(100vh - 80px); 
 }
 .auth-left {
    padding-top: 10px;
@@ -25,7 +25,7 @@
 .auth-right {
   position: relative;
   overflow: hidden;
-  background: transparent; /* IMPORTANT: same canvas */
+  background: transparent; 
 }
 
 .auth-card {
@@ -53,10 +53,10 @@
   padding: 12px 14px;
   border-radius: 8px;
 
-  background: rgba(220, 38, 38, 0.08); /* soft red */
+  background: rgba(220, 38, 38, 0.08); 
   border: 1px solid rgba(220, 38, 38, 0.25);
 
-  color: #b91c1c; /* red-700 */
+  color: #b91c1c;
   font-size: 14px;
   line-height: 1.4;
 
@@ -175,13 +175,6 @@
   justify-content: center;
 }
 
-/* .workflow-item:nth-child(odd) {
-  animation: drift-left 8s ease-in-out infinite alternate;
-}
-
-.workflow-item:nth-child(even) {
-  animation: drift-right 10s ease-in-out infinite alternate;
-} */
 
 .workflow-image {
   width: calc(100% - 96px);
@@ -290,9 +283,6 @@
   object-fit: cover;
 }
 
-
-
-/* ---------- RESPONSIVE ---------- */
 @media (max-width: 900px) {
   .auth-layout {
     grid-template-columns: 1fr;
