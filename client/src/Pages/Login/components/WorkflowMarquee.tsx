@@ -28,7 +28,7 @@ const WorkflowMarquee = () => {
         <div className="workflow-track">
           {[...images, ...images].map((ob, index) => (
             <div className="workflow-item" key={index}>
-              <div className="workflow-card">
+              <div className="login-workflow-card">
                 <div className="workflow-title">{ob.title}</div>
                 <img
                   src={ob.image}

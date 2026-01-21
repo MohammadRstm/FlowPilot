@@ -2,6 +2,7 @@ import "../styles/Landing.css";
 import Header from "./components/Header";
 import n8nMediaImage from "../assets/n8n-media.png";
 import FakeWorkflow from "./components/FakeWorkflow";
+import { Link } from "react-router-dom";
 
 export default function LandingPage() {
 
@@ -26,7 +27,8 @@ export default function LandingPage() {
       </section>
 
      <section className="data-chat-section">
-    <h2>Chat With Your Own Data</h2>
+      <h2 style={{fontSize:"2rem"}}>Chat With Your Own Data</h2>
+      <h3>Create your own data chatter</h3>
 
         <div className="data-chat-layout">
 
@@ -98,9 +100,9 @@ export default function LandingPage() {
           <p>AI Powered n8n Automation</p>
         </div>
         <div>
-          <p>Community</p>
-          <p>Docs</p>
-          <p>Contact</p>
+          <Link to="/community">Community</Link>
+          <Link to="/aboutus">About us</Link>
+          <Link to="Copilot">Copilot</Link>
         </div>
       </footer>
 
