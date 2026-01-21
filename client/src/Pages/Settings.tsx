@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { FiArrowLeft, FiLock, FiLink, FiLogOut } from "react-icons/fi";
-import "./SettingsPage.css";
+import "../styles/Settings.css";
 
 type Tab = "password" | "n8n" | "logout";
 
