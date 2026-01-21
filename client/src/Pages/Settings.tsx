@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { FiArrowLeft, FiLock, FiLink, FiLogOut } from "react-icons/fi";
 import "../styles/Settings.css";
+import { AuthContext } from "../context/AuthContext";
 
 type Tab = "password" | "n8n" | "logout";
 
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState<Tab>("password");
+  const { logout , user } = useContext(AuthContext);
+
+  console.log(user);
 
   return (
     <div className="settings-page">
@@ -79,7 +83,7 @@ const SettingsPage = () => {
               <h2>Logout</h2>
               <p>You will be logged out from this device.</p>
 
-              <button className="danger-btn">Logout</button>
+              <button onClick={logout} className="danger-btn">Logout</button>
             </section>
           )}
         </main>

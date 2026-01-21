@@ -1,7 +1,6 @@
 .settings-page {
   min-height: 100vh;
   padding: 24px;
-  background: var(--bg, #0f1115);
   color: var(--text, #e6e6e6);
 }
 
@@ -29,7 +28,7 @@
 
 /* Sidebar */
 .settings-sidebar {
-  background: #151821;
+  background: #000000;
   border-radius: 12px;
   padding: 12px;
   display: flex;
@@ -71,7 +70,7 @@
 
 /* Content */
 .settings-content {
-  background: #151821;
+  background: #000000;
   border-radius: 12px;
   padding: 24px;
 }
@@ -109,7 +108,7 @@
 /* Buttons */
 .primary-btn {
   margin-top: 12px;
-  background: #4c6fff;
+  background: #fda400;
   border: none;
   border-radius: 8px;
   padding: 10px;
@@ -119,7 +118,7 @@
 }
 
 .primary-btn:hover {
-  background: #3b5bdb;
+  background: #fbbb4c;
 }
 
 .danger-btn {
