@@ -3,6 +3,8 @@ import { useExportPost } from "../hook/useExportPost";
 import { useToggleLike } from "../hook/useToggleLike";
 import CommentsModal from "./CommentsModal";
 import type { PostCardData } from "../../profile/types";
+import { Heart, MessageCircle, Download } from "lucide-react";
+
 
 const BASE_URL = import.meta.env.VITE_PHOTO_BASE_URL;
 
@@ -27,7 +29,6 @@ const PostCard: React.FC<{
   return (
     <>
       <div className="post-card">
-        {/* HEADER */}
         {showHeader && post.author && (
           <div className="post-header">
             <img
@@ -65,16 +66,20 @@ const PostCard: React.FC<{
               onClick={() => likeMutation.mutate(post.id)}
               disabled={likeMutation.isPending}
             >
-              👍 Like
+                <Heart
+                    size={18}
+                    className={post.liked_by_me ? "icon-liked" : ""}
+                    fill={post.liked_by_me ? "currentColor" : "none"}
+                />likes
             </button>
 
-            <button onClick={() => setOpen(true)}>💬 Comment</button>
+            <button onClick={() => setOpen(true)}> <MessageCircle size={18} /> Comment</button>
 
             <button
               onClick={() => exportContent.mutate(post.id)}
               disabled={exportContent.isPending}
             >
-              ⬇ Export
+               <Download size={18} /> Export
             </button>
           </div>
         )}

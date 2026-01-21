@@ -21,7 +21,6 @@ import SettingsPage from './Pages/Settings/Settings'
 // objectives for today before hitting 12 am:
 // - add error and loading handling - VERY BIG
 // - change emojis into lucid icons
-// - Fix linting issues which includes cleaning types
 // Clean the whole frontend where it needs to be cleaned, all except copilot pages
 // merge branch with dev
 // Move to the next branch for copilot

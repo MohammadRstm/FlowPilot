@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import FriendsModal from "./FriendModal";
+import { Users } from "lucide-react";
+
 
 type Totals = {
   likes: number;
@@ -50,7 +52,7 @@ const StatsCard: React.FC<Props> = ({ totals, postsCount, tab, setTab, sortBy, s
               title="Friends"
               onClick={() => setFriendsOpen(true)}
             >
-              👥
+              <Users color="white" />
             </button>
           </div>
 
