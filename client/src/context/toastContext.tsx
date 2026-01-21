@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Toast, ToastType } from "../Pages/components/toast/toast.types";
 import { ToastContainer } from "../Pages/components/toast/ToastContainer";
+import { toastStore } from "./toastStore";
 
 
 interface ToastContextValue {
@@ -22,6 +23,11 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
     }, 3000);
   };
 
+  useEffect(() => {
+    toastStore.register(showToast);
+  }, [showToast]);
+
+  
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
