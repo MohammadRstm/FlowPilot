@@ -15,7 +15,7 @@ Route::group(["prefix" => "v0.1"] , function(){
 
     Route::group(["prefix" => "auth", "middleware" => "jwt.auth"] , function(){
         Route::get('/me', [AuthController::class, 'me']);
-        Route::put("/setPassword" , [AuthController::class , 'setPassword']);
+        Route::post("/setPassword" , [AuthController::class , 'setPassword']);
         Route::get("/account" , [UserController::class , "getUserAccount"]);
         Route::get("/unlinkGoogleAccount" , [AuthController::class , "unlinkGoogleAccount"]);
         Route::post("/linkN8nAccount" , [AuthController::class , "linkN8nAccount"]);

@@ -90,12 +90,12 @@ class AuthService{
 
     public static function setPassword(Model $user , array $data){
         if($user->password){
-            if(!$data["current"] || !Hash::check($data["current"], $user->password)){
+            if(!$data["current_password"] || !Hash::check($data["current_password"], $user->password)){
                 throw new Exception("Current password is incorrect");
             }
         }
 
-        $user->password = Hash::make($data["new"]);
+        $user->password = Hash::make($data["new_password"]);
         $user->save();
     }
 

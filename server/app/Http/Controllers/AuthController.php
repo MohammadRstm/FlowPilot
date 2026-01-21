@@ -67,6 +67,7 @@ class AuthController extends Controller{
             return $this->successResponse([], 'Password set successfully');
             
         }catch(Exception $ex){
+            Log::debug($ex->getMessage());
             return $this->errorResponse("Set password failed" , ["error" => $ex->getMessage()]);
         }
     }

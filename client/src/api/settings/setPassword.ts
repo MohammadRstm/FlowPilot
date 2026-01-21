@@ -6,6 +6,6 @@ export const setPassword = async (payload: {
   new_password: string;
   new_password_confirmation: string;
 }) => {
-  const resp = await api.post("auth/set-password", payload);
+  const resp = await api.post("auth/setPassword", payload);
   return returnDataFormat(resp);
 };
