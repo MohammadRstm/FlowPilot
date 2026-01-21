@@ -16,6 +16,8 @@ const Header: React.FC = () => {
     ? `${user.first_name?.[0] ?? "F"}${user.last_name?.[0] ?? "P"}`.toUpperCase()
     : "";
 
+    console.log(user);
+
   return (
     <header className="header">
       <div className="header__container">
@@ -36,7 +38,7 @@ const Header: React.FC = () => {
             <Link to="/profile" className="header__user-chip">
               <div className="header__user-avatar">
                 {user.photo_url ? (
-                  <img src={user.photo_url} alt={fullName || "User avatar"} />
+                  <img src={import.meta.env.VITE_PHOTO_BASE_URL + user.photo_url} alt={fullName || "User avatar"} />
                 ) : (
                   <span>{initials}</span>
                 )}

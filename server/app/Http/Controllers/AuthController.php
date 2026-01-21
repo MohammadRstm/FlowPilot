@@ -45,7 +45,8 @@ class AuthController extends Controller{
             'first_name' => $user->first_name,
             'last_name'  => $user->last_name,
             'email'      => $user->email,
-        ]);
+            'photo_url'  => $user->photo_url
+         ]);
     }
 
     public function googleLogin(GoogleLoginRequest $request){
