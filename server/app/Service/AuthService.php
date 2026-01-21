@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\Http;
 class AuthService{
 
     public static function createUser(array $userData, int $isFromGoogle = 0){
-        throw new UserFacingException("weer" , 343);
         $user = User::create([
             'user_role_id'      => env('USER_ROLE_ID'), // default role
             'first_name'        => $userData['firstName'],
