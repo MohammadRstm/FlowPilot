@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { getUserAccount } from "../../../api/settings/fetchAccountType";
-import { useToast } from "../../../context/toastContext";
+import { returnDataFormat } from "../../utils/returnApiDataFormat";
+import { api } from "../../../api/client";
+import type { UserAccountType } from "../types";
 
 export const useUserAccount = () => {
     return useQuery({
@@ -8,4 +9,9 @@ export const useUserAccount = () => {
         queryFn: getUserAccount,
         staleTime: 5 * 60 * 1000, 
     });
+};
+
+const getUserAccount = async (): Promise<UserAccountType> => {
+  const resp = await api.get("auth/account");
+  return returnDataFormat(resp);
 };

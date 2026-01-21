@@ -6,7 +6,7 @@ import {
   FiLogOut,
   FiXCircle,
 } from "react-icons/fi";
-import "../../styles/Settings.css";
+import "./settings.css";
 import { useUserAccount } from "./hook/useFetchAccountType";
 import { useSetPassword } from "./hook/useSetPassword";
 import { useLinkN8nAccount } from "./hook/useLinkN8nAccount";

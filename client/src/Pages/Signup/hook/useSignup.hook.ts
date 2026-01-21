@@ -2,9 +2,9 @@ import { useMutation } from "@tanstack/react-query";
 import { useToast } from "../../../context/toastContext";
 import { ToastMessage } from "../../components/toast/toast.types";
 import { api } from "../../../api/client";
-import { returnDataFormat } from "../../../api/utils";
 import type { RegisterPayload } from "../types";
 import type { AuthResponse } from "../../types";
+import { returnDataFormat } from "../../utils/returnApiDataFormat";
 
 export const useSignup = () =>{
     const { showToast } = useToast();

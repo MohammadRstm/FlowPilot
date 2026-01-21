@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { unlinkGoogle } from "../../../api/settings/unlinkGoogleAccount";
 import { ToastMessage } from "../../components/toast/toast.types";
 import { useToast } from "../../../context/toastContext";
+import { returnDataFormat } from "../../utils/returnApiDataFormat";
+import { api } from "../../../api/client";
 
 export const useUnlinkGoogleAccount = () => {
   const qc = useQueryClient();
@@ -17,3 +18,10 @@ export const useUnlinkGoogleAccount = () => {
     
   });
 };
+
+
+const unlinkGoogle = async () => {
+  const resp = await api.put("auth/unlinkGoogleAccount");
+  return returnDataFormat(resp);
+};
+

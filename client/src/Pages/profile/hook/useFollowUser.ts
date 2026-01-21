@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { followUser } from "../../../api/profile/followUser";
 import { useToast } from "../../../context/toastContext";
 import { ToastMessage } from "../../components/toast/toast.types";
-import { handleApiError } from "../../utls/handleErrorMessage";
+import { handleApiError } from "../../utils/handleErrorMessage";
 
 
 export const useFollowUser = () =>{

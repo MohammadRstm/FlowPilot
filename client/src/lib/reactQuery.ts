@@ -3,7 +3,7 @@ import {
   QueryCache,
   MutationCache,
 } from "@tanstack/react-query";
-import { handleApiError } from "../Pages/utls/handleErrorMessage";
+import { handleApiError } from "../Pages/utils/handleErrorMessage";
 import { toastStore } from "../context/toastStore";
 
 export const queryClient = new QueryClient({
