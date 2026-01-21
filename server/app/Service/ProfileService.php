@@ -131,7 +131,7 @@ class ProfileService{
 
             $path = Storage::disk('public')->putFileAs($folder, $file, $filename);
 
-            $user->photo_url = '/storage' .  $path;
+            $user->photo_url = '/storage' . "/" .  $path;
             $user->save();
             Log::debug("Success" , ["context" => $path]);
         } catch (Exception $e) {

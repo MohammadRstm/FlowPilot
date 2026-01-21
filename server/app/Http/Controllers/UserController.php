@@ -116,10 +116,10 @@ class UserController extends Controller{
         try{
             $user = $request->user();
             $avatar = $request->file("avatar");
-            Log::debug("kill me" , ["file" => $avatar]);
             ProfileService::uploadFile($user , $avatar);
             return $this->successResponse([] , "uploaded successfully");
         }catch(Exception $ex){
+            Log::debug($ex->getMessage());
             return $this->errorResponse("Failed to upload file" , ["1" => $ex->getMessage()]);
         }
     }

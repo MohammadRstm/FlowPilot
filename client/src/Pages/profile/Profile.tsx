@@ -30,7 +30,7 @@ const ProfilePage: React.FC = () => {
     error,
     } = useProfileQuery(userId);
 
-    
+    console.log(profile);
     const { mutate: downloadHistory, isLoading: isDownloading } =
     useDownloadHistory();
 

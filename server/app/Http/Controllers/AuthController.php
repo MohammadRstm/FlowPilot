@@ -78,8 +78,6 @@ class AuthController extends Controller{
             return $this->successResponse([], 'Google account unlinked successfullly');
             
         }catch(Exception $ex){
-            Log::debug($ex->getMessage());
-
             return $this->errorResponse("Unlinking google account failed" , ["error" => $ex->getMessage()]);
         }
     }
@@ -92,7 +90,6 @@ class AuthController extends Controller{
             return $this->successResponse([], 'N8n account linked successfullly');
             
         }catch(Exception $ex){
-            Log::debug($ex->getMessage());
 
             return $this->errorResponse("Failed to link n8n account" , ["error" => $ex->getMessage()]);
         }

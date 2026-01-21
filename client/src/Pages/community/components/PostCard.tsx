@@ -40,7 +40,7 @@ const PostCard: React.FC<{
         {showHeader && post.author && (
           <div className="post-header">
             <img
-              src={post.avatar || "/avatar-placeholder.png"}
+              src={import.meta.env.VITE_PHOTO_BASE_URL + post.avatar || "/avatar-placeholder.png"}
               alt={post.author}
             />
 

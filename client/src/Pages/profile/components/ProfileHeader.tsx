@@ -58,9 +58,9 @@ const ProfileHeader: React.FC<Props> = ({
       <div className="profile-head">
         <div className="profile-avatar-wrapper">
           <div className="profile-avatar">
-            {baseUser.photo_url && !imgError ? (
+            {baseUser.photo_url ? (
               <img
-                src={baseUser.photo_url}
+                src={import.meta.env.VITE_PHOTO_BASE_URL + baseUser.photo_url}
                 alt={fullName || "User avatar"}
                 onError={() => setImgError(true)}
               />

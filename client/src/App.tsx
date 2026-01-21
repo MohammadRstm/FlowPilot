@@ -11,8 +11,6 @@ import AboutPage from './Pages/AboutUs'
 import SettingsPage from './Pages/Settings/Settings'
 
 // ADD THE ABILITY TO SEND USER WORKFLOWS TO ADD ON IT/FIX IT - HARD - BACKEND HEAVY
-
-
 // ADD THE ABILITY TO CREATE CUSTOM NODES - VERY HARD - F/B HEAVY ON BOTH
 // ADD THE ABILITY TO SAVE CREDENTIALS OR FIGURE OUT A WAY TO DO IT AUTOMATICALLY - HARD F/B HEAVY ON BOTH
 // Fix Retry taking so long to kick start again. Add Edit Message ability
@@ -22,10 +20,6 @@ import SettingsPage from './Pages/Settings/Settings'
 // 7 days left to have a fully functioning and clean website
 // objectives for today before hitting 12 am:
 // - Fix linting issues which includes cleaning types
-// - Add setting page which includes
-// -- Setting/resetting password
-// -- Linking user's n8n account
-// -- logging out
 // Clean the whole frontend where it needs to be cleaned, all except copilot pages
 // merge branch with dev
 // Move to the next branch for copilot

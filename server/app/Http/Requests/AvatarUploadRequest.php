@@ -24,15 +24,8 @@ class AvatarUploadRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'avatar' => 'required|image|max:5120'
+            'avatar' => 'required|image'
         ];
     }
 
-    protected function failedValidation(Validator $validator)
-{
-    Log::debug("Avatar validation failed", $validator->errors()->toArray());
-    throw new HttpResponseException(response()->json([
-        'errors' => $validator->errors()
-    ], 422));
-}
 }
