@@ -14,6 +14,12 @@ use Illuminate\Support\Facades\Log;
 class AuthService{
 
     public static function createUser(array $userData, int $isFromGoogle = 0){
+
+        //for example
+        // if (self::emailFound($userData["email"])){
+        // throw new Exception("User already has an account");
+        //}
+
         $user = User::create([
             'user_role_id'      => env('USER_ROLE_ID'), // default role
             'first_name'        => $userData['firstName'],

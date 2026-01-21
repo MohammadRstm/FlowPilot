@@ -14,15 +14,16 @@ use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller{
 
-    public function register(RegisterRequest $request){
-        try{
-            $data = $request->validated();
-            $response = AuthService::createUser($data);
+    private int $userId;
 
-            return $this->successResponse($response);
-        }catch(Exception $ex){
-           return $this->errorResponse("User signup failed" , ["error" => $ex->getMessage()]);
-        }
+    public function __construct(){
+        $this->userId = auth()->id();
+    }
+
+    public function register(RegisterRequest $request){
+        $data = $request->validated();
+        $response = AuthService::createUser($data);
+        return $this->successResponse($response);
     }   
 
     public function login(LoginRequest $request){
