@@ -114,7 +114,7 @@ class UserController extends Controller{
 
     public function uploadAvatar(AvatarUploadRequest $request){
         try{
-            $user = auth()->user();
+            $user = $request->user();
             $avatar = $request->file("avatar");
             Log::debug("kill me" , ["file" => $avatar]);
             ProfileService::uploadFile($user , $avatar);

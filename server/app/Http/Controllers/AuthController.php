@@ -69,4 +69,15 @@ class AuthController extends Controller{
             return $this->errorResponse("Set password failed" , ["error" => $ex->getMessage()]);
         }
     }
+
+    public function unlinkGoogleAccount(Request $request){
+        try{
+            $user = $request->user();
+            AuthService::unlinkGoogle($user);
+            return $this->successResponse([], 'Google account unlinked successfullly');
+            
+        }catch(Exception $ex){
+            return $this->errorResponse("Unlinking google account failed" , ["error" => $ex->getMessage()]);
+        }
+    }
 }

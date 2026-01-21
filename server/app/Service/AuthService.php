@@ -98,7 +98,15 @@ class AuthService{
         $user->save();
     }
 
-    // public static function unlink
+    public static function unlinkGoogle(User $user): void{
+        if (!$user->password) {
+            throw new Exception("Set a password before unlinking Google");
+        }
+
+        $user->google_id = null;
+        $user->save();
+    }
+
 
     private static function verifyGoogleAccount(array $data){
         $client = new Google_Client([
