@@ -13,11 +13,11 @@ import zxcvbn from "zxcvbn";
 const strengthLabels = ["Very weak", "Weak", "Fair", "Good", "Strong"];
 
 const strengthColors = [
-  "#e74c3c", // red
-  "#e67e22", // orange
-  "#f1c40f", // yellow
-  "#2ecc71", // green
-  "#27ae60", // dark green
+  "#e74c3c", 
+  "#e67e22", 
+  "#f1c40f",
+  "#2ecc71", 
+  "#27ae60", 
 ];
 
 
