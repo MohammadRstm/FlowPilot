@@ -13,7 +13,6 @@ export const useCreatePost = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    // mutation function: sends data to the backend
     mutationFn: async (inputs: CreatePostInputs) => {
       const formData = new FormData();
       formData.append("title", inputs.title);

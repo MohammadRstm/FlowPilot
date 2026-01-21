@@ -22,8 +22,8 @@ const CreatePostModal: React.FC<Props> = ({ isOpen, onClose }) => {
     createPost.mutate({
       title,
       description,
-      file,
-      image,
+      file: file ?? undefined,
+      image: image ?? undefined,
     });
 
     setTitle("");

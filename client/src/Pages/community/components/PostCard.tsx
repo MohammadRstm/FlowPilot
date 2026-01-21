@@ -1,17 +1,8 @@
 import { useState } from "react";
 import { useExportPost } from "../hook/useExportPost";
-import type { PostDto } from "../hook/useFetchPosts";
 import { useToggleLike } from "../hook/useToggleLike";
 import CommentsModal from "./CommentsModal";
 import type { PostCardData } from "../../profile/types";
-
-type PostCardProps = {
-  post: PostCardData;
-
-  showHeader?: boolean;
-  showActions?: boolean;
-  showStats?: boolean;
-};
 
 const BASE_URL = import.meta.env.VITE_PHOTO_BASE_URL;
 
@@ -55,28 +46,24 @@ const PostCard: React.FC<{
           </div>
         )}
 
-        {/* TITLE */}
         {post.title && <h3 className="post-title">{post.title}</h3>}
 
-        {/* CONTENT */}
         {post.content && post.content.trim() !== "" && (
           <div className="post-content">{post.content}</div>
         )}
 
-        {/* IMAGE */}
         {imageUrl && (
           <div className="post-image-wrapper">
             <img src={imageUrl} alt="Post" className="post-image" />
           </div>
         )}
 
-        {/* ACTIONS */}
         {showActions && (
           <div className="post-actions">
             <button
               className={`like-btn ${post.liked_by_me ? "liked" : ""}`}
               onClick={() => likeMutation.mutate(post.id)}
-              disabled={likeMutation.isLoading}
+              disabled={likeMutation.isPending}
             >
               👍 Like
             </button>
@@ -85,14 +72,13 @@ const PostCard: React.FC<{
 
             <button
               onClick={() => exportContent.mutate(post.id)}
-              disabled={exportContent.isLoading}
+              disabled={exportContent.isPending}
             >
               ⬇ Export
             </button>
           </div>
         )}
 
-        {/* STATS */}
         {showStats && (
           <div className="post-stats">
             {post.likes ?? 0} likes · {post.comments ?? 0} comments

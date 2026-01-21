@@ -1,16 +1,15 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import "../../styles/Community.css";
 import Header from "../components/Header";
 import { useFetchPosts } from "./hook/useFetchPosts";
 import { useInfiniteScroll } from "./hook/useInfiniteScroll";
 import PostCard from "./components/PostCard";
-import { AuthContext } from "../../context/AuthContext";
 import CreatePostModal from "./components/CreatePostModal";
 import { adaptCommunityPost } from "../../api/adapters/CommunityPostAdapter";
+import { useAuth } from "../../context/useAuth";
 
 const CommunityPage: React.FC = () => {
-  const auth = useContext(AuthContext);
-  const { user, loading, logout } = auth;
+  const { user, loading } = useAuth();
 
   const [showModal, setShowModal] = useState(false);
 
