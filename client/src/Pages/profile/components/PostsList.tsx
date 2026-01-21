@@ -2,20 +2,21 @@ import React, { useMemo } from "react";
 import { getCounts, getScore } from "../utils/postScoring";
 import PostCard from "../../community/components/PostCard";
 import { adaptListPost } from "../../../api/adapters/ProfilePostAdapter";
+import { SortType } from "../types";
 
 type Props = {
   posts: any[];
-  sortBy: "score" | "likes" | "comments" | "imports";
+  sortBy: SortType;
 };
 
 const PostsList: React.FC<Props> = ({ posts, sortBy }) => {
   const sortedPosts = useMemo(() => {
     const list = [...posts];
-    if (sortBy === "likes") {
+    if (sortBy === SortType.LIKES) {
       list.sort((a: any, b: any) => getCounts(b).likes - getCounts(a).likes);
-    } else if (sortBy === "comments") {
+    } else if (sortBy === SortType.COMMENTS) {
       list.sort((a: any, b: any) => getCounts(b).comments - getCounts(a).comments);
-    } else if (sortBy === "imports") {
+    } else if (sortBy === SortType.IMPORTS) {
       list.sort((a: any, b: any) => getCounts(b).imports - getCounts(a).imports);
     } else {
       list.sort((a: any, b: any) => getScore(b) - getScore(a));

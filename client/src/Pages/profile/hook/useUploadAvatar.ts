@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { uploadAvatar } from "../../../api/profile/uploadAvatar";
 import { ToastMessage } from "../../components/toast/toast.types";
 import { useToast } from "../../../context/toastContext";
+import { api } from "../../../api/client";
+import { returnDataFormat } from "../../utils/returnApiDataFormat";
 
 export const useUploadAvatar = () => {
     const queryClient = useQueryClient();
@@ -14,3 +15,15 @@ export const useUploadAvatar = () => {
         },
     });
 };
+
+
+const uploadAvatar = async (file: File ) => {
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    const resp = await api.post("auth/profile/avatar" , formData , {
+        headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    return returnDataFormat(resp);  
+}

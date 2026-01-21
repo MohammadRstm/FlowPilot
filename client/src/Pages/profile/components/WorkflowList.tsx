@@ -1,4 +1,5 @@
 import React from "react";
+import { Loader2, Download } from "lucide-react";
 
 type Props = {
   workflows: any[];
@@ -30,7 +31,7 @@ const WorkflowsList: React.FC<Props> = ({ workflows, onDownload , isDownloading 
               disabled={isDownloading}
               title="Download JSON"
             >
-              {isDownloading ? "⏳" : "📄"}
+            {isDownloading ? <Loader2 className="animate-spin" /> : <Download />}
             </button>
           </li>
         ))}

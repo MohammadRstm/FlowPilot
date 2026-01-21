@@ -39,3 +39,42 @@ export type PostCardData = {
   liked_by_me?: boolean;
 };
 
+export type FollowUserParam = number | undefined;
+
+export type IsBeingFollowedParam = number | undefined;
+
+export const TabType = {
+  POSTS: "posts",
+  WORKFLOWS: "workflows",
+} as const;
+
+export type TabType = typeof TabType[keyof typeof TabType];
+
+export const SortType = {
+  SCORE: "score",
+  LIKES: "likes",
+  COMMENTS: "comments",
+  IMPORTS: "imports"
+} as const;
+
+export type SortType = typeof SortType[keyof typeof SortType];
+
+export const ModalType = {
+  FOLLOWERS: "followers",
+  FOLLOWING: "following"
+} as const;
+
+export type ModalType = typeof ModalType[keyof typeof ModalType];
+
+
+export type Totals = {
+  likes: number;
+  imports: number;
+  posts_count?: number;
+};
+
+
+
+
+
+

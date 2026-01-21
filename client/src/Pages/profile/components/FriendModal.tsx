@@ -32,7 +32,6 @@ const FriendsModal: React.FC<Props> = ({ isOpen, onClose }) => {
       <div className="friends-modal" onClick={(e) => e.stopPropagation()}>
         <h3>Find Friends</h3>
 
-        {/* Search Bar */}
         <div className="friends-search-wrapper">
           <input
             className="friends-search"

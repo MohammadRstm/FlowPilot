@@ -1,22 +1,15 @@
 import React, { useState } from "react";
 import FriendsModal from "./FriendModal";
 import { Users } from "lucide-react";
-
-
-type Totals = {
-  likes: number;
-  imports: number;
-  posts_count?: number;
-};
-
+import { TabType, type SortType, type Totals } from "../types";
 
 type Props = {
   totals: Totals;
   postsCount: number;
-  tab: "posts" | "workflows";
-  setTab: (t: "posts" | "workflows") => void;
-  sortBy: "score" | "likes" | "comments" | "imports";
-  setSortBy: (s: "score" | "likes" | "comments" | "imports") => void;
+  tab: TabType;
+  setTab: (t: TabType) => void;
+  sortBy: SortType;
+  setSortBy: (s: SortType) => void;
   isOwnProfile : boolean;
   isBeingFollowed: any;
 };
@@ -58,16 +51,16 @@ const StatsCard: React.FC<Props> = ({ totals, postsCount, tab, setTab, sortBy, s
 
           <div className="stats-actions">
             <div className="segmented-buttons">
-              <button className={`seg-btn ${tab === "posts" ? "active" : ""}`} onClick={() => setTab("posts")}>
+              <button className={`seg-btn ${tab === TabType.POSTS ? "active" : ""}`} onClick={() => setTab(TabType.POSTS)}>
                 Posts
               </button>
               {isOwnProfile && (
-                <button className={`seg-btn ${tab === "workflows" ? "active" : ""}`} onClick={() => setTab("workflows")}>
+                <button className={`seg-btn ${tab === TabType.WORKFLOWS ? "active" : ""}`} onClick={() => setTab(TabType.WORKFLOWS)}>
                     Workflows
                 </button>
               )}
              {!isOwnProfile && isBeingFollowed?.isFollowing && (
-                <button className={`seg-btn ${tab === "workflows" ? "active" : ""}`} onClick={() => setTab("workflows")}>
+                <button className={`seg-btn ${tab === TabType.WORKFLOWS ? "active" : ""}`} onClick={() => setTab(TabType.WORKFLOWS)}>
                     Workflows
                 </button>
               )}

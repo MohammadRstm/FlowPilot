@@ -1,9 +1,9 @@
 import React, { useContext, useMemo, useState } from "react";
-import "../../styles/Profile.css";
+import "./profile.css";
 import Header from "../components/Header";
 import { AuthContext } from "../../context/AuthContext";
 import { useParams, useNavigate } from "react-router-dom";
-import type { UserLite } from "./types";
+import { ModalType, SortType, TabType, type UserLite } from "./types";
 import ProfileHeader from "./components/ProfileHeader";
 import StatsCard from "./components/StatsCard";
 import PostsList from "./components/PostsList";
@@ -32,9 +32,9 @@ const ProfilePage: React.FC = () => {
 
     const { mutate: followUser } = useFollowUser();
 
-    const [modalType, setModalType] = useState<"followers" | "following" | null>(null);
-    const [tab, setTab] = useState<"posts" | "workflows">("posts");
-    const [sortBy, setSortBy] = useState<"score" | "likes" | "comments" | "imports">("likes");
+    const [modalType, setModalType] = useState<ModalType | null>(null);
+    const [tab, setTab] = useState<TabType>(TabType.POSTS);
+    const [sortBy, setSortBy] = useState<SortType>(SortType.LIKES);
     const [imgError, setImgError] = useState(false);
 
     const isOwnProfile = !userId || Number(userId) === authUser?.id;
@@ -121,8 +121,8 @@ const ProfilePage: React.FC = () => {
 
       {modalType && (
         <FollowModal
-          title={modalType === "followers" ? "Followers" : "Following"}
-          users={modalType === "followers" ? followers : following}
+          title={modalType === ModalType.FOLLOWERS ? ModalType.FOLLOWERS: ModalType.FOLLOWING}
+          users={modalType === ModalType.FOLLOWERS ? followers : following}
           onClose={() => setModalType(null)}
           onUserClick={(u: UserLite) => {
             navigate(`/profile/${u.id}`);

@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { FiSettings , FiCamera } from "react-icons/fi";
-import type { UserLite } from "../types";
+import type { ModalType, UserLite } from "../types";
 import { useUploadAvatar } from "../hook/useUploadAvatar";
 
 type Props = {
@@ -17,7 +17,7 @@ type Props = {
   isBeingFollowed: boolean;
 } | undefined;
   followUser: (userId: number| undefined) => void; 
-  onOpenModal: (type: "followers" | "following") => void;
+  onOpenModal: (type: ModalType) => void;
   onSettingsClick: () => void;
 };
 
@@ -46,6 +46,7 @@ const ProfileHeader: React.FC<Props> = ({
       uploadAvatar.mutate(e.target.files[0]);
     }
   };
+  
   return (
     <div className="profile-column profile-left" style={{ gridArea: "profile" }}>
       {isOwnProfile && (
@@ -91,7 +92,6 @@ const ProfileHeader: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Follow counts */}
       <div className="profile-follow-row">
         <button className="count-link" onClick={() => onOpenModal("followers")}>
           <strong>{followersCount}</strong>
@@ -104,7 +104,6 @@ const ProfileHeader: React.FC<Props> = ({
         </button>
       </div>
 
-      {/* Follow/Unfollow buttons */}
       {!isOwnProfile && isBeingFollowed && (
         <div className="profile-follow-cta">
           {!isBeingFollowed.isFollowing && (
