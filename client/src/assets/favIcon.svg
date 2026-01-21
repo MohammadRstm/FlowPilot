@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect width="100" height="100" fill="#000"></rect>
+
+  <!-- Lines -->
+  <g stroke="#c9c9c9" stroke-width="4" stroke-linecap="round">
+    <line x1="50" y1="50" x2="50" y2="15"></line>
+    <line x1="50" y1="50" x2="85" y2="30"></line>
+    <line x1="50" y1="50" x2="85" y2="50"></line>
+    <line x1="50" y1="50" x2="70" y2="85"></line>
+    <line x1="50" y1="50" x2="50" y2="85"></line>
+    <line x1="50" y1="50" x2="30" y2="85"></line>
+    <line x1="50" y1="50" x2="15" y2="50"></line>
+    <line x1="50" y1="50" x2="15" y2="30"></line>
+  </g>
+
+  <!-- Nodes -->
+  <g fill="#000" stroke="#c9c9c9" stroke-width="4">
+    <rect x="46" y="11" width="8" height="8"></rect>
+    <rect x="81" y="26" width="8" height="8"></rect>
+    <rect x="81" y="46" width="8" height="8"></rect>
+    <rect x="66" y="81" width="8" height="8"></rect>
+    <rect x="46" y="81" width="8" height="8"></rect>
+    <rect x="26" y="81" width="8" height="8"></rect>
+    <rect x="11" y="46" width="8" height="8"></rect>
+    <rect x="11" y="26" width="8" height="8"></rect>
+  </g>
+</svg>
