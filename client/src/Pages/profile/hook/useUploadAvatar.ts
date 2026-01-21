@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
 import { uploadAvatar } from "../../../api/profile/uploadAvatar";
 
 export const useUploadAvatar = () => {
