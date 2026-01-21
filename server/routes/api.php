@@ -18,7 +18,7 @@ Route::group(["prefix" => "v0.1"] , function(){
         Route::put("/setPassword" , [AuthController::class , 'setPassword']);
         Route::get("/account" , [UserController::class , "getUserAccount"]);
         Route::get("/unlinkGoogleAccount" , [AuthController::class , "unlinkGoogleAccount"]);
-
+        Route::post("/linkN8nAccount" , [AuthController::class , "linkN8nAccount"]);
 
         Route::group(["prefix"=>"copilot"] , function(){
             Route::post("/ask" , [UserController::class, "ask"]);

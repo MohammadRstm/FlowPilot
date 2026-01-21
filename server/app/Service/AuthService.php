@@ -8,6 +8,7 @@ use Firebase\JWT\JWT;
 use Google_Client;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class AuthService{
@@ -104,6 +105,21 @@ class AuthService{
         }
 
         $user->google_id = null;
+        $user->save();
+    }
+
+    public static function linkN8nAccount(Model $user , array $data){
+        /** @var Response */
+        $response = Http::withHeaders([
+            'X-N8N-API-KEY' => $data["apiKey"],
+        ])->get(rtrim($data["baseUrl"], '/') . '/api/v1/workflows');
+
+        if (!$response->successful()) {
+            throw new Exception("Failed to connect to n8n");
+        }
+
+        $user->n8n_base_url = $data["baseUrl"];
+        $user->n8n_api_key = $data["apiKey"];
         $user->save();
     }
 

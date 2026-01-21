@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\GoogleLoginRequest;
+use App\Http\Requests\LinkN8nAccountRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\SetPasswordRequest;
@@ -78,6 +79,18 @@ class AuthController extends Controller{
             
         }catch(Exception $ex){
             return $this->errorResponse("Unlinking google account failed" , ["error" => $ex->getMessage()]);
+        }
+    }
+
+    public function linkN8nAccount(LinkN8nAccountRequest $request){
+        try{
+            $user = $request->user();
+            $data = $request->validated();
+            AuthService::linkN8nAccount($user , $data);
+            return $this->successResponse([], 'N8n account linked successfullly');
+            
+        }catch(Exception $ex){
+            return $this->errorResponse("Failed to link n8n account" , ["error" => $ex->getMessage()]);
         }
     }
 }
