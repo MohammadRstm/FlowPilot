@@ -2,9 +2,14 @@ import "../styles/Landing.css";
 import Header from "./components/Header";
 import n8nMediaImage from "../assets/n8n-media.png";
 import FakeWorkflow from "./components/FakeWorkflow";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
-export default function LandingPage() {
+export default function LandingPage(){
+
+  const authUser = useContext(AuthContext);
+  const navigate = useNavigate();
 
   return (
     <div className="landing-root">
@@ -14,7 +19,11 @@ export default function LandingPage() {
         <div className="hero-content">
           <h1>AI Generated Workflows</h1>
           <p>You Think It. We Make It.</p>
-          <button className="cta">Get Started</button>
+          {authUser ? (
+            <button onClick={() => navigate("/copilot")} className="cta">Get Started</button>
+          ) : (
+            <button onClick={() => navigate("/")} className="cta">Get Started</button>
+          )}
         </div>
       </section>
 

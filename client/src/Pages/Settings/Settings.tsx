@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import {
   FiArrowLeft,
   FiLock,
@@ -8,18 +8,18 @@ import {
 } from "react-icons/fi";
 import "../../styles/Settings.css";
 import { useUserAccount } from "./hook/useFetchAccountType";
-import { AuthContext } from "../../context/AuthContext";
 import { useSetPassword } from "./hook/useSetPassword";
 import { useLinkN8nAccount } from "./hook/useLinkN8nAccount";
 import { useUnlinkGoogleAccount } from "./hook/useUnlinkGoogleAccount";
+import { useAuth } from "../../context/useAuth";
 
 type Tab = "password" | "n8n" | "unlink-google" | "logout";
 
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState<Tab>("password");
 
-  const { data, isLoading } = useUserAccount();
-  const { logout } = useContext(AuthContext);
+  const { data, isPending } = useUserAccount();
+  const { logout } = useAuth();
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -32,7 +32,7 @@ const SettingsPage = () => {
   const linkN8nMutation = useLinkN8nAccount();
   const unlinkGoogleMutation = useUnlinkGoogleAccount();
 
-  if (isLoading) return null;
+  if (isPending) return null;
 
   const hasPassword = data?.normalAccount;
   const hasGoogle = data?.googleAccount;
@@ -152,9 +152,9 @@ const SettingsPage = () => {
                 <button
                   className="primary-btn"
                   onClick={handleSetPassword}
-                  disabled={setPasswordMutation.isLoading}
+                  disabled={setPasswordMutation.isPending}
                 >
-                  {setPasswordMutation.isLoading
+                  {setPasswordMutation.isPending
                     ? "Saving..."
                     : hasPassword
                     ? "Update Password"
@@ -187,9 +187,9 @@ const SettingsPage = () => {
                 <button
                   className="primary-btn"
                   onClick={handleLinkN8n}
-                  disabled={linkN8nMutation.isLoading}
+                  disabled={linkN8nMutation.isPending}
                 >
-                  {linkN8nMutation.isLoading ? "Connecting..." : "Link Account"}
+                  {linkN8nMutation.isPending ? "Connecting..." : "Link Account"}
                 </button>
               </div>
             </section>
@@ -206,10 +206,10 @@ const SettingsPage = () => {
 
               <button
                 className="danger-btn"
-                disabled={!hasPassword || unlinkGoogleMutation.isLoading}
+                disabled={!hasPassword || unlinkGoogleMutation.isPending}
                 onClick={handleUnlinkGoogle}
               >
-                {unlinkGoogleMutation.isLoading
+                {unlinkGoogleMutation.isPending
                   ? "Unlinking..."
                   : "Unlink Google Account"}
               </button>

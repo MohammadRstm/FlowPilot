@@ -19,9 +19,8 @@ import SettingsPage from './Pages/Settings/Settings'
 // day 20
 // 7 days left to have a fully functioning and clean website
 // objectives for today before hitting 12 am:
-// fix login UI
-// fix sign up UI
-// fix footer
+// - add error and loading handling - VERY BIG
+// - change emojis into lucid icons
 // - Fix linting issues which includes cleaning types
 // Clean the whole frontend where it needs to be cleaned, all except copilot pages
 // merge branch with dev
