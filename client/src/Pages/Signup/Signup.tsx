@@ -1,11 +1,25 @@
 import Header from "../components/Header";
 import { useNavigate, Link } from "react-router-dom";
-import { register as setToken } from "../../api/auth";
 import "../../styles/signup.css";
 import { useSignup } from "./hook/useSignup.hook";
 import { useForm } from "react-hook-form";
 import { signupSchema, type SignupFormValues } from "../../validation/signup.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { setToken } from "../../api/auth";
+import { useMemo } from "react";
+import zxcvbn from "zxcvbn";
+
+
+const strengthLabels = ["Very weak", "Weak", "Fair", "Good", "Strong"];
+
+const strengthColors = [
+  "#e74c3c", // red
+  "#e67e22", // orange
+  "#f1c40f", // yellow
+  "#2ecc71", // green
+  "#27ae60", // dark green
+];
+
 
 const Signup: React.FC = () =>{
   const navigate = useNavigate();
@@ -14,13 +28,19 @@ const Signup: React.FC = () =>{
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
   });
+  const password = watch("password", "");
 
+  const passwordStrength = useMemo(() => {
+    if (!password) return null;
+    return zxcvbn(password);
+  }, [password]);
 
-  const onSubmit = async (data: SignupFormValues) => {
+  const onSubmit = async (data: SignupFormValues) =>{
     const resp = await signup.mutateAsync(data);
     setToken(resp.token);
     navigate("/");
@@ -76,10 +96,29 @@ const Signup: React.FC = () =>{
                 {...register("password")}
                 className="signup-input"
               />
+               {passwordStrength && (
+                <div className="password-strength">
+                  <div className="strength-bar">
+                    <div
+                      className="strength-bar-fill"
+                      style={{
+                        width: `${(passwordStrength.score + 1) * 20}%`,
+                        backgroundColor: strengthColors[passwordStrength.score],
+                      }}
+                    />
+                  </div>
+
+                  <span
+                    className="strength-text"
+                    style={{ color: strengthColors[passwordStrength.score] }}
+                  >
+                    {strengthLabels[passwordStrength.score]}
+                  </span>
+                </div>
+              )}
+
               {errors.password && (
-                <span className="field-error">
-                  {errors.password.message}
-                </span>
+                <span className="field-error">{errors.password.message}</span>
               )}
             </label>
 

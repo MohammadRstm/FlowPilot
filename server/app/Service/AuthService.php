@@ -16,8 +16,8 @@ class AuthService{
     public static function createUser(array $userData, int $isFromGoogle = 0){
         $user = User::create([
             'user_role_id'      => env('USER_ROLE_ID'), // default role
-            'first_name'        => $userData['first_name'],
-            'last_name'         => $userData['last_name'],
+            'first_name'        => $userData['firstName'],
+            'last_name'         => $userData['lastName'],
             'email'             => $userData['email'],
             'password'          => $isFromGoogle ? null : $userData['password'],
             'photo_url'         => '',
