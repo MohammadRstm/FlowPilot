@@ -5,7 +5,6 @@ import CommentsModal from "./CommentsModal";
 import type { PostCardData } from "../../profile/types";
 import { Heart, MessageCircle, Download } from "lucide-react";
 
-
 const BASE_URL = import.meta.env.VITE_PHOTO_BASE_URL;
 
 const PostCard: React.FC<{
@@ -18,7 +17,7 @@ const PostCard: React.FC<{
   showHeader = true,
   showActions = true,
   showStats = true,
-}) => {
+}) =>{
   const [open, setOpen] = useState(false);
 
   const likeMutation = useToggleLike();
@@ -46,6 +45,8 @@ const PostCard: React.FC<{
             )}
           </div>
         )}
+
+        <hr style={{marginTop:"10px", marginBottom:"10px"}} />
 
         {post.title && <h3 className="post-title">{post.title}</h3>}
 

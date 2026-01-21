@@ -4,7 +4,7 @@ import Landing from './Pages/Landing'
 import { Copilot } from './Pages/copilot/Copilot'
 import CommunityPage from './Pages/community/Community'
 import Login from './Pages/Login/Login'
-import Signup from './Pages/Signup'
+import Signup from './Pages/Signup/Signup'
 import ProtectedRoutes from './Pages/components/ProtectedRoutes'
 import ProfilePage from './Pages/profile/Profile'
 import AboutPage from './Pages/AboutUs'
@@ -20,7 +20,7 @@ import SettingsPage from './Pages/Settings/Settings'
 // 7 days left to have a fully functioning and clean website
 // objectives for today before hitting 12 am:
 // - add error and loading handling - VERY BIG
-// - change emojis into lucid icons
+// - type everything
 // Clean the whole frontend where it needs to be cleaned, all except copilot pages
 // merge branch with dev
 // Move to the next branch for copilot

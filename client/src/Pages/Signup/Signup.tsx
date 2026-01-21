@@ -1,42 +1,59 @@
 import React, { useState } from "react";
-import Header from "./components/Header";
+import Header from "../components/Header";
 import { useNavigate, Link } from "react-router-dom";
-import { register as registerRequest } from "../api/auth";
-import "../styles/signup.css";
-const Signup: React.FC = () => {
+import { register as registerRequest, setToken } from "../../api/auth";
+import "../../styles/signup.css";
+
+interface SignupForm{
+  firstName:string,
+  lastName:string,
+  email:string,
+  password:string,
+  confirmPassword:string,
+}
+
+const Signup: React.FC = () =>{
   const navigate = useNavigate();
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [form, setForm] = useState<SignupForm>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const onChange = (key: keyof SignupForm) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setForm((prev) => ({ ...prev, [key]: e.target.value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (password !== confirmPassword) {
+    if(form.password !== form.confirmPassword){
       setError("Passwords do not match");
       return;
     }
 
     setLoading(true);
 
-    try {
+    try{
       const { token } = await registerRequest({
-        first_name: firstName,
-        last_name: lastName,
-        email,
-        password,
+        first_name: form.firstName,
+        last_name: form.lastName,
+        email: form.email,
+        password: form.password,
       });
 
-      localStorage.setItem("token", token);
+      setToken(token);
       navigate("/");
-    } catch (err: any) {
+    }catch(err: any){
       setError(err.message || "Failed to create account");
-    } finally {
+    }finally{
       setLoading(false);
     }
   };
@@ -60,8 +77,8 @@ const Signup: React.FC = () => {
                 First name
                 <input
                   type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
+                  value={form.firstName}
+                  onChange={onChange("firstName")}
                   className="signup-input"
                   required
                 />
@@ -71,8 +88,8 @@ const Signup: React.FC = () => {
                 Last name
                 <input
                   type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
+                  value={form.lastName}
+                  onChange={onChange("lastName")}
                   className="signup-input"
                   required
                 />
@@ -83,8 +100,8 @@ const Signup: React.FC = () => {
               Email
               <input
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={form.email}
+                onChange={onChange("email")}
                 className="signup-input"
                 required
               />
@@ -94,8 +111,8 @@ const Signup: React.FC = () => {
               Password
               <input
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={form.password}
+                onChange={onChange("password")}
                 className="signup-input"
                 required
               />
@@ -105,18 +122,14 @@ const Signup: React.FC = () => {
               Confirm password
               <input
                 type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                value={form.confirmPassword}
+                onChange={onChange("confirmPassword")}
                 className="signup-input"
                 required
               />
             </label>
 
-            <button
-              className="signup-button"
-              type="submit"
-              disabled={loading}
-            >
+            <button className="signup-button" type="submit" disabled={loading}>
               {loading ? "Creating account..." : "Sign up"}
             </button>
           </form>
