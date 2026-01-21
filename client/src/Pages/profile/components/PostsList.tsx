@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { getCounts, getScore } from "../utils/postScoring";
 import PostCard from "../../community/components/PostCard";
-import { adaptListPost } from "../../../api/adapters/ProfilePostAdapter";
+import { adaptListPost } from "../../community/adapters/ProfilePostAdapter";
 import { SortType } from "../types";
 
 type Props = {

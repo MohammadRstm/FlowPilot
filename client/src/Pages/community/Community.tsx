@@ -5,7 +5,7 @@ import { useFetchPosts } from "./hook/useFetchPosts";
 import { useInfiniteScroll } from "./hook/useInfiniteScroll";
 import PostCard from "./components/PostCard";
 import CreatePostModal from "./components/CreatePostModal";
-import { adaptCommunityPost } from "../../api/adapters/CommunityPostAdapter";
+import { adaptCommunityPost } from "./adapters/CommunityPostAdapter";
 import { useAuth } from "../../context/useAuth";
 
 const CommunityPage: React.FC = () => {

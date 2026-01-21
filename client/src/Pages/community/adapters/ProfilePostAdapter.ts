@@ -1,4 +1,4 @@
-import type { PostCardData } from "../../Pages/profile/types";
+import type { PostCardData } from "../../profile/types";
 
 export const adaptListPost = (post: any): PostCardData => ({
   id: post.id,

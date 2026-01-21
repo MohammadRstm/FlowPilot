@@ -1,5 +1,5 @@
-import type { PostDto } from "../../Pages/community/hook/useFetchPosts";
-import type { PostCardData } from "../../Pages/profile/types";
+import type { PostCardData } from "../../profile/types";
+import type { PostDto } from "../types";
 
 export const adaptCommunityPost = (post: PostDto): PostCardData => ({
   id: post.id,
