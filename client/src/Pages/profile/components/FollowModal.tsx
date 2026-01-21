@@ -9,7 +9,7 @@ type FollowModalProps = {
   followUser: (userId: number) => void;
 };
 
-const FollowModal: React.FC<FollowModalProps> = ({ title, users, onClose, onUserClick, followUser }) => {
+const FollowModal: React.FC<FollowModalProps> = ({ title, users, onClose, onUserClick }) => {
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLowerCase();
 

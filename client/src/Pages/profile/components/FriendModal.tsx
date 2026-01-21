@@ -45,7 +45,7 @@ const FriendsModal: React.FC<Props> = ({ isOpen, onClose }) => {
           <button
             className="friends-search-btn"
             onClick={handleSubmit}
-            disabled={searchMutation.isLoading}
+            disabled={searchMutation.isPending}
             aria-label="Search"
           >
             <Search size={18} />
@@ -53,7 +53,7 @@ const FriendsModal: React.FC<Props> = ({ isOpen, onClose }) => {
         </div>
 
         <div className="friends-list">
-          {searchMutation.isLoading && (
+          {searchMutation.isPending && (
             <div className="loading">Searching...</div>
           )}
 
@@ -80,7 +80,7 @@ const FriendsModal: React.FC<Props> = ({ isOpen, onClose }) => {
             </div>
           ))}
 
-          {!searchMutation.isLoading &&
+          {!searchMutation.isPending &&
             suggestions.length === 0 &&
             search === "" &&(
               <div className="empty">No users found</div>

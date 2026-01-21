@@ -25,7 +25,6 @@ const ProfileHeader: React.FC<Props> = ({
   userId,
   baseUser,
   initials,
-  imgError,
   setImgError,
   isOwnProfile,
   followersCount,

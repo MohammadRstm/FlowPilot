@@ -11,7 +11,6 @@ import FollowModal from "./components/FollowModal";
 import { getCounts } from "./utils/postScoring";
 import WorkflowsList from "./components/WorkflowList";
 import LoadingPage from "./components/LoadingPage";
-import ErrorPage from "./components/ErrorPage";
 import { useProfileQuery } from "./hook/useFetchProfileDetails";
 import { useDownloadHistory } from "./hook/useGetDownloadContent";
 import { useFollowUser } from "./hook/useFollowUser";
@@ -25,13 +24,10 @@ const ProfilePage: React.FC = () => {
 
     const {
     data: profile,
-    isLoading,
-    isError,
-    error,
+    isPending,
     } = useProfileQuery(userId);
 
-    console.log(profile);
-    const { mutate: downloadHistory, isLoading: isDownloading } =
+    const { mutate: downloadHistory, isPending: isDownloading } =
     useDownloadHistory();
 
     const { mutate: followUser } = useFollowUser();
@@ -71,31 +67,8 @@ const ProfilePage: React.FC = () => {
     const followers = profile?.followers ?? [];
     const following = profile?.following ?? [];
 
-    if (isLoading) {
+    if (isPending) {
         return <LoadingPage />
-    }
-
-    if (isError) {
-        return (
-            <ErrorPage
-            error={(error as Error).message}
-            baseUser={baseUser}
-            initials={initials}
-            imgError={imgError}
-            setImgError={setImgError}
-            isOwnProfile={isOwnProfile}
-            followersCount={followers.length}
-            followingCount={following.length}
-            totals={totals}
-            postsCount={posts.length}
-            tab={tab}
-            setTab={setTab}
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-            onSettingsClick={() => navigate("/settings")}
-            />
-        );
-
     }
 
   return (
