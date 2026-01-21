@@ -88,14 +88,17 @@ class AuthService{
     }
 
     public static function setPassword(Model $user , array $data){
-        if ($user->password) {
-            throw new Exception("Password already set");
+        if($user->password){
+            if(!$data["current"] || !Hash::check($data["current"], $user->password)){
+                throw new Exception("Current password is incorrect");
+            }
         }
 
-        $user->update([
-            'password' => Hash::make($data['password']),
-        ]);
+        $user->password = Hash::make($data["new"]);
+        $user->save();
     }
+
+    // public static function unlink
 
     private static function verifyGoogleAccount(array $data){
         $client = new Google_Client([
