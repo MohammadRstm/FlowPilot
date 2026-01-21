@@ -1,5 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
-import { googleLogin, setToken } from "../../../api/auth";
+import { setToken } from "../../../api/auth";
+import { api } from "../../../api/client";
+import { returnDataFormat } from "../../utils/returnApiDataFormat";
 
 export const useLoginGoogleMutation = () => {
   return useMutation({
@@ -10,3 +12,9 @@ export const useLoginGoogleMutation = () => {
     },
   });
 };
+
+
+async function googleLogin(response : any){
+  const res = await api.post("google" , {idToken: response.credential});
+  return returnDataFormat(res);
+}

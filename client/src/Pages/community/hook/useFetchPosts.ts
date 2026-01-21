@@ -1,30 +1,7 @@
-// src/hooks/useFetchPosts.ts
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { fetchPosts } from "../../../api/community/fetchPosts";
-
-export type PostDto = {
-  id: number;
-  author: string;
-  title:string;
-  photo:string;
-  username?: string | null;
-  avatar?: string | null;
-  content: string;
-  likes: number;
-  comments: number;
-  exports: number;
-  score?: number;
-  created_at?: string | null;
-  liked_by_me: boolean;
-};
-
-type ApiResponse = {
-  data: PostDto[];
-  meta: {
-    current_page: number;
-    last_page: number;
-  };
-};
+import { useInfiniteQuery, type QueryFunctionContext } from "@tanstack/react-query";
+import { returnDataFormat } from "../../utils/returnApiDataFormat";
+import { api } from "../../../api/client";
+import type { ApiResponse } from "../types";
 
 export function useFetchPosts() {
   const query = useInfiniteQuery<ApiResponse>({
@@ -53,4 +30,12 @@ export function useFetchPosts() {
     loadMore: query.fetchNextPage,
     refresh: query.refetch,
   };
+}
+
+
+const fetchPosts = async ( ctx: QueryFunctionContext) =>{
+    const pageParam = (ctx.pageParam as number) ?? 1;
+    const res = await api.get(`auth/community/posts?page=${pageParam}`);
+
+    return returnDataFormat(res);
 }

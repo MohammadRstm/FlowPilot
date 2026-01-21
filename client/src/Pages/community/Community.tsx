@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "../../styles/Community.css";
+import "./community.css";
 import Header from "../components/Header";
 import { useFetchPosts } from "./hook/useFetchPosts";
 import { useInfiniteScroll } from "./hook/useInfiniteScroll";

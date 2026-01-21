@@ -1,10 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { postComment } from "../../../api/community/postComment";
+import type { PostCommentPayload } from "../types";
+import { returnDataFormat } from "../../utils/returnApiDataFormat";
+import { api } from "../../../api/client";
 
 export const usePostComment = () =>{
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ postId , content } : {postId : number , content : string}) => postComment(postId , content),
+        mutationFn: ({ postId , content } : PostCommentPayload ) => postComment(postId , content),
         onMutate: async () => {
             await queryClient.cancelQueries({ queryKey: ["post-comments"] });
         },
@@ -13,5 +15,13 @@ export const usePostComment = () =>{
             queryKey : ["post-comments"]
         })
         },
-    })
+    });
+}
+
+const postComment =async  (postId : number , content : string) =>{
+    const payload = {
+        content 
+    };
+    const resp = await api.post(`auth/community/postComment/${postId}` , payload);
+    return returnDataFormat(resp);
 }

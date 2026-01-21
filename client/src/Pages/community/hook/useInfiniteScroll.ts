@@ -1,5 +1,5 @@
-// src/hooks/useInfiniteScroll.ts
 import { useEffect, useRef } from "react";
+import { ROOT_MARGIN } from "../constants";
 
 type Props = {
   hasMore: boolean;
@@ -12,7 +12,7 @@ export function useInfiniteScroll({
   hasMore,
   isLoading,
   onLoadMore,
-  rootMargin = "200px",
+  rootMargin = ROOT_MARGIN,
 }: Props) {
   const ref = useRef<HTMLDivElement | null>(null);
 

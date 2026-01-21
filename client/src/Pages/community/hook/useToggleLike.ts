@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toggleLike } from "../../../api/community/toggleLike";
+import { api } from "../../../api/client";
+import { returnDataFormat } from "../../utils/returnApiDataFormat";
 
 export function useToggleLike() {
   const queryClient = useQueryClient();
@@ -15,18 +16,31 @@ export function useToggleLike() {
       queryClient.setQueryData(["community-posts"], (old: any) => {
         if (!old) return old;
 
-        return {
-          ...old,
-          pages: old.pages.map((page: any) => ({
-            ...page,
-            data: page.data.map((post: any) =>
-              post.id === postId
-                ? { ...post, likes: data.likes , liked_by_me: data.liked }
-                : post
-            ),
-          })),
-        };
+        return liveUpdateOnSuccess(old , postId , data);
       });
     },
   });
+}
+
+
+
+const toggleLike = async (postId : number)=>{
+    const response = await api.post(`auth/community/toggleLike/${postId}`);
+
+    return returnDataFormat(response);
+}
+
+
+const liveUpdateOnSuccess = (old : any , postId : number , data : any) =>{
+    return {
+        ...old,
+        pages: old.pages.map((page: any) => ({
+        ...page,
+        data: page.data.map((post: any) =>
+            post.id === postId
+            ? { ...post, likes: data.likes , liked_by_me: data.liked }
+            : post
+        ),
+        })),
+    }
 }

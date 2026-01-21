@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
-import { fetchPostComments } from "../../../api/community/fetchPostComments";
+import { returnDataFormat } from "../../utils/returnApiDataFormat";
+import { api } from "../../../api/client";
 
 export const useFetchPostComments = (postId: number) => {
   return useQuery({
@@ -8,3 +9,8 @@ export const useFetchPostComments = (postId: number) => {
     enabled: !!postId,
   });
 };
+
+const fetchPostComments = async (postId : number) => {
+    const resp = await api.get(`auth/community/comments/${postId}`);
+    return returnDataFormat(resp);
+}
