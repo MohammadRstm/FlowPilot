@@ -32,6 +32,10 @@
   line-height: 1;
 }
 
+.logo-image{
+  width:150px;
+}
+
 .logo-text strong {
   font-weight: 700;
 }

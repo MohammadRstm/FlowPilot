@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import "../../styles/Header.css";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
-import Logo from "../../assets/Logo.png";
+import Logo from "../../assets/header-logo-removebg-preview.png";
 
 const Header: React.FC = () => {
   const auth = useContext(AuthContext);
@@ -16,7 +16,6 @@ const Header: React.FC = () => {
     ? `${user.first_name?.[0] ?? "F"}${user.last_name?.[0] ?? "P"}`.toUpperCase()
     : "";
 
-    console.log(user);
 
   return (
     <header className="header">
@@ -24,7 +23,7 @@ const Header: React.FC = () => {
         <div className="header__logo">
           <Link to="/">
             <span className="logo-icon">
-            <img style={{width:"75px"}} className="logo-image" src={Logo} alt="FP" />
+            <img style={{width:"150px"}} className="logo-image" src={Logo} alt="FP" />
             </span>
           </Link>
         </div>
