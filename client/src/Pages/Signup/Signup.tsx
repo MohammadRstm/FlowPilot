@@ -1,6 +1,6 @@
 import Header from "../components/Header";
 import { useNavigate, Link } from "react-router-dom";
-import "../../styles/signup.css";
+import "./signup.css";
 import { useSignup } from "./hook/useSignup.hook";
 import { useForm } from "react-hook-form";
 import { signupSchema, type SignupFormValues } from "../../validation/signup.schema";
@@ -8,18 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { setToken } from "../../api/auth";
 import { useMemo } from "react";
 import zxcvbn from "zxcvbn";
-
-
-const strengthLabels = ["Very weak", "Weak", "Fair", "Good", "Strong"];
-
-const strengthColors = [
-  "#e74c3c", 
-  "#e67e22", 
-  "#f1c40f",
-  "#2ecc71", 
-  "#27ae60", 
-];
-
+import { strengthColors, strengthLabels } from "./constants";
 
 const Signup: React.FC = () =>{
   const navigate = useNavigate();
