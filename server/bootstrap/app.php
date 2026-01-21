@@ -8,6 +8,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\HandleCors;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -25,21 +26,32 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        // User-facing rendering
         $exceptions->render(function (UserFacingException $e, Request $request) {
-            if($request->is('api/*')){// only respond to api requests 
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], $e->getStatus());
+        });
+
+        $exceptions->render(function (ValidationException $e, Request $request) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->errors()
+                    ? collect($e->errors())->flatten()->first()
+                    : $e->getMessage(),
+                'errors' => $e->errors(),
+            ], $e->status);
+        });
+
+        $exceptions->render(function (Throwable $e, Request $request) {
+            if ($request->expectsJson()) {
+                Log::error($e);
                 return response()->json([
                     'success' => false,
-                    'message' => $e->getMessage(),
-                ], $e->getStatus());
+                    'message' => 'Something went wrong. Please try again.',
+                ], 500);
             }
         });
 
-        // logs all exceptions
-        $exceptions->report(function (Throwable $e) {
-            // Only log real server errors
-            if (!($e instanceof UserFacingException)) {
-                Log::error($e);
-            }
-        });
+
     })->create();

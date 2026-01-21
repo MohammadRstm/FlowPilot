@@ -14,7 +14,7 @@
   border-radius: 6px;
   color: white;
   font-weight: 500;
-  animation: slide-in 0.4s ease, slide-out 0.4s ease 2.6s forwards;
+  animation: slide-in 0.4s ease, slide-out 0.4s ease 5s forwards;
 }
 
 /* Variants */

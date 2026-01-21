@@ -3,6 +3,9 @@
 namespace App\Exceptions;
 
 use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class UserFacingException extends Exception{
 
@@ -15,6 +18,13 @@ class UserFacingException extends Exception{
 
     public function getStatus(): int{
         return $this->status;
+    }
+
+    public function render(Request $request): JsonResponse{
+        return response()->json([
+            'success' => false,
+            'message' => $this->getMessage(),
+        ], 404);
     }
     
 }

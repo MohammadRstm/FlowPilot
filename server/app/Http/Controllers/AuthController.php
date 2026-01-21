@@ -14,12 +14,6 @@ use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller{
 
-    private int $userId;
-
-    public function __construct(){
-        $this->userId = auth()->id();
-    }
-
     public function register(RegisterRequest $request){
         $data = $request->validated();
         $response = AuthService::createUser($data);

@@ -1,4 +1,4 @@
-import "./toast.css";
+import "../../../styles/toast.css";
 import type { Toast } from "./toast.types";
 
 export const ToastContainer = ({ toasts }: { toasts: Toast[] }) => {
