@@ -2,14 +2,18 @@ import { useToggleCommentLike } from "../hook/useToggleCommentLike";
 
 const CommentItem: React.FC<{ comment: any }> = ({ comment }) => {
   const toggleLike = useToggleCommentLike(comment.post_id);
-
+    console.log(comment);
   return (
     <div className="comment">
-      <img
-        src={comment.user?.profile_pic || "/avatar-placeholder.png"}
-        alt="avatar"
-        className="comment-avatar"
-      />
+        {comment.user?.photo_url ? (
+            <img
+              src={import.meta.env.VITE_PHOTO_BASE_URL + comment.user?.photo_url}
+              alt="avatar"
+              className="comment-avatar"
+            />
+        ) : (
+            <span className="avatar-initials">{comment.user?.first_name[0].toUpperCase()}</span>
+        )}
 
       <div className="comment-body">
         <div className="comment-author">

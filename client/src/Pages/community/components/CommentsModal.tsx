@@ -3,6 +3,7 @@ import PostCard from "./PostCard";
 import { useFetchPostComments } from "../hook/useFetchPostComments";
 import { usePostComment } from "../hook/usePostComment";
 import CommentItem from "./CommentItem";
+import CommentSkeleton from "./CommentSkeleton";
 
 type Props = {
   post: any;
@@ -11,8 +12,11 @@ type Props = {
 };
 
 const CommentsModal: React.FC<Props> = ({ post, isOpen, onClose }) => {
-  const { data: comments, isLoading } = useFetchPostComments(post.id , isOpen);
+  const { data: comments, isLoading, isFetched } = useFetchPostComments(post.id , isOpen);
   const createComment = usePostComment();
+
+  const isInitialLoading = isLoading && !isFetched;
+
 
   useEffect(() => {
     const esc = (e: KeyboardEvent) => {
@@ -36,11 +40,15 @@ const CommentsModal: React.FC<Props> = ({ post, isOpen, onClose }) => {
 
         <div className="comments-modal-comments">
           <div className="comments-list">
-            {!isLoading && comments?.length === 0 && (
+            {isInitialLoading &&
+            Array.from({ length: 3 }).map((_, i) => (
+                <CommentSkeleton key={i} />
+            ))}
+
+            {!isLoading && isFetched && comments?.length === 0 && (
                 <div className="empty-comments">No comments yet</div>
             )}
 
-            {isLoading && <div>Loading comments…</div>}
             {comments?.map((comment: any) => (
               <CommentItem key={comment.id} comment={comment} />
             ))}
@@ -66,7 +74,10 @@ const CommentsModal: React.FC<Props> = ({ post, isOpen, onClose }) => {
           >
             <textarea
               name="content"
-              placeholder="Write a comment…"
+              disabled={isLoading}
+              placeholder={
+                isLoading ? "Loading comments…" : "Write a comment…"
+              }
               rows={1}
               onInput={(e) => {
                 const el = e.currentTarget;
@@ -74,7 +85,7 @@ const CommentsModal: React.FC<Props> = ({ post, isOpen, onClose }) => {
                 el.style.height = Math.min(el.scrollHeight, 160) + "px";
               }}
             />
-            <button type="submit">Send</button>
+            <button type="submit" disabled={createComment.isPending || isLoading}>Send</button>
           </form>
         </div>
       </div>

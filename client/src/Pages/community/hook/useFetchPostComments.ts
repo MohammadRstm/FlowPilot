@@ -7,6 +7,8 @@ export const useFetchPostComments = (postId: number , enabled: boolean) => {
     queryKey: ["post-comments", postId],
     queryFn: () => fetchPostComments(postId),
     enabled: enabled && !!postId,
+
+    staleTime: 1000 * 60,
   });
 };
 
