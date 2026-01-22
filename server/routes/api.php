@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserCopilotHistoryController;
+use App\Http\Controllers\UserPostController;
 use App\Service\UserService;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +15,7 @@ Route::group(["prefix" => "v0.1"] , function(){
     Route::post('/login', [AuthController::class, 'login']);
 
     Route::group(["prefix" => "auth", "middleware" => "jwt.auth"] , function(){
+        
         Route::get('/me', [AuthController::class, 'me']);
         Route::post("/setPassword" , [AuthController::class , 'setPassword']);
         Route::get("/account" , [UserController::class , "getUserAccount"]);
@@ -39,14 +41,14 @@ Route::group(["prefix" => "v0.1"] , function(){
         });
 
         Route::group(["prefix" => "community"] , function(){
-            Route::get("/posts" , [CommunityController::class , "fetchPosts"]);
-            Route::post("/toggleLike/{postId}" , [CommunityController::class , "toggleLike"]);
-            Route::get("/export/{postId}" , [CommunityController::class , "export"]);
+            Route::get("/posts" , [UserPostController::class , "fetchPosts"]);
+            Route::post("/toggleLike/{postId}" , [UserPostController::class , "toggleLike"]);
+            Route::get("/export/{postId}" , [UserPostController::class , "export"]);
 
-            Route::get("/comments/{postId}" , [CommunityController::class , "getPostComments"]);
-            Route::post("/postComment/{postId}" , [CommunityController::class , "postComment"]);
-            Route::post("/toggleCommentLike/{commentId}" , [CommunityController::class , "toggleCommentLike"]);
-            Route::post("/createPost" , [CommunityController::class , "createPost"]);
+            Route::get("/comments/{postId}" , [UserPostController::class , "getPostComments"]);
+            Route::post("/postComment/{postId}" , [UserPostController::class , "postComment"]);
+            Route::post("/toggleCommentLike/{commentId}" , [UserPostController::class , "toggleCommentLike"]);
+            Route::post("/createPost" , [UserPostController::class , "createPost"]);
         });
     });
 
