@@ -7,7 +7,7 @@ import PostCard from "./components/PostCard";
 import CreatePostModal from "./components/CreatePostModal";
 import { adaptCommunityPost } from "./adapters/CommunityPostAdapter";
 import { useAuth } from "../../context/useAuth";
-import { PostCardSkeleton } from "./components/PostCardSkeleton";
+import { Spinner } from "../components/Spinner";
 
 const CommunityPage: React.FC = () => {
   const { user, loading } = useAuth();
@@ -17,7 +17,7 @@ const CommunityPage: React.FC = () => {
   const handleStartPost = () => setShowModal(true);
 
   if (loading) {
-    return <div>Loading user...</div>;
+    return <Spinner />;
   }
 
   const {

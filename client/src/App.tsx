@@ -34,9 +34,7 @@ import SettingsPage from './Pages/Settings/Settings'
 
 // issues to solve
 // posts not apearing immediatly after posting
-// following/ Followers count not increasing as we follow
 // white screen appearing on reload then page appears
-// loading state for comments
 
 
 

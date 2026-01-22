@@ -26,7 +26,7 @@ export const useFollowUser = () =>{
             });
 
             return { previous };
-            },
+        },
         onError: (err, userId, context) => {
             queryClient.setQueryData(
                 ["is-being-followed", userId],
@@ -42,10 +42,8 @@ export const useFollowUser = () =>{
         });
 
         queryClient.invalidateQueries({
-            queryKey: ["profile", userId],
+            queryKey: ["profile-details", userId],
         });
-        
-        showToast("Followed user successfully" , ToastMessage.SUCCESS)
         },
     })
 }
