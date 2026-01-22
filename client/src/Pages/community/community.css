@@ -563,6 +563,65 @@ body {
   display: block;
 }
 
+.skeleton {
+  pointer-events: none;
+}
+
+.skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e5e7eb;
+}
+
+.skeleton-lines {
+  flex: 1;
+}
+
+.skeleton-line {
+  height: 12px;
+  background: #e5e7eb;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  animation: pulse 1.5s infinite;
+}
+
+.skeleton-line.short {
+  width: 120px;
+}
+
+.skeleton-line.tiny {
+  width: 80px;
+}
+
+.skeleton-line.title {
+  width: 60%;
+  height: 16px;
+}
+
+.skeleton-line.image {
+  height: 200px;
+  margin-top: 12px;
+}
+
+.avatar-initials{
+  background-color: #d34500;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+
 
 
 @media (max-width: 1024px) {

@@ -23,3 +23,4 @@ export type ApiResponse = {
 };
 
 export type PostCommentPayload = {postId : number , content : string}
+

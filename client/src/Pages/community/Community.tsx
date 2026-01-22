@@ -7,6 +7,7 @@ import PostCard from "./components/PostCard";
 import CreatePostModal from "./components/CreatePostModal";
 import { adaptCommunityPost } from "./adapters/CommunityPostAdapter";
 import { useAuth } from "../../context/useAuth";
+import { PostCardSkeleton } from "./components/PostCardSkeleton";
 
 const CommunityPage: React.FC = () => {
   const { user, loading } = useAuth();
@@ -21,7 +22,7 @@ const CommunityPage: React.FC = () => {
 
   const {
     posts,
-    isLoading,
+    isPending,
     isFetchingMore,
     hasMore,
     loadMore,
@@ -40,9 +41,7 @@ const CommunityPage: React.FC = () => {
       <div className="community-page">
         <Header />
 
-        {/* Feed area */}
         <main className="community-layout">
-          {/* LEFT: feed */}
           <section className="feed">
             <div className="feed-header">
               <div className="page-meta">
@@ -53,11 +52,14 @@ const CommunityPage: React.FC = () => {
               </div>
             </div>
 
-            {isLoading && <div className="loading">Loading...</div>}
             {error && <div className="error">Error loading posts</div>}
+            {isPending &&
+            Array.from({ length: 5 }).map((_, i) => (
+              <PostCard key={i} post={null} isPending />
+            ))}
 
             {posts.map((post) => (
-              <PostCard key={post.id} post={adaptCommunityPost(post)} />
+              <PostCard key={post.id} post={adaptCommunityPost(post)} isPending={isPending} />
             ))}
 
             <div ref={loadMoreRef} />
@@ -65,7 +67,6 @@ const CommunityPage: React.FC = () => {
             {isFetchingMore && <div className="loading-more">Loading more…</div>}
           </section>
 
-          {/* RIGHT: sticky profile card */}
           <aside className="community-sidebar">
             <div className="sticky-profile-card">
               <div className="profile-header">

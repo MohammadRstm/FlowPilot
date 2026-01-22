@@ -1,9 +1,5 @@
+import { returnDataFormat } from "../Pages/utils/returnApiDataFormat";
 import { api } from "./client";
-import { returnDataFormat } from "./utils";
-
-
-
-
 
 export async function me(){
   const res = await api.get("auth/me");

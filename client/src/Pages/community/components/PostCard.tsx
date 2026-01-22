@@ -4,36 +4,51 @@ import { useToggleLike } from "../hook/useToggleLike";
 import CommentsModal from "./CommentsModal";
 import type { PostCardData } from "../../profile/types";
 import { Heart, MessageCircle, Download } from "lucide-react";
+import { PostCardSkeleton } from "./PostCardSkeleton";
 
 const BASE_URL = import.meta.env.VITE_PHOTO_BASE_URL;
 
-const PostCard: React.FC<{
-  post: PostCardData;
+type PostCardProps = {
+  post: PostCardData | null;
   showHeader?: boolean;
   showActions?: boolean;
   showStats?: boolean;
-}> = ({
+  isPending?:boolean
+}
+
+const PostCard: React.FC<PostCardProps> = ({
   post,
+  isPending,
   showHeader = true,
   showActions = true,
   showStats = true,
 }) =>{
-  const [open, setOpen] = useState(false);
+    if(isPending){
+        return <PostCardSkeleton />;
+    }
 
-  const likeMutation = useToggleLike();
-  const exportContent = useExportPost();
+    if (!post) return null;
 
-  const imageUrl = post.photo ? `${BASE_URL}/${post.photo}` : null;
+    const [open, setOpen] = useState(false);
+
+    const likeMutation = useToggleLike();
+    const exportContent = useExportPost();
+
+    const imageUrl = post.photo ? `${BASE_URL}/${post.photo}` : null;
 
   return (
     <>
       <div className="post-card">
         {showHeader && post.author && (
           <div className="post-header">
-            <img
-              src={import.meta.env.VITE_PHOTO_BASE_URL + post.avatar || "/avatar-placeholder.png"}
-              alt={post.author}
-            />
+            {post.avatar ? (
+                <img
+                  src={import.meta.env.VITE_PHOTO_BASE_URL + post.avatar || "/avatar-placeholder.png"}
+                  alt={post.author}
+                />
+            ) : (
+                <span className="avatar-initials">{post.author[0]}</span>
+            )}
 
             <div>
               <div className="post-author">{post.author}</div>
@@ -92,7 +107,7 @@ const PostCard: React.FC<{
         )}
       </div>
 
-      {showActions && (
+      {open && showActions && (
         <CommentsModal
           post={post as any}
           isOpen={open}

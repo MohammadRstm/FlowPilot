@@ -13,18 +13,16 @@ import SettingsPage from './Pages/Settings/Settings'
 // ADD THE ABILITY TO SEND USER WORKFLOWS TO ADD ON IT/FIX IT - HARD - BACKEND HEAVY
 // ADD THE ABILITY TO CREATE CUSTOM NODES - VERY HARD - F/B HEAVY ON BOTH
 // ADD THE ABILITY TO SAVE CREDENTIALS OR FIGURE OUT A WAY TO DO IT AUTOMATICALLY - HARD F/B HEAVY ON BOTH
-// Fix Retry taking so long to kick start again. Add Edit Message ability
-// APPROX TIME : 8 DAYS TO FINISH (EXCLUDING ENHANCING THE AI'S ABILITY TO GENERATE WORKFLOWS)
+// USE LANGCHAIN
 
-// day 20
-// 7 days left to have a fully functioning and clean website
-// objectives for today before hitting 12 am:
-// - add error and loading handling - VERY BIG
-// - type everything
-// Clean the whole frontend where it needs to be cleaned, all except copilot pages
+// day 22 I am fucked beyond comprehension
+// - add loading handling 
+// - test all functionalities before merge
 // merge branch with dev
 // Move to the next branch for copilot
 // Remove ranking module and just take top 5 answers for every node
+// Test tracing and generation
+// Add the abiilty to send a workflow
 // Clean the copilot frontend / backend files
 // merge to main 
 // fix CV 
@@ -34,8 +32,13 @@ import SettingsPage from './Pages/Settings/Settings'
 // push to main
 // victory dance
 
-// FIXES:
-// FIX AVATAR UPLOADS I CAN'T BE ASSED MAN
+// issues to solve
+// posts not apearing immediatly after posting
+// following/ Followers count not increasing as we follow
+// white screen appearing on reload then page appears
+// loading state for comments
+
+
 
 function App() {
   return (

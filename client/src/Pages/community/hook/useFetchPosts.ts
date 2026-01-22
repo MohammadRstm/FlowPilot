@@ -23,7 +23,7 @@ export function useFetchPosts() {
 
   return {
     posts,
-    isLoading: query.isLoading,
+    isPending: query.isPending,
     isFetchingMore: query.isFetchingNextPage,
     error: query.error,
     hasMore: query.hasNextPage,

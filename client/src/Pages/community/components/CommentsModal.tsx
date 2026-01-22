@@ -11,7 +11,7 @@ type Props = {
 };
 
 const CommentsModal: React.FC<Props> = ({ post, isOpen, onClose }) => {
-  const { data: comments, isLoading } = useFetchPostComments(post.id);
+  const { data: comments, isLoading } = useFetchPostComments(post.id , isOpen);
   const createComment = usePostComment();
 
   useEffect(() => {

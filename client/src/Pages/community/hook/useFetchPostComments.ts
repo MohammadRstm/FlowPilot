@@ -2,11 +2,11 @@ import { useQuery } from "@tanstack/react-query"
 import { returnDataFormat } from "../../utils/returnApiDataFormat";
 import { api } from "../../../api/client";
 
-export const useFetchPostComments = (postId: number) => {
+export const useFetchPostComments = (postId: number , enabled: boolean) => {
   return useQuery({
     queryKey: ["post-comments", postId],
     queryFn: () => fetchPostComments(postId),
-    enabled: !!postId,
+    enabled: enabled && !!postId,
   });
 };
 
