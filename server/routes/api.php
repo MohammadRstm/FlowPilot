@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommunityController;
+use App\Http\Controllers\PostCommentController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserCopilotHistoryController;
 use App\Http\Controllers\UserPostController;
@@ -15,7 +16,7 @@ Route::group(["prefix" => "v0.1"] , function(){
     Route::post('/login', [AuthController::class, 'login']);
 
     Route::group(["prefix" => "auth", "middleware" => "jwt.auth"] , function(){
-        
+
         Route::get('/me', [AuthController::class, 'me']);
         Route::post("/setPassword" , [AuthController::class , 'setPassword']);
         Route::get("/account" , [UserController::class , "getUserAccount"]);
@@ -44,11 +45,11 @@ Route::group(["prefix" => "v0.1"] , function(){
             Route::get("/posts" , [UserPostController::class , "fetchPosts"]);
             Route::post("/toggleLike/{postId}" , [UserPostController::class , "toggleLike"]);
             Route::get("/export/{postId}" , [UserPostController::class , "export"]);
-
-            Route::get("/comments/{postId}" , [UserPostController::class , "getPostComments"]);
-            Route::post("/postComment/{postId}" , [UserPostController::class , "postComment"]);
-            Route::post("/toggleCommentLike/{commentId}" , [UserPostController::class , "toggleCommentLike"]);
             Route::post("/createPost" , [UserPostController::class , "createPost"]);
+
+            Route::get("/comments/{postId}" , [PostCommentController::class , "getPostComments"]);
+            Route::post("/postComment/{postId}" , [PostCommentController::class , "postComment"]);
+            Route::post("/toggleCommentLike/{commentId}" , [PostCommentController::class , "toggleCommentLike"]);
         });
     });
 

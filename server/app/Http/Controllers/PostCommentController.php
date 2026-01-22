@@ -2,66 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PostComment;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StorePostCommentRequest;
-use App\Http\Requests\UpdatePostCommentRequest;
+use App\Http\Requests\CommentPostRequest;
+use App\Service\PostCommentService;
+use Illuminate\Http\Request;
 
-class PostCommentController extends Controller
-{
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
+class PostCommentController extends Controller{
+
+    public function toggleCommentLike(Request $request , int $commentId){
+        $userId = $request->user()->id;
+
+        $likedResp = PostCommentService::toggleCommentLike($userId , $commentId);
+        return $this->successResponse($likedResp);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+    public function getPostComments(int $postId){
+        $comments = PostCommentService::getComments($postId);
+        return $this->successResponse($comments);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StorePostCommentRequest $request)
-    {
-        //
-    }
+    public function postComment($postId , CommentPostRequest $request){
+        $content = $request->validated()["content"];
+        $userId = $request->user()->id;
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(PostComment $postComment)
-    {
-        //
+        $submitResp = PostCommentService::postComment($userId , $content , $postId);
+        return $this->successResponse($submitResp);
     }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(PostComment $postComment)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdatePostCommentRequest $request, PostComment $postComment)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(PostComment $postComment)
-    {
-        //
-    }
+  
 }

@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class ProfileService{
+
     public static function getProfileDetails(int $userId, ?int $viewerId = null, int $perPage = 20){
         $user = self::getNumberOfImports($userId);
 
@@ -60,7 +61,6 @@ class ProfileService{
         ];
     }
 
-
     public static function toggeleFollow(int $userId, int $toBeFollowed){
         if ($userId === $toBeFollowed) {
             throw new Exception("You cannot follow yourself");
@@ -93,7 +93,6 @@ class ProfileService{
             'following' => true,
         ];
     }
-
 
     public static function isFollowingUser(int $userId, int $viewerId): array{
         $isViewerFollowing = Follower::where('follower_id', $viewerId)
@@ -138,7 +137,6 @@ class ProfileService{
             throw new Exception($e->getMessage());
         }
     }
-
 
     private static function getNumberOfImports(int $userId){
         return User::select('id','first_name','last_name','email','photo_url','created_at')
