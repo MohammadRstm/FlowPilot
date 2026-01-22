@@ -55,82 +55,55 @@ class UserController extends Controller{
         ]);
     }
 
-    public function confirmWorkflow(ConfirmWorkflowRequest $req){
-        try{
-            UserService::saveWorkflow($req);
-            return $this->successResponse(["message" => "Workflow saved"]);
-        }catch(Exception $ex){
-            return $this->errorResponse("Failed to save worfklow" , ["1" => $ex->getMessage()]);
-        }
+    public function confirmWorkflow(ConfirmWorkflowRequest $req){  
+        UserService::saveWorkflow($req);
+        return $this->successResponse(["message" => "Workflow saved"]);
     }
 
-    public function getProfileDetails(Request $request){
-        try{
-            $viewerId = auth()->id();
-            $userId = (int) ($request->query('user_id') ?? $viewerId);
+    public function getProfileDetails(Request $request){ 
+        $viewerId = $request->user()->id;// user viewing the profile (who made the request)
+        $userId = (int) ($request->query('user_id') ?? $viewerId);// user being viewed
 
-            $profileDetails = ProfileService::getProfileDetails(
-                userId: $userId,
-                viewerId: $viewerId
-            );
-
-            return $this->successResponse($profileDetails);
-        }catch(Exception $ex){
-            return $this->errorResponse("Failed to get user profile" , ["1" => $ex->getMessage()]);
-        }     
+        $profileDetails = ProfileService::getProfileDetails(
+            userId: $userId,
+            viewerId: $viewerId
+        );
+        return $this->successResponse($profileDetails);
     }
 
-    public function followUser(int $toBeFollowed){
-        try{
-            $userId = auth()->id();
-            ProfileService::toggeleFollow($userId, $toBeFollowed);
+    public function followUser(Request $request , int $toBeFollowed){ 
+        $userId = $request->user()->id;
 
-            return $this->successResponse([] , "User followed successfully");
-        }catch(Exception $ex){
-            return $this->errorResponse("Failed to follow user" , ["1" => $ex->getMessage()]);
-        }
+        ProfileService::toggeleFollow($userId, $toBeFollowed);
+        return $this->successResponse([] , "User followed successfully");
     }
 
-    public function isFollowed(int $toBeChecked){
-        try{
-            $userId = auth()->id();
-            $response = ProfileService::isFollowingUser($toBeChecked , $userId);
+    public function isFollowed(Request $request , int $toBeChecked){ 
+        $userId = $request->user()->id;
 
-            return $this->successResponse($response);
-        }catch(Exception $ex){
-            return $this->errorResponse("Failed to check if followed by user" , ["1" => $ex->getMessage()]);
-        }
+        $response = ProfileService::isFollowingUser($toBeChecked , $userId);
+        return $this->successResponse($response);
     }
 
-    public function getFriends(string $name){
-        try{
-            $userId = auth()->id();
-            $suggestions = UserService::getFriends($name , $userId);
-            return $this->successResponse($suggestions);
-        }catch(Exception $ex){
-            return $this->errorResponse("Failed to get friends" , ["1" => $ex->getMessage()]);
-        }
+    public function getFriends(Request $request , string $name){
+        $userId = $request->user()->id;
+
+        $suggestions = UserService::getFriends($name , $userId);
+        return $this->successResponse($suggestions);
     }
 
     public function uploadAvatar(AvatarUploadRequest $request){
-        try{
-            $user = $request->user();
-            $avatar = $request->file("avatar");
-            ProfileService::uploadFile($user , $avatar);
-            return $this->successResponse([] , "uploaded successfully");
-        }catch(Exception $ex){
-            Log::debug($ex->getMessage());
-            return $this->errorResponse("Failed to upload file" , ["1" => $ex->getMessage()]);
-        }
+        $user = $request->user();
+        $avatar = $request->file("avatar");
+
+        ProfileService::uploadFile($user , $avatar);
+        return $this->successResponse([] , "uploaded successfully");
     }
 
-    public function getUserAccount(){
-        try{
-            $userId = auth()->id();
-            $userAccountInfo = UserService::getUserAccount($userId);
-            return $this->successResponse($userAccountInfo);
-        }catch(Exception $ex){
-            return $this->errorResponse("Failed to get user's account" , ["1" => $ex->getMessage()]);
-        }
+    public function getUserAccount(Request $request){
+        $userId = $request->user()->id;
+
+        $userAccountInfo = UserService::getUserAccount($userId);
+        return $this->successResponse($userAccountInfo);
     }
 }
