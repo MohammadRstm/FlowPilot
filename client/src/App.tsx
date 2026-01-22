@@ -10,11 +10,6 @@ import ProfilePage from './Pages/profile/Profile'
 import AboutPage from './Pages/AboutUs'
 import SettingsPage from './Pages/Settings/Settings'
 
-// ADD THE ABILITY TO SEND USER WORKFLOWS TO ADD ON IT/FIX IT - HARD - BACKEND HEAVY
-// ADD THE ABILITY TO CREATE CUSTOM NODES - VERY HARD - F/B HEAVY ON BOTH
-// ADD THE ABILITY TO SAVE CREDENTIALS OR FIGURE OUT A WAY TO DO IT AUTOMATICALLY - HARD F/B HEAVY ON BOTH
-// USE LANGCHAIN
-
 // day 22 I am fucked beyond comprehension
 // clean backend
 // test when done
@@ -31,6 +26,12 @@ import SettingsPage from './Pages/Settings/Settings'
 // Create CI / CD
 // push to main
 // victory dance
+
+// big objectives must start at 24th to give myself a chance of finishing them
+// ADD THE ABILITY TO SEND USER WORKFLOWS TO ADD ON IT/FIX IT - HARD - BACKEND HEAVY
+// ADD THE ABILITY TO CREATE CUSTOM NODES - VERY HARD - F/B HEAVY ON BOTH
+// ADD THE ABILITY TO SAVE CREDENTIALS OR FIGURE OUT A WAY TO DO IT AUTOMATICALLY - HARD F/B HEAVY ON BOTH
+// USE LANGCHAIN
 
 // white screen appearing on reload then page appears
 
