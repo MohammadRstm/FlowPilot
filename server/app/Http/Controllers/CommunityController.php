@@ -10,78 +10,54 @@ use Illuminate\Http\Request;
 
 
 class CommunityController extends Controller{
+    
     public function fetchPosts(Request $request){
-        try{
-            $userId = auth()->id();
-            $page = (int) $request->query('page', 1);
-            $paginatedPosts = CommunityService::getPosts($userId , $page);
-            return $this->successResponse($paginatedPosts);
-        }catch(Exception $ex){
-            return $this->errorResponse("Failed to fetch posts" , ["error" => $ex->getMessage()]);
-        }
+        $userId = $request->user()->id;
+        $page = (int) $request->query('page', 1);
+
+        $paginatedPosts = CommunityService::getPosts($userId , $page);
+        return $this->successResponse($paginatedPosts);
     }
 
-    public function toggleLike(int $postId){
-        try{
-            $userId = auth()->id();
+    public function toggleLike(Request $request , int $postId){
+        $userId = $request->user()->id;
 
-            $likeResp = CommunityService::toggleLike($userId , $postId);
-            return $this->successResponse($likeResp);
-        }catch(Exception $ex){
-            return $this->errorResponse("Failed to like post" , ["error" => $ex->getMessage()]);
-        }
+        $likeResp = CommunityService::toggleLike($userId , $postId);
+        return $this->successResponse($likeResp);
     }
 
-    public function export(int $postId){
-        try{
-            $userId = auth()->id();
+    public function export(Request $request , int $postId){
+        $userId = $request->user()->id;
 
-            $exportResp = CommunityService::export($userId , $postId);
-            return $this->successResponse($exportResp);
-        }catch(Exception $ex){
-            return $this->errorResponse("Failed to export post" , ["error" => $ex->getMessage()]);
-        }
+        $exportResp = CommunityService::export($userId , $postId);
+        return $this->successResponse($exportResp);
     }
 
-    public function toggleCommentLike(int $commentId){
-        try{
-            $userId = auth()->id();
+    public function toggleCommentLike(Request $request , int $commentId){
+        $userId = $request->user()->id;
 
-            $likedResp = CommunityService::toggleCommentLike($userId , $commentId);
-            return $this->successResponse($likedResp);
-        }catch(Exception $ex){
-            return $this->errorResponse("Failed to like comment" , ["error" => $ex->getMessage()]);
-        }
+        $likedResp = CommunityService::toggleCommentLike($userId , $commentId);
+        return $this->successResponse($likedResp);
     }
 
     public function getPostComments(int $postId){
-        try{
-            $comments = CommunityService::getComments($postId);
-            return $this->successResponse($comments);
-        }catch(Exception $ex){
-            return $this->errorResponse("Failed to get post comments" , ["error" => $ex->getMessage()]);
-        }
+        $comments = CommunityService::getComments($postId);
+        return $this->successResponse($comments);
     }
 
     public function postComment($postId , CommentPostRequest $request){
-        try{
-            $content = $request->validated()["content"];
-            $userId = auth()->id();
-            $submitResp = CommunityService::postComment($userId , $content , $postId);
-            return $this->successResponse($submitResp);
-        }catch(Exception $ex){
-            return $this->errorResponse("Failed to post comment" , ["error" => $ex->getMessage()]);
-        }
+        $content = $request->validated()["content"];
+        $userId = $request->user()->id;
+
+        $submitResp = CommunityService::postComment($userId , $content , $postId);
+        return $this->successResponse($submitResp);
     }
 
     public function createPost(CreatePostRequest $request){
-        try{
-            $userId = auth()->id();
-            $form = $request->validated();
-            $createdResp = CommunityService::createPost($userId , $form);
-            return $this->successResponse(["post_id" => $createdResp]);
-        }catch(Exception $ex){
-            return $this->errorResponse("Failed to create post" , ["error" => $ex->getMessage()]);
-        }
+        $userId = $request->user()->id;
+        $form = $request->validated();
+
+        $createdResp = CommunityService::createPost($userId , $form);
+        return $this->successResponse(["post_id" => $createdResp]);
     }
 }

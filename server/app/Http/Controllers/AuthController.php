@@ -26,9 +26,7 @@ class AuthController extends Controller{
     }
 
     public function me(Request $request){
-        $user = $request->user();
-
-        
+        $user = $request->user();    
         return $this->successResponse([
             'id'         => $user->id,
             'first_name' => $user->first_name,
