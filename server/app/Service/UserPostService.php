@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Exceptions\UserFacingException;
 use App\Models\PostsLike;
 use App\Models\UserPost;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -19,17 +20,10 @@ class UserPostService{
                 ->where('user_id', $userId)
                 ->first();
 
-            if ($existing) {
-                $existing->delete();
-                $post->decrement('likes');
-                $liked = false;
-            } else {
-                PostsLike::create([
-                    'post_id' => $post->id,
-                    'user_id' => $userId,
-                ]);
-                $post->increment('likes');
-                $liked = true;
+            if($existing){
+               $liked = self::removeOldLike($existing , $post);
+            }else{
+               $liked = self::addLike($post , $userId);
             }
         });
 
@@ -43,9 +37,7 @@ class UserPostService{
         $perPage = 30;
 
         $query = self::executeFetchPaginatedPostsQuery($userId);
-
         $paginated = $query->paginate($perPage, ['*'], 'page', $page);
-
         $data = self::buildPostsData($paginated);
 
         return[
@@ -62,13 +54,12 @@ class UserPostService{
     public static function export(int $postId){
         $post = self::getPost($postId);
 
-        $jsonContent = $post->json_content ?? [];
+        $jsonContent = $post->json_content;
 
-        $filename = 'post-' . $post->id . '.json';
-        $headers = [
-            'Content-Type' => 'application/json',
-            'Content-Disposition' => "attachment; filename={$filename}",
-        ];
+        if(!$jsonContent) throw new UserFacingException("No attached file for this post");
+
+        $fileName = 'post-' . $post->id . '.json';
+        $headers = self::getExportHeaders($fileName);
 
         $post->increment('imports');
 
@@ -79,33 +70,16 @@ class UserPostService{
         ];
     }
 
-
-
     public static function createPost(int $userId , array $form){
         $jsonContent = null;
         $photoUrl = null;
 
         if (isset($form['file'])) {
-
-            $file = $form['file'];
-            if ($file->getClientOriginalExtension() === 'json') {
-                $jsonContent = json_decode(file_get_contents($file->getRealPath()), true);
-            }
+            $jsonContent = self::getJsonContent($form);
         }
 
         if (isset($form['image'])) {
-            $image = $form['image'];
-            $storagePath = 'upload/post_images';
-
-            if (!Storage::disk('public')->exists($storagePath)) {
-                Storage::disk('public')->makeDirectory($storagePath);
-            }
-
-            $filename = Str::uuid()->toString() . '.' . $image->getClientOriginalExtension();
-
-            $image->storeAs($storagePath, $filename, 'public');
-
-            $photoUrl = 'storage/' . $storagePath . '/' . $filename;
+            $photoUrl = self::storeImageInStorage($form);
         }
 
         $post = UserPost::create([
@@ -122,6 +96,25 @@ class UserPostService{
     }
 
     /** helpers */
+    private static function removeOldLike(Model $existing , Model $post){
+        $existing->delete();
+        $post->decrement('likes');
+        $liked = false;
+
+        return $liked;
+    }
+
+    private static function addLike(Model $post , int $userId){
+        PostsLike::create([
+            'post_id' => $post->id,
+            'user_id' => $userId,
+        ]);
+        $post->increment('likes');
+        $liked = true;
+
+        return $liked;
+    }
+
     private static function executeFetchPaginatedPostsQuery($userId){
         $weightLikes = 1;
         $weightComments = 2;
@@ -209,5 +202,37 @@ class UserPostService{
         if(!$post) throw new UserFacingException("Post not found");
 
         return $post;
+    }
+
+    private static function getExportHeaders(string $fileName){
+        return [
+            'Content-Type' => 'application/json',
+            'Content-Disposition' => "attachment; filename={$fileName}",
+        ];
+    }
+
+    private static function getJsonContent(array $form){
+        $file = $form['file'];
+        if ($file->getClientOriginalExtension() === 'json') {
+            $jsonContent = json_decode(file_get_contents($file->getRealPath()), true);
+            return $jsonContent;
+        }
+
+        return null;
+    }
+
+    private static function storeImageInStorage(array $form){
+        $image = $form['image'];
+        $storagePath = 'upload/post_images';
+
+        if (!Storage::disk('public')->exists($storagePath)) {
+            Storage::disk('public')->makeDirectory($storagePath);
+        }
+
+        $filename = Str::uuid()->toString() . '.' . $image->getClientOriginalExtension();
+        $image->storeAs($storagePath, $filename, 'public');
+        $photoUrl = 'storage/' . $storagePath . '/' . $filename;
+
+        return $photoUrl;
     }
 }
