@@ -6,18 +6,12 @@ use App\Http\Requests\CommentPostRequest;
 use App\Http\Requests\CreatePostRequest;
 use App\Service\CommunityService;
 use Exception;
-use Illuminate\Http\Request;
+
 
 
 class CommunityController extends Controller{
-    
-    public function fetchPosts(Request $request){
-        $userId = $request->user()->id;
-        $page = (int) $request->query('page', 1);
 
-        $paginatedPosts = CommunityService::getPosts($userId , $page);
-        return $this->successResponse($paginatedPosts);
-    }
+   
 
     public function toggleLike(Request $request , int $postId){
         $userId = $request->user()->id;

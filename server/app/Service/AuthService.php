@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\Http;
 class AuthService{
 
     public static function createUser(array $userData, int $isFromGoogle = 0){
-    throw new UserFacingException("weer" , 343);
         $user = User::create([
             'user_role_id'      => env('USER_ROLE_ID'), // default role
             'first_name'        => $userData['firstName'],
@@ -34,20 +33,18 @@ class AuthService{
         $user = User::where('email', $credentials['email'])->first();
 
         if (!$user) {
-            throw new Exception("Invalid credentials");
+            throw new UserFacingException("Invalid credentials");
         }
 
-
         if (!$user->password) {
-            throw new Exception("This account uses Google login. Please continue with Google");
+            throw new UserFacingException("This account uses Google login. Please continue with Google");
         }
 
         if (!Hash::check($credentials['password'], $user->password)) {
-            throw new Exception("Invalid credentials");
+            throw new UserFacingException("Invalid credentials");
         }
 
         $token = self::createToken($user);
-
 
         return self::authenticationReturnFormat($user , $token);
     }
@@ -64,20 +61,17 @@ class AuthService{
 
         $user = User::where('google_id', $googleId)->first();
         if($user && self::googleAccountAlreadyLinkedWithDifferentUser($user , $googleId)){
-            throw new Exception("Google account already linked");
+            throw new UserFacingException("Google account already linked");
         }
-
 
         if(!$user){
             $user = self::getUserByEmail($userData);
         }
 
-
         if(!$user){
             $isFromGoogle = 1;
             self::createUser($userData ,$isFromGoogle);
         }
-
 
         if (!$user->google_id) {
             $user->update(['google_id' => $googleId]);
@@ -85,14 +79,13 @@ class AuthService{
 
         $token = self::createToken($user);
 
-
         return self::authenticationReturnFormat($user, $token);
     }
 
     public static function setPassword(Model $user , array $data){
         if($user->password){
             if(!$data["current_password"] || !Hash::check($data["current_password"], $user->password)){
-                throw new Exception("Current password is incorrect");
+                throw new UserFacingException("Current password is incorrect");
             }
         }
 
@@ -102,7 +95,7 @@ class AuthService{
 
     public static function unlinkGoogle(User $user): void{
         if (!$user->password) {
-            throw new Exception("Set a password before unlinking Google");
+            throw new UserFacingException("Set a password before unlinking Google");
         }
 
         $user->google_id = null;
@@ -113,24 +106,23 @@ class AuthService{
         /** @var Response */
         $response = Http::withHeaders([
             'X-N8N-API-KEY' => $data["api_key"],
-        ])->get(rtrim($data["base_url"], '/') . '/api/v1/workflows')
-        ->throw();
+        ])->get(rtrim($data["base_url"], '/') . '/api/v1/workflows');
 
         $contentType = $response->header('Content-Type');
 
         if (!str_contains($contentType, 'application/json')) {
-            throw new Exception('Invalid n8n response (not JSON)');
+            throw new UserFacingException('Invalid n8n response.Consider using a different api key');
         }
 
         $body = $response->json();
 
         if (!isset($body['data']) || !is_array($body['data'])) {
-            throw new Exception('Invalid n8n API response');
+            throw new UserFacingException('Invalid n8n API response.Consider using a different api key');
         }
 
 
         if (!$response->successful()) {
-            throw new Exception("Failed to connect to n8n");
+            throw new UserFacingException("Failed to connect to n8n");
         }
 
         $user->n8n_base_url = $data["base_url"];
@@ -138,7 +130,7 @@ class AuthService{
         $user->save();
     }
 
-
+    /** helpers */
     private static function verifyGoogleAccount(array $data){
         $client = new Google_Client([
             'client_id' => env('GOOGLE_CLIENT_ID'),
@@ -177,7 +169,7 @@ class AuthService{
             'iss' => config('app.url'),
             'sub' => $user->id,
             'iat' => $now,
-            'exp' => $now + (60 * 60 * 24 * 7), // 7 days
+            'exp' => $now + env('TOKEN_EXPIRATION_TIME'), // 7 days
         ];
 
         return JWT::encode($payload, self::getJwtSecret(), 'HS256');
@@ -186,7 +178,7 @@ class AuthService{
     private static function getJwtSecret(): string{
         $secret = env('JWT_SECRET');
 
-        if (! $secret) {
+        if(!$secret){
             throw new \RuntimeException('JWT_SECRET environment variable is not set');
         }
 
@@ -202,6 +194,4 @@ class AuthService{
     private static function getUserByEmail(array $userData){
         return User::where('email', $userData["email"])->first();
     }
-
-
 }
