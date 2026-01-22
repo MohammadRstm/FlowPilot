@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useToast } from "../../../context/toastContext";
-import { ToastMessage } from "../../components/toast/toast.types";
 import { handleApiError } from "../../utils/handleErrorMessage";
 import { returnDataFormat } from "../../utils/returnApiDataFormat";
 import { api } from "../../../api/client";

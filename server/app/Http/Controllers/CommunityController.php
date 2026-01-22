@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CommentPostRequest;
 use App\Http\Requests\CreatePostRequest;
-use App\Models\UserPost;
 use App\Service\CommunityService;
 use Exception;
 use Illuminate\Http\Request;

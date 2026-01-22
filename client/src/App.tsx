@@ -16,8 +16,8 @@ import SettingsPage from './Pages/Settings/Settings'
 // USE LANGCHAIN
 
 // day 22 I am fucked beyond comprehension
-// - add loading handling 
-// - test all functionalities before merge
+// clean backend
+// test when done
 // merge branch with dev
 // Move to the next branch for copilot
 // Remove ranking module and just take top 5 answers for every node
@@ -32,8 +32,6 @@ import SettingsPage from './Pages/Settings/Settings'
 // push to main
 // victory dance
 
-// issues to solve
-// posts not apearing immediatly after posting
 // white screen appearing on reload then page appears
 
 
