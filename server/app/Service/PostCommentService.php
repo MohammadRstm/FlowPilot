@@ -2,12 +2,14 @@
 
 namespace App\Service;
 
+use App\Exceptions\UserFacingException;
 use App\Models\CommentsLike;
 use App\Models\PostComment;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class PostCommentService{
-    
+
     public static function toggleCommentLike(int $userId , int $commentId){
         $comment = PostComment::find($commentId);
 
@@ -16,17 +18,10 @@ class PostCommentService{
                 ->where('user_id', $userId)
                 ->first();
 
-            if ($existing) {
-                $existing->delete();
-                $comment->decrement('likes');
-                $liked = false;
-            } else {
-                CommentsLike::create([
-                    'comment_id' => $comment->id,
-                    'user_id' => $userId,
-                ]);
-                $comment->increment('likes');
-                $liked = true;
+            if($existing){
+               $liked = self::removeOldLike($existing , $comment);
+            }else{
+                $liked = self::addLike($comment , $userId);
             }
         });
 
@@ -43,11 +38,33 @@ class PostCommentService{
     }
 
     public static function postComment(int $userId , string $content , int $postId){
+        if(empty($content)) throw new UserFacingException("Comment is empty");
+        
         return PostComment::create([
             "user_id" => $userId,
             "post_id" => $postId,
             "content" => $content,
             "likes" => 0
         ]);
+    }
+
+    /** helpers */
+    private static function removeOldLike(Model $existing , Model $comment){
+        $existing->delete();
+        $comment->decrement('likes');
+        $liked = false;
+
+        return $liked;
+    }
+
+    private static function addLike(Model $comment , int $userId){
+        CommentsLike::create([
+            'comment_id' => $comment->id,
+            'user_id' => $userId,
+        ]);
+        $comment->increment('likes');
+        $liked = true;
+
+        return $liked;
     }
 }

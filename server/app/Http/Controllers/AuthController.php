@@ -8,6 +8,7 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\SetPasswordRequest;
 use App\Service\AuthService;
+use App\Service\UserService;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller{
@@ -61,5 +62,12 @@ class AuthController extends Controller{
         $data = $request->validated();
         AuthService::linkN8nAccount($user , $data);
         return $this->successResponse([], 'N8n account linked successfullly');
+    }
+
+    public function getUserAccount(Request $request){
+        $userId = $request->user()->id;
+
+        $userAccountInfo = UserService::getUserAccount($userId);
+        return $this->successResponse($userAccountInfo);
     }
 }

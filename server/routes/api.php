@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommunityController;
+use App\Http\Controllers\FollowerController;
 use App\Http\Controllers\PostCommentController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserCopilotHistoryController;
 use App\Http\Controllers\UserPostController;
@@ -19,7 +21,7 @@ Route::group(["prefix" => "v0.1"] , function(){
 
         Route::get('/me', [AuthController::class, 'me']);
         Route::post("/setPassword" , [AuthController::class , 'setPassword']);
-        Route::get("/account" , [UserController::class , "getUserAccount"]);
+        Route::get("/account" , [AuthController::class , "getUserAccount"]);
         Route::put("/unlinkGoogleAccount" , [AuthController::class , "unlinkGoogleAccount"]);
         Route::post("/linkN8nAccount" , [AuthController::class , "linkN8nAccount"]);
 
@@ -34,11 +36,13 @@ Route::group(["prefix" => "v0.1"] , function(){
 
         Route::group(["prefix" => "profile"] , function(){
             Route::get('/histories/{history}/download',[UserCopilotHistoryController::class, 'download'])->name('user.histories.download');
-            Route::get("/profileDetails" , [UserController::class , "getProfileDetails"]);
-            Route::post("/follow/{toBeFollowed}" , [UserController::class, "followUser"]);
-            Route::get("/isFollowed/{userId}" , [UserController::class , "isFollowed"]);
-            Route::get("/searchFriends/{name}" , [UserController::class , "getFriends"]);
-            Route::post("/avatar" , [UserController::class , "uploadAvatar"]);
+            
+            Route::get("/profileDetails" , [ProfileController::class , "getProfileDetails"]);
+            Route::post("/avatar" , [ProfileController::class , "uploadAvatar"]);
+            Route::get("/searchFriends/{name}" , [ProfileController::class , "getFriends"]);
+
+            Route::post("/follow/{toBeFollowed}" , [FollowerController::class, "followUser"]);
+            Route::get("/isFollowed/{userId}" , [FollowerController::class , "isFollowed"]);
         });
 
         Route::group(["prefix" => "community"] , function(){
