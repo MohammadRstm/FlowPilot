@@ -59,7 +59,7 @@ class LLMService{
         // prompt-injection/creating a final user message
         $prompt = Prompts::getSecureIntentCompilerPrompt($messages);
         $analyzedQuestion = self::callOpenAI($prompt);
-
+        Log::debug("Prompt" , ["context" => $messages]);
         if($analyzedQuestion["attack"]){
             throw new UserFacingException("Prompt injection detected");
         }else{
