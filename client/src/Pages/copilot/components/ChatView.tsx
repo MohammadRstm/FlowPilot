@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
-import { ChatMessageType, type GenerationStage, type ChatMessage as Msg, type TraceBlock } from "../Copilot.types";
+import { ChatMessageType, type GenerationStage, type ChatMessage as Msg, type TraceBlock } from "../types";
 import { ChatMessage as ChatMessageComponent } from "./ChatMessages";
 
 interface ChatViewProps {

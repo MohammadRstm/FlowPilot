@@ -1,4 +1,4 @@
-import type { FeedbackState } from "../Copilot.types";
+import type { FeedbackState } from "../types";
 
 interface FeedbackToastProps {
   feedback: FeedbackState;

@@ -1,7 +1,7 @@
 import { useRef } from "react";
-import type { GenerationStage, ChatMessage } from "../Copilot.types";
-import { streamCopilotQuestion } from "../../../api/copilot/streamResponse";
-import { useToast } from "../../../context/toastContext";
+import type { GenerationStage, ChatMessage } from "../../types";
+import { streamCopilotQuestion } from "../data/streamResponse";
+import { useToast } from "../../../../context/toastContext";
 
 export function useCopilotStream({
   onStage,

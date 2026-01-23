@@ -1,4 +1,4 @@
-import type { WorkflowAnswer } from "../../api/copilot/types";
+import type { WorkflowAnswer } from "./hooks/data/types";
 
 export type GenerationStage =
   | "idle"
@@ -37,11 +37,6 @@ export interface FeedbackState{
   question: string;
   workflow: WorkflowAnswer;
 }
-
-export type CopilotHistoryMessage = {
-  user_message: string;
-  ai_response: WorkflowAnswer; 
-};
 
 
 export interface TraceEvent {

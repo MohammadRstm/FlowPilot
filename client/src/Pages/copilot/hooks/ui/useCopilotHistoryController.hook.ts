@@ -1,7 +1,7 @@
-import type { CopilotHistory } from "../../../api/copilot/types";
-import { useDeleteCopilotHistoryMutation } from "../../../hooks/mutations/Copilot/deleteHistory.copilot.mutation.hook";
-import { useCopilotHistoriesQuery } from "../../../hooks/queries/Copilot/getHistories.copilot.query.hook";
-import { ChatMessageType, type ChatMessage } from "../Copilot.types";
+import { useDeleteCopilotHistoryMutation } from "../data/deleteHistory.copilot.mutation.hook";
+import { useCopilotHistoriesQuery } from "../data/getHistories.copilot.query.hook";
+import { ChatMessageType, type ChatMessage } from "../../types";
+import type { CopilotHistory } from "../data/types";
 
 type ChatKey = number | "new";
 

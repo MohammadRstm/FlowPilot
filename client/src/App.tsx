@@ -35,7 +35,6 @@ import SettingsPage from './Pages/Settings/Settings'
  * Use hook to send copilot requests
  * Authenticate all requests
  * Clean copilot backend
- * Add error handling in copilot whilst generating
  * Clean copilot frontend
  * Create Tests for everything except copilot
  * Create CI CD

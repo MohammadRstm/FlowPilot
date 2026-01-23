@@ -1,4 +1,4 @@
-import type { GenerationStage } from "./Copilot.types";
+import type { GenerationStage } from "./types";
 
 export const STAGE_MAP: Record<string, GenerationStage> = {
   analyzing: "analyzing",

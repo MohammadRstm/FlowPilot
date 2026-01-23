@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import type { FeedbackState } from "../Copilot.types";
-import { useConfirmWorkflowMutation } from "../../../hooks/mutations/Copilot/confirmWorkflow.copilot.mutation.hook";
-import type { WorkflowAnswer } from "../../../api/copilot/types";
+import type { FeedbackState } from "../../types";
+import { useConfirmWorkflowMutation } from "../data/confirmWorkflow.copilot.mutation.hook";
+import type { WorkflowAnswer } from "../data/types";
 
 export function useCopilotFeedback() {
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);

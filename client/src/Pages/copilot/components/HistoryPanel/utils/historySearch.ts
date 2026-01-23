@@ -1,4 +1,4 @@
-import type { CopilotHistory } from "../../../../api/copilot/types";
+import type { CopilotHistory } from "../../../hooks/data/types";
 
 export function filterHistories(histories: CopilotHistory[], query: string) {
   const normalizedQuery = query.trim().toLowerCase();

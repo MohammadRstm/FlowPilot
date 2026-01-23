@@ -1,5 +1,5 @@
-import type { ToastType } from "../../Pages/components/toast/toast.types";
-import type { ChatMessage } from "../../Pages/copilot/Copilot.types";
+import type { ToastType } from "../../../components/toast/toast.types";
+import type { ChatMessage } from "../../types";
 import { BASE_URL, type WorkflowAnswer } from "./types";
 
 export const streamCopilotQuestion = (

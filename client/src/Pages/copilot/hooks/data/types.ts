@@ -1,3 +1,8 @@
+export type CopilotHistoryMessage = {
+  user_message: string;
+  ai_response: WorkflowAnswer; 
+};
+
 export interface WorkflowAnswer {
   name: string;
   nodes: unknown[];
@@ -8,6 +13,16 @@ export interface WorkflowAnswer {
     instanceId: string;
   };
 }
+
+export interface CopilotHistoriesResponse {
+    message: string;
+    data: {
+        histories: CopilotHistory[];
+    };
+}
+
+
+
 
 export interface CopilotMessage {
   id: number;
@@ -35,12 +50,7 @@ export interface CopilotResponse {
   };
 }
 
-export interface CopilotHistoriesResponse {
-    message: string;
-    data: {
-        histories: CopilotHistory[];
-    };
-}
+
 
 export interface ConfirmWorkflowPayload {
     question: string;

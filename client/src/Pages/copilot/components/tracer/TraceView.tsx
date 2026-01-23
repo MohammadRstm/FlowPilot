@@ -1,4 +1,4 @@
-import { TraceEventName, type TraceBlock } from "../../Copilot.types";
+import { TraceEventName, type TraceBlock } from "../../types";
 import { N8nPlan } from "./components/N8NPlan";
 import { TypedLine } from "./components/TypedLine";
 import { TypedList } from "./components/TypedList";

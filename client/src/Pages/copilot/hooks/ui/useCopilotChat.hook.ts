@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { ChatMessageType, type ChatMessage, type GenerationStage, type TraceBlock } from "../Copilot.types";
-import { STAGE_LABELS } from "../Copilot.constants";
+import { ChatMessageType, type ChatMessage, type GenerationStage, type TraceBlock } from "../../types";
+import { STAGE_LABELS } from "../../constants";
 
 const STORAGE_KEY = "copilot_messages";
 
