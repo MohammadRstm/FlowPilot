@@ -26,7 +26,7 @@ class LLMService{
                         ["role" => "user", "content" => $prompt["user"]]
                     ]
                 ]);
-            
+ 
         $results = trim($response->json("choices.0.message.content"));
         $decoded = json_decode($results , true);
 
@@ -53,29 +53,48 @@ class LLMService{
         throw new Exception("LLMService: non-JSON response from model (logged raw content).");
     }
 
-    public static function intentAnalyzer(array $question){
+    public static function intentAnalyzer(array $messages){
+
+        // prompt-injection/creating a final user message
+        $prompt = Prompts::getSecureIntentCompilerPrompt($messages);
+        $analyzedQuestion = self::callOpenAI($prompt);
+
+        if($analyzedQuestion["attack"]){
+            throw new Exception("Prompt injection detected");
+        }else{
+            $question = $analyzedQuestion["question"];
+        }
+
+        Log::info("Analyzed question : " , ["question" => $question]);
+
         $prompt = Prompts::getAnalysisIntentAndtiggerPrompt($question);
+        $intentData = self::callOpenAI($prompt);
 
-        return self::callOpenAI($prompt);
-    }
+        Log::info("User's intent : " , ["intent" => $intentData["intent"] , "trigger" => $intentData["trigger"]]);
 
-    public static function nodeAnalyzer(string $question ,string $intent){
-        $prompt = Prompts::getAnalysisNodeExtractionPrompt($intent , $question);
+        $prompt = Prompts::getAnalysisNodeExtractionPrompt($intentData["intent"] , $question);
+        $nodeData = self::callOpenAI($prompt);
 
-        return self::callOpenAI($prompt);
+        $prompt = Prompts::getAnalysisValidationAndPruningPrompt($question , $intentData["intent"] , $intentData["trigger"] , json_encode($nodeData["nodes"]));
+        $final = self::callOpenAI($prompt);
+
+        Log::info("Extracted Nodes" , ["nodes" => $final["nodes"] , "min_nodes" => $final["min_nodes"]]);
+  
+        $final["intent"] = $intentData["intent"];
+        $final["trigger"] = $intentData["trigger"];
+        $final["question"] = $question;
+
+
+        return $final;
     }
 
     /** WORKFLOW GENERATION (CORE) */
-    public static function workflowSchemaValidator(array $intentData , array $nodeData){
-        $prompt = Prompts::getAnalysisValidationAndPruningPrompt($intentData["trigger"] , json_encode($nodeData["nodes"]));
+    public static function generateAnswer(array $analysis, array $finalPoints ,?callable $stage ,  ?callable $trace) {
+        $stage("generating");
 
-        return self::callOpenAI($prompt);
-    }
-
-    public static function generateAnswer(string $question, array $topFlows , ?callable $trace) {
-        $context = self::buildContext($topFlows);
-        $planningPrompt = Prompts::getWorkflowBuildingPlanPrompt($question, $context);
-
+        $workflowContext = WorkflowGeneration::buildWorkflowContext($finalPoints["workflows"] ?? []);
+        $nodesContext = WorkflowGeneration::buildSchemasContext($finalPoints["schemas"]);
+        $planningPrompt = Prompts::getWorkflowBuildingPlanPrompt($analysis, $workflowContext);
         $plan = self::callOpenAI($planningPrompt);
 
         $trace("genration_plan", [
@@ -83,66 +102,20 @@ class LLMService{
         ]);
 
         // generate workflow
-        $compilerPrompt = Prompts::getWorkflowBuildingPrompt($question , $plan , $context);
-
+        $compilerPrompt = Prompts::getWorkflowBuildingPrompt($analysis , $plan , $workflowContext ,$nodesContext);
         $workflow = self::callOpenAI($compilerPrompt);
+
+        $trace("workflow", [
+            "workflow" => $workflow
+        ]);
 
         return $workflow;   
     }
 
-    public static function extractAllowedNodes(array $topFlows): array {
-        $set = [];
-
-        foreach ($topFlows as $flow) {
-            if (isset($flow["payload"])) {
-                $flow = $flow["payload"];
-            }
-
-            foreach (($flow["nodes_used"] ?? []) as $n) {
-                $set[self::normalizeNodeName($n)] = true;
-            }
-        }
-
-        return array_keys($set);
-    }
-
-    private static function buildContext(array $flows): string{
-        $out = "";
-        $counter = 1;
-
-        foreach ($flows as $flow) {
-
-            // if this is a Qdrant result, extract payload
-            if (isset($flow["payload"])) {
-                $flow = $flow["payload"];
-            }
-
-            // if it's not an array now, skip it
-            if (!is_array($flow)) {
-                continue;
-            }
-
-            $name  = $flow["workflow"] ?? "Unknown Workflow";
-            $nodes = $flow["nodes_used"] ?? [];
-            $count = $flow["node_count"] ?? count($nodes);
-            $raw   = $flow["raw"] ?? $flow;
-
-            $out .= "\n--- Workflow {$counter} ---\n";
-            $out .= "Name: {$name}\n";
-            $out .= "Nodes: " . implode(", ", $nodes) . "\n";
-            $out .= "Node Count: {$count}\n";
-            $out .= "JSON:\n" . json_encode($raw, JSON_PRETTY_PRINT) . "\n";
-
-            $counter++;
-        }
-
-        return $out;
-    }
-
     /** WORKFLOW LOGIC VALIDATOR/JUDGER */
-    public static function judgeResults(array $workflow, string $question){
+    public static function judgeResults(array $workflow, array $analysis){
         // functionalities
-        $reqPrompt = Prompts::getWorkflowFunctionalitiesPrompt($question);
+        $reqPrompt = Prompts::getWorkflowFunctionalitiesPrompt($analysis);
         $requirements = self::callOpenAI($reqPrompt);
 
         // what workflow actually does

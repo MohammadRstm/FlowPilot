@@ -9,13 +9,12 @@ use App\Models\UserCopilotHistory;
 use App\Service\Copilot\GetAnswer;
 use App\Service\Copilot\SaveWorkflow;
 use Exception;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class UserService{
-    
-    public static function getCopilotAnswer(array $messages, ?int $historyId = null , ?callable $stream = null): array{
-        $userId = auth()->id();
+
+    public static function getCopilotAnswer(array $messages, int $userId , ?int $historyId = null , ?callable $stream = null): array{
+
         $answer = GetAnswer::execute($messages , $stream);
         $history = self::handleHistoryManagement($userId , $historyId , $messages , $answer);
 
@@ -56,7 +55,7 @@ class UserService{
         $saved = SaveWorkflow::save($requestForm);
         return $saved; 
     }
-
+    // CLEAN
     public static function saveCopilotHistories(
         int $historyId,
         array $messages,
@@ -74,20 +73,12 @@ class UserService{
             ]);
         }
 
-        $lastUserMessage = collect($messages)
-            ->reverse()
-            ->first(fn ($m) => 
-                (is_array($m) ? $m['type'] : $m->type) === 'user'
-            );
+        $lastUserMessage = collect($messages)->last();
+        if (!isset($lastUserMessage['content'])){
+            throw new Exception("No message content");
+        };
 
-
-        if (!$lastUserMessage) return;
-
-        $userContent = is_array($lastUserMessage)
-            ? ($lastUserMessage['content'] ?? null)
-            : ($lastUserMessage->content ?? null);
-
-        if (!$userContent) return;
+        $userContent = $lastUserMessage['content'];
 
         // get ai model 
         $model = AiModel::where("name" , $aiModel)
@@ -112,6 +103,7 @@ class UserService{
             ->get();
     }
 
+<<<<<<< HEAD
     public static function getFriends(string $name , int $userId){
         if(empty($name)){
             throw new Exception("Name is empty");
@@ -178,4 +170,33 @@ class UserService{
         ];
     }
 
+=======
+    public static function returnSseHeaders(){
+        return [
+            "Content-Type" => "text/event-stream",
+            "Cache-Control" => "no-cache",
+            "Connection" => "keep-alive",
+            "X-Accel-Buffering" => "no",
+        ];
+    }
+
+    public static function returnFinalWorkflowResult($result){
+        echo "event: result\n";
+        echo "data: " . json_encode($result) . "\n\n";
+        ob_flush(); flush();
+    }
+
+    public static function initializeStream(){
+        return function (string $event, $data){// stream helper, this sends the events (chunks) to frontend
+                if (!is_string($data)) {
+                    $data = json_encode($data);
+                }
+
+                echo "event: $event\n";
+                echo "data: $data\n\n";// needs to have two new line charachters or else it breaks 
+                ob_flush(); flush();// this forces laravel to send now instead of waiting
+            };
+    }
+
+>>>>>>> refactor/Server-copilot
 }

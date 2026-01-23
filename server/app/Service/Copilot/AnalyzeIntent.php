@@ -8,24 +8,21 @@ use Illuminate\Support\Facades\Log;
 class AnalyzeIntent{
 
     // Orchestrater
-    public static function analyze(array $question): array {
-        $intentData = LLMService::intentAnalyzer($question);
-        $nodeData = LLMService::nodeAnalyzer($intentData["question"], $intentData["intent"]);
-        $final = LLMService::workflowSchemaValidator($intentData, $nodeData);
+    public static function analyze(array $messages ,?callable $stage ,?callable $trace): array {
+        $stage && $stage("analyzing");
 
-        $final["intent"] = $intentData["intent"];
-        $final["trigger"] = $intentData["trigger"];
-        $final["question"] = $intentData["question"];
+        $final = LLMService::intentAnalyzer($messages);
+        $final["embedding_query"] = self::buildWorkflowEmbeddingQuery($final,$final["question"]);
         $final["nodes"] = self::normalizeNodes($final["nodes"]);
-        $final["embedding_query"] = self::buildWorkflowEmbeddingQuery($final, $intentData["question"]);
 
-        Log::info("Intent" , ["intent" => $final["intent"]]);
-        Log::info("embedding_query" , ["embedding" => $final["embedding_query"]]);
+        $trace && $trace("intent analysis", [
+            "intent" => $final["intent"],
+        ]);
 
         return $final;
     }
 
-    private static function normalizeNodes(array $nodes): array {
+    public static function normalizeNodes(array $nodes): array {
         return array_values(array_unique(array_map(function ($n) {
             return preg_replace(
                 '/[^a-z0-9]/',
@@ -35,8 +32,15 @@ class AnalyzeIntent{
         }, $nodes)));
     }
 
+    public static function normalizeNode(string $node): string {
+        return preg_replace(
+            '/[^a-z0-9]/',
+            '',
+            strtolower(trim($node))
+        );
+    }
 
-    private static function buildWorkflowEmbeddingQuery(array $analysis, string $question): string {
+    public static function buildWorkflowEmbeddingQuery(array $analysis, string $question): string {
         $parts = [];
 
         $parts[] = $analysis["intent"];

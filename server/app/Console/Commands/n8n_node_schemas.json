@@ -1,0 +1,39 @@
+[
+  {
+  "node": "emailSend",
+  "node_normalized": "emailsend",
+  "displayName": "Send Email",
+  "description": "Send an email using a configured email service provider",
+  "resource": "email",
+  "operation": "send",
+  "is_trigger": false,
+  "credentials": [
+    "smtp",
+    "awsSes",
+    "mailgun",
+    "sendgrid",
+    "mandrill"
+  ],
+  "credentials_details": {
+    "smtp": ["host", "port", "username", "password"],
+    "awsSes": ["accessKeyId", "secretAccessKey", "region"],
+    "mailgun": ["apiKey", "domain"],
+    "sendgrid": ["apiKey"]
+  },
+  "fields": [
+    { "name": "from", "type": "string", "required": true },
+    { "name": "to", "type": "string", "required": true },
+    { "name": "subject", "type": "string", "required": true },
+    { "name": "text", "type": "string", "required": false },
+    { "name": "html", "type": "string", "required": false },
+    { "name": "cc", "type": "string", "required": false },
+    { "name": "bcc", "type": "string", "required": false },
+    { "name": "attachments", "type": "array", "required": false }
+  ],
+  "inputs": ["main"],
+  "outputs": ["main"],
+  "version": "v1",
+  "source": "canonical"
+}
+
+]
