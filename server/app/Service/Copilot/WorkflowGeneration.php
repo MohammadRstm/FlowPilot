@@ -53,7 +53,6 @@ class WorkflowGeneration{
                 "fields"      => $s["fields"] ?? [],
                 "inputs"      => $s["inputs"] ?? [],
                 "outputs"     => $s["outputs"] ?? [],
-                "score"       => $row["score"]
             ];
         }
 

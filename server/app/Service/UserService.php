@@ -12,8 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class UserService{
 
-    public static function getCopilotAnswer(array $messages, ?int $historyId = null , ?callable $stream = null): array{
-        $userId = 1; // replace with authenticated user id when auth is wired
+    public static function getCopilotAnswer(array $messages, int $userId , ?int $historyId = null , ?callable $stream = null): array{
 
         $answer = GetAnswer::execute($messages , $stream);
         $history = self::handleHistoryManagement($userId , $historyId , $messages , $answer);

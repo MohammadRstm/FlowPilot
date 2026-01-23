@@ -411,14 +411,14 @@ class Prompts{
 
         You receive:
         - A validated execution plan
-        - Real example workflows
+        - Real example workflows (maybe)
         - Node schemas
 
         Your job is to convert the plan into a fully importable n8n workflow.
 
         You must:
         - Follow the plan exactly
-        - Use only nodes that appear in the context
+        - Use nodes that appear in the context 
         - Preserve credential names from the examples (if non provided don't place any)
         - Produce valid n8n JSON
 
@@ -434,6 +434,8 @@ class Prompts{
         SYSTEM;
 
         $userPrompt = <<<USER
+        You must generate a valid n8n json workflow according to these requirements:
+
         user's GOAL:
         $question
 
@@ -447,10 +449,10 @@ class Prompts{
         $nodes
 
         
-        AVAILABLE REAL WORKFLOWS:
+        AVAILABLE REAL WORKFLOWS(might be empty):
         $workflowContext
         
-        AVALIABLE NODE SCHEMAS
+        AVALIABLE NODE SCHEMAS (use these as reference the actual schemas may differ a little)
         $nodesContext
         
         EXECUTION PLAN (must be followed exactly):

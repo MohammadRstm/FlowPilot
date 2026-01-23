@@ -17,15 +17,12 @@ class UserController extends Controller{
     }
 
     public function confirmWorkflow(ConfirmWorkflowRequest $req){
-        try{
-            UserService::saveWorkflow($req);
-            return $this->successResponse(["message" => "Workflow saved"]);
-        }catch(Exception $ex){
-            return $this->errorResponse("Failed to save worfklow" , ["1" => $ex->getMessage()]);
-        }
+        UserService::saveWorkflow($req);
+        return $this->successResponse(["message" => "Workflow saved"]);
     }
 
     private function askCopilot($req){
+        $userId = 1;
         $messages = json_decode($req->query('messages'), true);
         $historyId = $req->query('history_id');
 
@@ -37,11 +34,11 @@ class UserController extends Controller{
 
         $result = UserService::getCopilotAnswer(
             $messages,
+            $userId,
             $historyId,
-            $stream// the helper is sent further down the pipeline for detialed chunks
+            $stream
         );
 
-        // finally we send the results
         UserService::returnFinalWorkflowResult($result);
     }
 

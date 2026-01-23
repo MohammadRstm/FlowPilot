@@ -15,7 +15,7 @@ class UserCopilotHistoryController extends Controller
      */
     public function index(){
         try {
-            $userId = 1; // TODO: replace with authenticated user id
+            $userId = 1; 
             $histories = UserService::getChatHistory($userId);
 
             return $this->successResponse([

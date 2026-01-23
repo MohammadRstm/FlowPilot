@@ -4,6 +4,7 @@ namespace App\Service\Copilot;
 
 use App\Console\Commands\Services\IngestionService;
 use Exception;
+use Illuminate\Http\Client\Pool;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -17,6 +18,9 @@ class GetPoints{
     private static $numberOfRetrievedActionNodes = 30;
     private static $numberOfRetrievedSchemasPerNode = 10;
     private static $numberOfRetrievedWorkflows = 30;
+
+    private static float $minNodeScore = 0.15; 
+
 
     public static function execute(array $analysis, ?callable $stage, ?callable $trace): array{
         $stage && $stage("retrieving");
@@ -59,6 +63,10 @@ class GetPoints{
             $nodes
         );
 
+        Log::info("Final points" , [
+            "schemas"   => $schemas
+        ]);
+
         return [
             "workflows" => $workflows,
             "nodes"     => $nodes,
@@ -66,7 +74,6 @@ class GetPoints{
         ];
     }
 
-    /** WORKFLOW SEARCH */
     private static function searchWorkflows(array $dense, array $sparse): array{
         return self::query(
             self::$N8N_WORKFLOWS_COLLECTION,
@@ -78,7 +85,6 @@ class GetPoints{
         );
     }
 
-    /** NODES SEARCH */
     private static function searchNodes(array $dense, array $sparse): array{
 
         $triggerHits = self::getTriggerPoints($dense , $sparse);
@@ -146,77 +152,209 @@ class GetPoints{
             } , $actionNodesHits)
         ]);
 
+        $actionNodesHits = self::filterByAdaptiveScore($actionNodesHits);
+
+        Log::info("Action nodes after score filter", [
+            "returned_after_filter" => array_map(function($h){
+                return[
+                    "name" => $h["payload"]["class_name"]
+                ];
+            } , $actionNodesHits)
+        ]);
+
+        $actionNodesHits = self::filterByAdaptiveScore($actionNodesHits);
+        $actionNodesHits = self::keepLatestVersions($actionNodesHits);
+
+        Log::info("Action nodes after version collapse", [
+            "kept" => array_map(fn($h) => $h["payload"]["class_name"], $actionNodesHits)
+        ]);
+
         return $actionNodesHits;
     }
 
-    /** SCHEMA SEARCH */
-    // private static function searchSchemas(array $dense, array $sparse , array $nodeHits): array{
-    //     // iterate over retrieved nodes and seach via node_id to node_normalized
-    //     $schemas = [];
-    //     foreach($nodeHits as $node){
-    //         $filter = [
-    //             "should" =>[
-    //                 ["key" => "node_normalized" , "match" => ["value" => strtolower($node["payload"]["node_id"])]]
-    //             ]
-    //         ];
+    private static function filterByAdaptiveScore(array $hits, int $maxKeep = 8): array{
+        if (empty($hits)) return [];
 
-    //         $nodeSchema = self::query(
-    //         "node_schemas",
-    //         $dense,
-    //         $sparse,
-    //         $filter,
-    //         true,
-    //         self::$numberOfRetrievedSchemasPerNode
-    //         );
-            
-    //         Log::info("Schemas for " . $node["payload"]["node_id"] . " :" , ["schema" => array_map(function($s){
-    //             return[
-    //                 "operation" => $s["payload"]["operation"] ?? "N/A"
-    //             ];
-    //         } , $nodeSchema)]);
+        usort($hits, function ($a, $b) {
+            return ($b['score'] ?? 0) <=> ($a['score'] ?? 0);
+        });
 
-    //         $schemas[] = $nodeSchema;
-    //     }
-       
-    //     return $schemas;
-    // }
+        $best = $hits[0]['score'] ?? 0.0;
+
+        if ($best <= 0.0) {
+            Log::info("filterByAdaptiveScore: best score is zero, returning empty");
+            return [];
+        }
+
+        if ($best >= 0.6) {
+            $ratio = 0.35;
+        } elseif ($best >= 0.4) {
+            $ratio = 0.45;
+        } elseif ($best >= 0.25) {
+            $ratio = 0.60;
+        } else {
+            $selected = array_slice($hits, 0, 1);
+            Log::info("filterByAdaptiveScore: best < 0.25, keeping top 1 only", [
+                'best' => round($best, 3),
+                'kept' => count($selected),
+                'top_scores' => array_map(fn($h) => round($h['score'],3), array_slice($hits,0,5)),
+            ]);
+            return $selected;
+        }
+
+        $threshold = $best * $ratio;
+
+        $kept = array_values(array_filter($hits, function ($hit) use ($threshold) {
+            return ($hit['score'] ?? 0) >= $threshold;
+        }));
+
+        if (count($kept) > $maxKeep) {
+            $kept = array_slice($kept, 0, $maxKeep);
+        }
+
+        Log::info("filterByAdaptiveScore", [
+            'best' => round($best, 3),
+            'ratio' => $ratio,
+            'threshold' => round($threshold, 3),
+            'kept' => count($kept),
+            'scores_kept' => array_map(fn($h) => round($h['score'],3), $kept),
+        ]);
+
+        return $kept;
+    }
+
 
     private static function searchSchemas(array $nodeHits): array{
-        // iterate over retrieved nodes and seach via node_id to node_normalized
-        $schemas = [];
-        foreach($nodeHits as $node){
-            $text = "".
-                $node["payload"]["class_name"] . " ".
-                $node["payload"]["node_id"] . " ".
-                $node["payload"]["display_name"] . " ".
-                $node["payload"]["description"];
-             
-
-            $denseVector = IngestionService::embed($text);
-            $sparseVector = IngestionService::embed($text);
-
-            $nodeSchema = self::query(
-            self::$N8N_SCHEMAS_COLLECTION,
-            $denseVector,
-            $sparseVector,
-            [],
-            true,
-            self::$numberOfRetrievedSchemasPerNode
-            );
-            
-            Log::info("Schemas for " . $node["payload"]["node_id"] . " :" , ["schema" => array_map(function($s){
-                return[
-                    "name" => $s["payload"]["node_normalized"] ?? "N/A",
-                    "operation" => $s["payload"]["operation"] ?? "N/A"
-                ];
-            } , $nodeSchema)]);
-
-            $schemas[] = $nodeSchema;// an array of schemas that might relate to the node we searched for somehting like : 
-            //Schemas for emailSend : {"schema":[{"name":"emailsend","operation":"send"},{"name":"awsses","operation":"send"},{"name":"awsses","operation":"sendTemplate"},{"name":"mailgun","operation":"default"},{"name":"mailchimp","operation":"send"},{"name":"awsses","operation":"send"},{"name":"mandrill","operation":"sendTemplate"},{"name":"mandrill","operation":"sendHtml"},{"name":"awsses","operation":"create"},{"name":"mailcheck","operation":"check"}]} 
+        $nodesById = [];
+        foreach ($nodeHits as $node) {
+            $nodeId = $node['payload']['node_id'] ?? null;
+            if (!$nodeId) continue;
+            $nodesById[$nodeId] = $node;
         }
-       
+
+        $uniqueNodeIds = array_keys($nodesById);
+        if (empty($uniqueNodeIds)) return [];
+
+        $chunkSize = 8; 
+        $batches = array_chunk($uniqueNodeIds, $chunkSize);
+
+        $allSchemas = []; 
+
+        foreach ($batches as $batch){   
+            
+            $responses = Http::pool(fn (Pool $pool) => array_map(function ($nodeId) use ($pool , $nodesById){
+                $node = $nodesById[$nodeId];
+                $schemasPerNode =  max(
+                    3,
+                    intval(self::$numberOfRetrievedSchemasPerNode * ($node['score'] ?? 0))
+                );
+                $text = trim(
+                    ($node['payload']['class_name'] ?? '') . ' ' .
+                    ($node['payload']['node_id'] ?? '') . ' ' .
+                    ($node['payload']['display_name'] ?? '') . ' ' .
+                    ($node['payload']['description'] ?? '')
+                );
+
+                $denseVector = IngestionService::embed($text);
+                $sparseVector = IngestionService::buildSparseVector($text);
+
+                $endpoint = rtrim(env("QDRANT_CLUSTER_ENDPOINT", ''), '/');
+                $payload = [
+                    'limit' => $schemasPerNode,
+                    'with_payload' =>  true,
+                    'vector' => ['name' => 'dense-vector', 'vector' => $denseVector ?? []],
+                    'sparse_vector' => ['name' => 'text-sparse', 'vector' => $sparseVector ?? []],
+                    'score_threshold' => 0.0,
+                ];
+
+                return $pool
+                ->as($nodeId)
+                ->withHeaders([
+                    'api-key' => env('QDRANT_API_KEY'),
+                ])
+                ->post(
+                    "{$endpoint}/collections/" . self::$N8N_SCHEMAS_COLLECTION . "/points/search",
+                    $payload
+                );
+            }, $batch));
+
+            foreach ($batch as $nodeId) {
+                $resp = $responses[$nodeId];
+                if (!$resp->ok()) {
+                    Log::warning("Schema search failed for {$nodeId}", [
+                            'status' => $resp->status(),
+                            'body'   => $resp->body(),
+                            'json'   => $resp->json(),
+                            'headers'=> $resp->headers(),
+                        ]);
+                    $allSchemas[$nodeId] = [];
+                    continue;
+                }
+                $result = $resp->json('result') ?? [];
+                $allSchemas[$nodeId] = is_array($result) ? $result : [];
+            }
+        }
+
+        $schemas = [];
+        foreach ($nodeHits as $node) {
+            $nodeId = $node['payload']['node_id'] ?? null;
+            $schemas[] = $allSchemas[$nodeId] ?? [];
+        }
+
         return $schemas;
     }
+
+    private static function parseNodeVersion(string $className): array {
+        if (preg_match('/^(.*?)(?:V(\d+))$/i', $className, $m)) {
+            return [
+                'base' => $m[1],
+                'version' => (int) $m[2],
+            ];
+        }
+
+        return [
+            'base' => $className,
+            'version' => 0, // legacy / unversioned
+        ];
+    }
+
+    private static function keepLatestVersions(array $hits): array {
+        $bestByBase = [];
+
+        foreach ($hits as $hit) {
+            $class = $hit['payload']['class_name'] ?? null;
+            if (!$class) continue;
+
+            ['base' => $base, 'version' => $version] = self::parseNodeVersion($class);
+
+            if (!isset($bestByBase[$base])) {
+                $bestByBase[$base] = $hit + ['__version' => $version];
+                continue;
+            }
+
+            $current = $bestByBase[$base]['__version'];
+
+            // Prefer higher version
+            if ($version > $current) {
+                $bestByBase[$base] = $hit + ['__version' => $version];
+                continue;
+            }
+
+            // Same version → prefer higher score
+            if ($version === $current && ($hit['score'] ?? 0) > ($bestByBase[$base]['score'] ?? 0)) {
+                $bestByBase[$base] = $hit + ['__version' => $version];
+            }
+        }
+
+        // Clean helper field
+        return array_values(array_map(function ($h) {
+            unset($h['__version']);
+            return $h;
+        }, $bestByBase));
+    }
+
+
+
 
     /** EMBEDDINGS */
     private static function getEmbeddingQueries($analysis){
