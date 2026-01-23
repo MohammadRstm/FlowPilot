@@ -9,13 +9,15 @@ use App\Models\UserCopilotHistory;
 use App\Service\Copilot\GetAnswer;
 use App\Service\Copilot\SaveWorkflow;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class UserService{
 
-    public static function getCopilotAnswer(array $messages, int $userId , ?int $historyId = null , ?callable $stream = null): array{
+    public static function getCopilotAnswer(array $messages, ?int $userId , ?int $historyId = null , ?callable $stream = null): array{
 
         $answer = GetAnswer::execute($messages , $stream);
+        if(!$answer) throw new Exception("Failed to generate n8n workflow");
         $history = self::handleHistoryManagement($userId , $historyId , $messages , $answer);
 
         return [
@@ -24,8 +26,10 @@ class UserService{
         ];
     }
 
-    private static function handleHistoryManagement(int $userId , ?int $historyId , array $messages , $answer){
+    private static function handleHistoryManagement(?int $userId , ?int $historyId , array $messages , $answer){
+        Log::debug("here");
         $history = self::saveHistory($historyId , $userId);
+        Log::debug("here");
 
         self::saveCopilotHistories(
             $history->id,
@@ -34,6 +38,7 @@ class UserService{
             $userId,
             env('OPENAI_MODEL')
         );
+        Log::debug("here");
 
         return $history;
     }
@@ -103,7 +108,6 @@ class UserService{
             ->get();
     }
 
-<<<<<<< HEAD
     public static function getFriends(string $name , int $userId){
         if(empty($name)){
             throw new Exception("Name is empty");
@@ -170,7 +174,6 @@ class UserService{
         ];
     }
 
-=======
     public static function returnSseHeaders(){
         return [
             "Content-Type" => "text/event-stream",
@@ -198,5 +201,4 @@ class UserService{
             };
     }
 
->>>>>>> refactor/Server-copilot
 }

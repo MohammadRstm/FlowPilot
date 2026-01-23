@@ -1,18 +1,22 @@
 import { useRef } from "react";
 import type { GenerationStage, ChatMessage } from "../Copilot.types";
 import { streamCopilotQuestion } from "../../../api/copilot/streamResponse";
+import { useToast } from "../../../context/toastContext";
 
 export function useCopilotStream({
   onStage,
   onProgress,
   onTrace,
   onComplete,
+  onError
 }: {
   onStage: (s: GenerationStage) => void;
   onProgress: (key: number | "new", label: GenerationStage) => void;
   onTrace: (key: number | "new", trace: any) => void;
   onComplete: (answer: any, historyId: number) => void;
+  onError: () => void;
 }) {
+  const { showToast } = useToast();
   const streamRef = useRef<EventSource | null>(null); // SSE connection
   const runIdRef = useRef(0);
 
@@ -24,8 +28,9 @@ export function useCopilotStream({
 
   const run = (
     messages: ChatMessage[],
-    historyId: number | null,
-    key: number | "new" = "new"
+    historyId: number | null,// active key 
+    key: number | "new" = "new",
+    userId: number
   ) => {
     runIdRef.current += 1;
     const id =runIdRef.current;
@@ -36,7 +41,9 @@ export function useCopilotStream({
     onStage("analyzing");
     // open new SSE connection
     streamRef.current = streamCopilotQuestion(
+      userId,
       messages,
+      showToast,
       historyId,
       (stage) => {
         onStage(stage as GenerationStage);
@@ -49,6 +56,10 @@ export function useCopilotStream({
       (answer, historyId) => {
         if (id !== runIdRef.current) return;
         onComplete(answer, historyId);
+      },
+      () =>{
+        if (id !== runIdRef.current) return;
+        onError();
       }
     );
   };

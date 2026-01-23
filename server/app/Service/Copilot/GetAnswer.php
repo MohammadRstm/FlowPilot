@@ -2,6 +2,9 @@
 
 namespace App\Service\Copilot;
 
+use App\Exceptions\UserFacingException;
+use Illuminate\Support\Facades\Log;
+
 // THINGS WE DO THAT DOESN'T MAKE SENSE : 
 // IN RAG WE SAVE N8N NODES CATALOGS AND N8N NODES SCHEMAS ALTHOUGH SCHEMAS ALONE MIGHT SUFFICE
 // ANALYZE INTENT SERVICE GIVES US THE NODES NEEDED FOR THE WORFKLOW GENERATION, BUT THERE IS NO GURANTEE THAT AN AI MODEL ACTUALLY KNOWS ALL THE N8N NODES AVAILABLE
@@ -14,17 +17,30 @@ class GetAnswer{
         // intialize streaming services
         $stage = self::initializeStage($stream);
         $trace = self::initializeTrace($stream);
+        $error = self::initializeError($stream);
 
+        try{
+            $analysis = AnalyzeIntent::analyze($messages , $stage , $trace);
+            $points = GetPoints::execute($analysis , $stage , $trace);
+            $finalPoints = RankingFlows::rank($analysis, $points , $stage);
+            $workflow = LLMService::generateAnswer($analysis, $finalPoints , $stage , $trace);
 
-        $analysis = AnalyzeIntent::analyze($messages , $stage , $trace);
-        $points = GetPoints::execute($analysis , $stage , $trace);
-        $finalPoints = RankingFlows::rank($analysis, $points , $stage);
-        $workflow = LLMService::generateAnswer($analysis, $finalPoints , $stage , $trace);
+            $validateWorkflowService = new ValidateFlowLogicService();
+            $workflow = $validateWorkflowService->execute($workflow , $analysis , $finalPoints ,$stage ,  $trace);
 
-        $validateWorkflowService = new ValidateFlowLogicService();
-        $workflow = $validateWorkflowService->execute($workflow , $analysis , $finalPoints ,$stage ,  $trace);
+            return $workflow;
+        }catch(UserFacingException $e){
+            $error($e->getMessage());
+        }catch(\Throwable $e){
+            Log::error('Copilot execution failed', [
+                'exception' => $e,
+                'stage' => 'execute',
+            ]);
 
-        return $workflow;
+            $error("Unexpected error occurred");
+
+            return null;
+        }
     }
 
     private static function initializeStage($stream){
@@ -37,7 +53,18 @@ class GetAnswer{
             "payload" => $payload
         ]);
     }
+
+    
+    private static function initializeError($stream) {
+        return fn(string $message, array $context = [], int $code = 400) 
+            => $stream && $stream("error", [
+                "message" => $message,
+                "code" => $code,
+                "context" => $context,
+            ]);
+    }
 }
+
 
 
 

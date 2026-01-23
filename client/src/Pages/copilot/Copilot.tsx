@@ -6,9 +6,10 @@ import { ChatView } from "./components/ChatView";
 import { ChatInput } from "./components/ChatInput";
 import { FeedbackToast } from "./components/FeedbackToast";
 
-import type {
-  GenerationStage,
-  TraceBlock,
+import {
+  ChatMessageType,
+  type GenerationStage,
+  type TraceBlock,
 } from "./Copilot.types";
 
 import { useCopilotChatController } from "./hooks/useCopilotChat.hook";
@@ -18,8 +19,12 @@ import { applyTrace } from "./utils/traceAdapter";
 import { buildWorkflowFile, commitHistory, finalizeAssistantMessage } from "./utils/onComplete";
 import { useCopilotHistoryController } from "./hooks/useCopilotHistoryController.hook";
 import { HistoryPanel } from "./components/HistoryPanel/HistoryPanel";
+import { useAuth } from "../../context/useAuth";
 
 export const Copilot =() => {
+  const { user } = useAuth();
+  const userId = user?.id;
+
   const [question, setQuestion] = useState("");
   const [stage, setStage] = useState<GenerationStage>("idle");// lets the UI know where the UI is in the generation process
   const [currentHistoryId, setCurrentHistoryId] = useState<number | null>(null);
@@ -29,7 +34,7 @@ export const Copilot =() => {
   const chatRef = useRef<HTMLDivElement>(null);
 
   const [activeGenerationKey, setActiveGenerationKey] =
-  useState<number | "new" | null>(null);// check why I put this null 
+  useState<number | "new" | null>(null); 
 
   const [traceBlocks, setTraceBlocks] = useState<Record<number | "new", TraceBlock[]>>(
     { new: [] }
@@ -45,7 +50,8 @@ export const Copilot =() => {
     onTrace: (key, trace) => {
       setTraceBlocks(prev => applyTrace(prev , key , trace));
     },
-    onComplete: (answer, newHistoryId) =>handleStreamComplete(answer , newHistoryId)
+    onComplete: (answer, newHistoryId) =>handleStreamComplete(answer , newHistoryId),
+    onError : () => handleStreamError(),
   });
 
   // copilot chat hook
@@ -58,6 +64,7 @@ export const Copilot =() => {
     retry,
   } = useCopilotChatController({
     run,
+    userId,
     cancel,
     setStage,
     setQuestion,
@@ -132,6 +139,38 @@ export const Copilot =() => {
     setActiveGenerationKey(null);
     openFeedback(question, answer);
   };
+
+  const handleStreamError = () => {
+    const key = currentHistoryId ?? "new";
+
+    setTraceBlocks(prev => ({
+      ...prev,
+      [key]: [],
+    }));
+
+    console.log("here");
+
+    setMessageStore(prev => {
+      const msgs = prev[key] ?? [];
+
+      return {
+        ...prev,
+        [key]: msgs.map((m, i) =>
+          i === msgs.length - 1 && m.type === ChatMessageType.ASSISTANT
+            ? {
+                ...m,
+                isStreaming: false,
+                content: "Something went wrong. Please try again.",
+              }
+            : m
+        ),
+      };
+    });
+
+    setStage("done");
+    setActiveGenerationKey(null);
+  };
+
 
   
   return (

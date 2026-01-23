@@ -71,7 +71,7 @@ class ValidateFlowLogicService{
             "workflow" => $repaired
         ]);
 
-        return $this->execute($repaired, $question, $totalPoints, $stage , $trace, $retries + 1);
+        return $this->execute($repaired, $analysis, $totalPoints, $stage , $trace, $retries + 1);
     }
 
     private function updateBestWorkflow(array $workflow, float $score){

@@ -2,6 +2,7 @@
 
 namespace App\Service\Copilot;
 
+use App\Exceptions\UserFacingException;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\Response;
@@ -60,7 +61,7 @@ class LLMService{
         $analyzedQuestion = self::callOpenAI($prompt);
 
         if($analyzedQuestion["attack"]){
-            throw new Exception("Prompt injection detected");
+            throw new UserFacingException("Prompt injection detected");
         }else{
             $question = $analyzedQuestion["question"];
         }

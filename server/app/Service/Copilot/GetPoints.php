@@ -19,9 +19,6 @@ class GetPoints{
     private static $numberOfRetrievedSchemasPerNode = 10;
     private static $numberOfRetrievedWorkflows = 30;
 
-    private static float $minNodeScore = 0.15; 
-
-
     public static function execute(array $analysis, ?callable $stage, ?callable $trace): array{
         $stage && $stage("retrieving");
 
@@ -283,7 +280,6 @@ class GetPoints{
                 if (!$resp->ok()) {
                     Log::warning("Schema search failed for {$nodeId}", [
                             'status' => $resp->status(),
-                            'body'   => $resp->body(),
                             'json'   => $resp->json(),
                             'headers'=> $resp->headers(),
                         ]);

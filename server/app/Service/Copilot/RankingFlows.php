@@ -5,7 +5,6 @@ namespace App\Service\Copilot;
 use Illuminate\Support\Facades\Log;
 
 class RankingFlows {
-    // tuning knobs
     private static float $threshold = 0.75;
     private static int $workflowsToBeUsedIndex = 2; 
 
@@ -130,7 +129,6 @@ class RankingFlows {
 
         return $grouped;
     }
-
 
     private static function complexityScore(int $minRequired, int $actual): float {
         if ($actual === 0) return 0.0;

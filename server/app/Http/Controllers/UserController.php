@@ -12,6 +12,7 @@ use Exception;
 use Illuminate\Http\Request;
 
 class UserController extends Controller{
+    
     public function askStream(Request $req){
         return response()->stream(function () use ($req){// initiate stream
             $this->askCopilot($req);
@@ -24,12 +25,12 @@ class UserController extends Controller{
     }
 
     private function askCopilot($req){
-        $userId = 1;
+        $userId = (int) $req->query("userId");
         $messages = json_decode($req->query('messages'), true);
-        $historyId = $req->query('history_id');
+        $historyId = (int) $req->query('history_id');
 
-        if (!$messages || !is_array($messages)) {
-            abort(400, "Invalid messages payload");
+        if ((!$messages || !is_array($messages)) || !$userId) {
+            abort(400, "Invalid payload");
         }
 
         $stream = UserService::initializeStream();

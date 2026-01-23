@@ -4,9 +4,10 @@ import { STAGE_LABELS } from "../Copilot.constants";
 
 const STORAGE_KEY = "copilot_messages";
 
-type ChatKey = number | "new";
+export type ChatKey = number | "new";
 
 type CopilotChatPropsType = {
+  userId: number;
   run: Function;
   cancel: () => void;
   setStage: (s: GenerationStage) => void;
@@ -20,6 +21,7 @@ type CopilotChatPropsType = {
 
 export function useCopilotChatController({
   run,
+  userId,
   cancel,
   setStage,
   setQuestion,
@@ -35,10 +37,10 @@ export function useCopilotChatController({
 
     useEffect(() => {
         try {
-        const cached = localStorage.getItem(STORAGE_KEY);
-        if (cached) setMessageStore(JSON.parse(cached));
+            const cached = localStorage.getItem(STORAGE_KEY);
+            if (cached) setMessageStore(JSON.parse(cached));
         } catch {
-        localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(STORAGE_KEY);
         }
     }, []);
 
@@ -79,7 +81,7 @@ export function useCopilotChatController({
                 content: label,
                 isStreaming: true,
                 canRetry: true,
-                canCancel: true,
+                canCancel: false,
             },
             ],
         };
@@ -108,11 +110,11 @@ export function useCopilotChatController({
         .slice(-10);
         
         setActiveGenerationKey(activeKey);
-        run(lastTenUserMessages, currentHistoryId, activeKey);
+        run(lastTenUserMessages, currentHistoryId, activeKey , userId);
     };
 
     const cancelGeneration = () => {
-        cancel();
+        cancel();// signals backend
         setActiveGenerationKey(null);
         setStage("done");
         resetTracesForKey(activeKey);
