@@ -15,8 +15,11 @@ class User extends Authenticatable{
         'first_name',
         'last_name',
         'email',
+        'n8n_base_url',
+        'n8n_api_key',
         'password',
         'photo_url',
+        'google_id',
         'email_verified_at',
     ];
 

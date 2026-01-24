@@ -1,28 +1,54 @@
-import React from "react";
+import React, { useContext } from "react";
 import "../../styles/Header.css";
 import { Link } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
+import Logo from "../../assets/header-logo-removebg-preview.png";
 
 const Header: React.FC = () => {
+  const auth = useContext(AuthContext);
+  const user = auth?.user;
+
+  const fullName = user
+    ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim()
+    : "";
+
+  const initials = user
+    ? `${user.first_name?.[0] ?? "F"}${user.last_name?.[0] ?? "P"}`.toUpperCase()
+    : "";
+
+
   return (
     <header className="header">
       <div className="header__container">
         <div className="header__logo">
           <Link to="/">
-            <span className="logo-icon">⟡</span>
-            <span className="logo-text">
-                <strong>Flow</strong> Pilot
+            <span className="logo-icon">
+            <img style={{width:"150px"}} className="logo-image" src={Logo} alt="FP" />
             </span>
           </Link>
         </div>
 
         <nav className="header__nav">
-          <Link to="/">Community</Link>
+          <Link to="/community">Community</Link>
           <Link to="/copilot">Copilot</Link>
-          <a href="#about">About Us</a>
-          <a href="#get-started">Get Started</a>
-          <a href="#login" className="login">
-            Login
-          </a>
+          <Link to="/aboutus">About Us</Link>
+
+          {user ? (
+            <Link to="/profile" className="header__user-chip">
+              <div className="header__user-avatar">
+                {user.photo_url ? (
+                  <img src={import.meta.env.VITE_PHOTO_BASE_URL + user.photo_url} alt={fullName || "User avatar"} />
+                ) : (
+                  <span>{initials}</span>
+                )}
+              </div>
+              <span className="header__user-name">{fullName}</span>
+            </Link>
+          ) : (
+            <Link to="/login" className="login">
+              Login
+            </Link>
+          )}
         </nav>
       </div>
     </header>

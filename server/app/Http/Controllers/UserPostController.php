@@ -2,66 +2,40 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\UserPost;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreUserPostRequest;
-use App\Http\Requests\UpdateUserPostRequest;
+use App\Http\Requests\CreatePostRequest;
+use App\Service\UserPostService;
+use Illuminate\Http\Request;
 
-class UserPostController extends Controller
-{
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
+class UserPostController extends Controller{
+
+    public function fetchPosts(Request $request){
+        $userId = $request->user()->id;
+        $page = (int) $request->query('page', 1);
+
+        $paginatedPosts = UserPostService::getPosts($userId , $page);
+        return $this->successResponse($paginatedPosts);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+    public function toggleLike(Request $request , int $postId){
+        $userId = $request->user()->id;
+
+        $likeResp = UserPostService::toggleLike($userId , $postId);
+        return $this->successResponse($likeResp);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreUserPostRequest $request)
-    {
-        //
+    public function export(Request $request , int $postId){
+        $userId = $request->user()->id;
+
+        $exportResp = UserPostService::export($userId , $postId);
+        return $this->successResponse($exportResp);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(UserPost $userPost)
-    {
-        //
-    }
+    public function createPost(CreatePostRequest $request){
+        $userId = $request->user()->id;
+        $form = $request->validated();
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(UserPost $userPost)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateUserPostRequest $request, UserPost $userPost)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(UserPost $userPost)
-    {
-        //
-    }
+        $createdResp = UserPostService::createPost($userId , $form);
+        return $this->successResponse(["post_id" => $createdResp]);
+    }   
 }

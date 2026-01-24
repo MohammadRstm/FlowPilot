@@ -79,6 +79,7 @@ body {
 .fake-workflow {
   --x: 50%;
   --y: 50%;
+  margin-top:20px;
 
   position: relative;
   height: 500px;
@@ -146,11 +147,19 @@ body {
   color: white;
 }
 
+
+
+
 .data-chat-section h2 {
   text-align: center;
   font-size: 46px;
-  margin-bottom: 80px;
 }
+
+.data-chat-section h3{
+  margin-bottom: 30px;
+  text-align: center;
+}
+
 
 .data-chat-layout {
   display: grid;
@@ -225,7 +234,7 @@ body {
   position: relative;
   width: 480px;
   height: 480px;
-  margin: 100px auto;
+  margin: 20px auto;
 }
 
 /* Center */
@@ -334,4 +343,31 @@ footer {
   padding: 60px 10%;
   background: #060300;
   border-top: 1px solid #ff9b0020;
+}
+
+h2{
+  font-size: 2rem;
+}
+
+h3{
+  font-weight: normal;
+}
+
+/* Footer links */
+footer div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+footer a {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 0.95rem;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+}
+
+footer a:hover {
+  opacity: 1;
 }

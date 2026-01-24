@@ -1,0 +1,148 @@
+.settings-page {
+  min-height: 100vh;
+  padding: 24px;
+  color: var(--text, #e6e6e6);
+}
+
+.settings-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.settings-back-btn:hover {
+  color: #fff;
+}
+
+.settings-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 24px;
+}
+
+.settings-sidebar {
+  background: #000000;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings-tab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  color: #cfcfcf;
+  cursor: pointer;
+  text-align: left;
+  font-size: 14px;
+}
+
+.settings-tab:hover {
+  background: #1e2230;
+}
+
+.settings-tab.active {
+  background: #242a3b;
+  color: #fff;
+}
+
+.settings-tab.logout {
+  margin-top: auto;
+  color: #ff6b6b;
+}
+
+.settings-tab.logout:hover {
+  background: rgba(255, 107, 107, 0.1);
+}
+
+.settings-content {
+  background: #000000;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.settings-content h2 {
+  margin-bottom: 6px;
+}
+
+.settings-content p {
+  color: #aaa;
+  margin-bottom: 20px;
+}
+
+.settings-form {
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-form input {
+  background: #0f1115;
+  border: 1px solid #2a2f42;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #fff;
+}
+
+.settings-form input:focus {
+  outline: none;
+  border-color: #4c6fff;
+}
+
+.primary-btn {
+  margin-top: 12px;
+  background: #fda400;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.primary-btn:hover {
+  background: #fbbb4c;
+}
+
+.danger-btn {
+  background: #ff4d4f;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.danger-btn:hover {
+  background: #e03a3c;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .settings-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-sidebar {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .settings-tab {
+    white-space: nowrap;
+  }
+}

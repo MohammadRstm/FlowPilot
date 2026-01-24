@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import { filterHistories } from "./historySearch";
+import { filterHistories } from "./utils/historySearch";
 import { HistoryHeader } from "./components/HistoryHeader";
 import { HistorySearch } from "./components/HistorySearch";
 import { HistoryList } from "./components/HistoryList";
-import type { CopilotHistory } from "../../../../api/copilot/types";
+import type { CopilotHistory } from "../../hooks/data/types";
 
 interface HistoryPanelProps {
   histories?: CopilotHistory[];

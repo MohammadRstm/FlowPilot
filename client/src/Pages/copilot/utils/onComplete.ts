@@ -1,4 +1,4 @@
-import { ChatMessageType } from "../Copilot.types";
+import { ChatMessageType } from "../types";
 
 export const buildWorkflowFile = (answer: any) => {
   const blob = new Blob([JSON.stringify(answer, null, 2)], {

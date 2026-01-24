@@ -1,5 +1,5 @@
-import type { CopilotHistory } from "../../../../../api/copilot/types";
 import { Spinner } from "../../../../components/Spinner";
+import type { CopilotHistory } from "../../../hooks/data/types";
 
 interface Props {
   histories: CopilotHistory[];

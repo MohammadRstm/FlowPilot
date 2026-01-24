@@ -15,10 +15,11 @@ class SaveWorkflow{
         if(!$json){
             throw new Exception("Workflow given not correct json");
         }
+
         $question = $requestForm["question"];
-        
         $payload = self::buildPayload($json , $question);
         $embeddingText = self::buildEmbeddingText($payload);
+
         try{
             $denseVector = IngestionService::embed($embeddingText);
             $sparseVector = IngestionService::buildSparseVector($embeddingText);
@@ -51,27 +52,26 @@ class SaveWorkflow{
     }
 
     private static function buildPayload(string $json , string $question): array {
-    $metaData = LLMService::generateWorkflowQdrantPayload($json , $question); // description, tags, notes, category
+        $metaData = LLMService::generateWorkflowQdrantPayload($json , $question); // description, tags, notes, category
 
-    $decoded_workflow = json_decode($json , true);
-    if (!is_array($decoded_workflow)) {
-        throw new \RuntimeException("Invalid workflow JSON passed to buildPayload");
+        $decoded_workflow = json_decode($json , true);
+        if (!is_array($decoded_workflow)) {
+            throw new \RuntimeException("Invalid workflow JSON passed to buildPayload");
+        }
+
+        $nodes = array_map(fn($n) => $n['name'] ?? $n['type'] ?? '', $decoded_workflow['nodes'] ?? []);
+
+        return [
+            "workflow" => $decoded_workflow['name'] ?? '',
+            "description" => $metaData['description'] ?? '',
+            "notes" => $metaData['notes'] ?? '',
+            "tags" => is_array($metaData['tags'] ?? null) ? $metaData['tags'] : [],
+            "category" => $metaData['category'] ?? null,
+            "node_count" => count($decoded_workflow['nodes'] ?? []),
+            "nodes_used" => $nodes,
+            "raw" => $decoded_workflow
+        ];
     }
-
-    $nodes = array_map(fn($n) => $n['name'] ?? $n['type'] ?? '', $decoded_workflow['nodes'] ?? []);
-
-    return [
-        "workflow" => $decoded_workflow['name'] ?? '',
-        "description" => $metaData['description'] ?? '',
-        "notes" => $metaData['notes'] ?? '',
-        "tags" => is_array($metaData['tags'] ?? null) ? $metaData['tags'] : [],
-        "category" => $metaData['category'] ?? null,
-        "node_count" => count($decoded_workflow['nodes'] ?? []),
-        "nodes_used" => $nodes,
-        "raw" => $decoded_workflow
-    ];
-}
-
 
     private static function buildEmbeddingText(array $p): string{
         return implode("\n", [

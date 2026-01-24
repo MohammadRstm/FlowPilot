@@ -6,22 +6,27 @@ import { ChatView } from "./components/ChatView";
 import { ChatInput } from "./components/ChatInput";
 import { FeedbackToast } from "./components/FeedbackToast";
 
-import type {
-  GenerationStage,
-  TraceBlock,
-} from "./Copilot.types";
+import {
+  ChatMessageType,
+  type GenerationStage,
+  type TraceBlock,
+} from "./types";
 
-import { useCopilotChatController } from "./hooks/useCopilotChat.hook";
-import { useCopilotStream } from "./hooks/useCopilotStream.hook";
-import { useCopilotFeedback } from "./hooks/useCopilotFeedback.hook";
+import { useCopilotChatController } from "./hooks/ui/useCopilotChat.hook";
+import { useCopilotStream } from "./hooks/ui/useCopilotStream.hook";
+import { useCopilotFeedback } from "./hooks/ui/useCopilotFeedback.hook";
 import { applyTrace } from "./utils/traceAdapter";
 import { buildWorkflowFile, commitHistory, finalizeAssistantMessage } from "./utils/onComplete";
-import { useCopilotHistoryController } from "./hooks/useCopilotHistoryController.hook";
+import { useCopilotHistoryController } from "./hooks/ui/useCopilotHistoryController.hook";
 import { HistoryPanel } from "./components/HistoryPanel/HistoryPanel";
+import { useAuth } from "../../context/useAuth";
 
 export const Copilot =() => {
+  const { user } = useAuth();
+  const userId = user?.id;
+
   const [question, setQuestion] = useState("");
-  const [stage, setStage] = useState<GenerationStage>("idle");// lets the UI know where the UI is in the generation process
+  const [stage, setStage] = useState<GenerationStage>("idle");
   const [currentHistoryId, setCurrentHistoryId] = useState<number | null>(null);
 
   const activeKey = currentHistoryId ?? "new";
@@ -29,7 +34,7 @@ export const Copilot =() => {
   const chatRef = useRef<HTMLDivElement>(null);
 
   const [activeGenerationKey, setActiveGenerationKey] =
-  useState<number | "new" | null>(null);
+  useState<number | "new" | null>(null); 
 
   const [traceBlocks, setTraceBlocks] = useState<Record<number | "new", TraceBlock[]>>(
     { new: [] }
@@ -37,15 +42,16 @@ export const Copilot =() => {
 
 
   // streaming hook
-  const { run , cancel , runId} = useCopilotStream({// this hook requires three call back functions
-    onStage: setStage,// tracks current stage of generation
+  const { run , cancel , runId} = useCopilotStream({
+    onStage: setStage,
     onProgress: (key : number | "new", stage: GenerationStage) => {
-      upsertStreamingAssistant(key, stage); // updates chat messages reflecting the new stage
+      upsertStreamingAssistant(key, stage); 
     },
     onTrace: (key, trace) => {
       setTraceBlocks(prev => applyTrace(prev , key , trace));
     },
-    onComplete: (answer, newHistoryId) =>handleStreamComplete(answer , newHistoryId)
+    onComplete: (answer, newHistoryId) =>handleStreamComplete(answer , newHistoryId),
+    onError : () => handleStreamError(),
   });
 
   // copilot chat hook
@@ -58,6 +64,7 @@ export const Copilot =() => {
     retry,
   } = useCopilotChatController({
     run,
+    userId,
     cancel,
     setStage,
     setQuestion,
@@ -121,7 +128,10 @@ export const Copilot =() => {
         file.name
       );
 
-      return commitHistory(prev, newHistoryId, updated);
+      const commited = commitHistory(prev, newHistoryId, updated);
+      delete commited["new"];
+      
+      return commited;
     });
 
     setCurrentHistoryId(newHistoryId);
@@ -129,6 +139,38 @@ export const Copilot =() => {
     setActiveGenerationKey(null);
     openFeedback(question, answer);
   };
+
+  const handleStreamError = () => {
+    const key = currentHistoryId ?? "new";
+
+    setTraceBlocks(prev => ({
+      ...prev,
+      [key]: [],
+    }));
+
+    console.log("here");
+
+    setMessageStore(prev => {
+      const msgs = prev[key] ?? [];
+
+      return {
+        ...prev,
+        [key]: msgs.map((m, i) =>
+          i === msgs.length - 1 && m.type === ChatMessageType.ASSISTANT
+            ? {
+                ...m,
+                isStreaming: false,
+                content: "Something went wrong. Please try again.",
+              }
+            : m
+        ),
+      };
+    });
+
+    setStage("done");
+    setActiveGenerationKey(null);
+  };
+
 
   
   return (

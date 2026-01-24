@@ -1,5 +1,5 @@
-import { STAGE_LABELS } from "../Copilot.constants";
-import type { GenerationStage } from "../Copilot.types";
+import { STAGE_LABELS } from "../constants";
+import type { GenerationStage } from "../types";
 
 export function ProgressMessage({ stage }: { stage: GenerationStage }) {
   if (stage === "idle" || stage === "done") return null;

@@ -1,4 +1,4 @@
-import { ChatMessageType, type GenerationStage, type ChatMessage as Msg, type TraceBlock } from "../Copilot.types";
+import { ChatMessageType, type GenerationStage, type ChatMessage as Msg, type TraceBlock } from "../types";
 import { ProgressMessage } from "./ProgressMessage";
 import { TraceView } from "./tracer/TraceView";
 

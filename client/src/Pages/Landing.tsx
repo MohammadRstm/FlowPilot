@@ -2,8 +2,14 @@ import "../styles/Landing.css";
 import Header from "./components/Header";
 import n8nMediaImage from "../assets/n8n-media.png";
 import FakeWorkflow from "./components/FakeWorkflow";
+import { Link, useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
-export default function LandingPage() {
+export default function LandingPage(){
+
+  const authUser = useContext(AuthContext);
+  const navigate = useNavigate();
 
   return (
     <div className="landing-root">
@@ -13,7 +19,11 @@ export default function LandingPage() {
         <div className="hero-content">
           <h1>AI Generated Workflows</h1>
           <p>You Think It. We Make It.</p>
-          <button className="cta">Get Started</button>
+          {authUser ? (
+            <button onClick={() => navigate("/copilot")} className="cta">Get Started</button>
+          ) : (
+            <button onClick={() => navigate("/")} className="cta">Get Started</button>
+          )}
         </div>
       </section>
 
@@ -26,7 +36,8 @@ export default function LandingPage() {
       </section>
 
      <section className="data-chat-section">
-    <h2>Chat With Your Own Data</h2>
+      <h2 style={{fontSize:"2rem"}}>Chat With Your Own Data</h2>
+      <h3>Create your own data chatter</h3>
 
         <div className="data-chat-layout">
 
@@ -98,9 +109,9 @@ export default function LandingPage() {
           <p>AI Powered n8n Automation</p>
         </div>
         <div>
-          <p>Community</p>
-          <p>Docs</p>
-          <p>Contact</p>
+          <Link to="/community">Community</Link>
+          <Link to="/aboutus">About us</Link>
+          <Link to="Copilot">Copilot</Link>
         </div>
       </footer>
 

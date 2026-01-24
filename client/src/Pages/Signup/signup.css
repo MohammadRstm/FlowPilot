@@ -1,0 +1,160 @@
+.signup-page {
+  min-height: 100vh;
+  background: linear-gradient(
+    to bottom,
+    #050300 0%,
+    #271300 40%,
+    #050300 100%
+  );
+  color: #ffffff;
+  overflow: hidden;
+}
+
+.signup-main {
+  height: calc(100vh - 80px); 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  margin-top:50px;
+  margin-bottom:50px;
+}
+
+.signup-card {
+  width: 100%;
+  max-width: 520px;
+
+  padding: 28px 32px 32px;
+  border-radius: 18px;
+
+  border: 1px solid rgba(255, 155, 0, 0.2);
+}
+
+.signup-card h1 {
+  font-size: 26px;
+  margin-bottom: 8px;
+}
+
+.signup-subtitle {
+  font-size: 14px;
+  opacity: 0.85;
+  margin-bottom: 20px;
+}
+
+.signup-error {
+  margin: 14px 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  color: #b91c1c;
+
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.signup-error::before {
+  content: "⚠";
+  font-size: 16px;
+}
+
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.signup-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.signup-label {
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.signup-input {
+  padding: 9px 12px;
+  border-radius: 10px;
+
+  background: rgba(5, 3, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: white;
+}
+
+.signup-input:focus {
+  outline: none;
+  border-color: rgba(255, 155, 0, 0.9);
+}
+
+.signup-button {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 12px;
+
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+
+  background: linear-gradient(90deg, #ff9b00, #ffb84d);
+}
+
+.signup-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.signup-footer-text {
+  margin-top: 18px;
+  font-size: 14px;
+}
+
+.signup-footer-text a {
+  color: #ffcf70;
+}
+
+.password-strength {
+  margin-top: 6px;
+}
+
+.strength-bar {
+  height: 6px;
+  width: 100%;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.strength-bar-fill {
+  height: 100%;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.strength-text {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.field-error{
+    color: red;
+}
+
+
+@media (max-width: 520px) {
+  .signup-row {
+    grid-template-columns: 1fr;
+  }
+
+  .signup-card {
+    padding: 24px;
+  }
+}

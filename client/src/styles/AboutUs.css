@@ -1,0 +1,111 @@
+body {
+  background: radial-gradient(circle at top, #000, #2b1208);
+  color: #fff;
+}
+
+
+/* HERO */
+.about-hero {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  padding: 0 10%;
+}
+
+
+.about-hero-inner {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  align-items: center;
+  gap: 80px;
+}
+
+.about-hero-text h1 {
+  font-size: 3.6rem;
+  margin-bottom: 14px;
+}
+
+.about-hero-text p {
+  font-size: 1.4rem;
+  opacity: 0.85;
+  max-width: 480px;
+}
+
+.about-hero-logo {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.about-hero-logo img {
+  max-width: 220px;
+  width: 100%;
+}
+
+/* SECTIONS */
+.about-section {
+  padding: 120px 10%;
+}
+
+.about-container {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+/* Optional subtle divider for rhythm */
+.about-section:not(:first-of-type) .about-container {
+  padding-top: 40px;
+  border-top: 1px solid rgba(255, 155, 0, 0.08);
+}
+
+.about-container h2 {
+  font-size: 2.4rem;
+  margin-bottom: 20px;
+}
+
+.about-container p {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  opacity: 0.85;
+  margin-bottom: 16px;
+}
+
+/* LIST */
+.about-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+}
+
+.about-list li {
+  padding-left: 20px;
+  margin-bottom: 12px;
+  position: relative;
+  opacity: 0.85;
+}
+
+.about-list li::before {
+  content: "–";
+  position: absolute;
+  left: 0;
+  color: #ff9b00;
+}
+
+/* FOOTER */
+.about-footer {
+  padding: 80px 10%;
+  border-top: 1px solid rgba(255, 155, 0, 0.15);
+}
+
+.about-footer h3 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.about-footer p {
+  margin-top: 6px;
+  opacity: 0.7;
+}

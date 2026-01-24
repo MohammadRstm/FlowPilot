@@ -24,10 +24,13 @@ class ValidateFlowLogicService{
         $this->maxRetries = 3;
     }
 
-    public function execute($workflow, $question, $totalPoints, $trace ,  $retries = 0){
-        $judgement = LLMService::judgeResults($workflow , $question);
+    public function execute($workflow, $analysis, $totalPoints, $stage ,  $trace ,  $retries = 0){
+        $stage && $stage("validating");
+        $judgement = LLMService::judgeResults($workflow , $analysis);
 
-        Log::debug('Workflow judgement', [
+        $question = $analysis["question"];
+
+        Log::info('Workflow judgement', [
             'attempt' => $retries,
             'judgement' => $judgement
         ]);
@@ -40,7 +43,7 @@ class ValidateFlowLogicService{
             return $this->bestWorkflow ?? $workflow;
         }
 
-        $trace("judgement" , [
+        $trace && $trace("judgement" , [
             "capabilities" => $judgement["capabilities"],
             "requirements" => $judgement["requirements"],
             "errors" => $judgement["errors"],
@@ -49,7 +52,7 @@ class ValidateFlowLogicService{
 
         // check if we've seen this workflow before
         $fingerprint = $this->fingerprintWorkflow($workflow);
-        if ($this->seenFingerprint($fingerprint, $retries)) {
+        if($this->seenFingerprint($fingerprint, $retries)){
             return $this->bestWorkflow ?? $workflow;
         }
 
@@ -68,7 +71,7 @@ class ValidateFlowLogicService{
             "workflow" => $repaired
         ]);
 
-        return $this->execute($repaired, $question, $totalPoints, $retries + 1);
+        return $this->execute($repaired, $analysis, $totalPoints, $stage , $trace, $retries + 1);
     }
 
     private function updateBestWorkflow(array $workflow, float $score){

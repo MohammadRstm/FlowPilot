@@ -1,4 +1,4 @@
-import type { TraceBlock } from "../Copilot.types";
+import type { TraceBlock } from "../types";
 
 export function applyTrace(
   prev: Record<number | "new", TraceBlock[]>,

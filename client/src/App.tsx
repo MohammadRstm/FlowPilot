@@ -2,42 +2,76 @@ import './App.css'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Landing from './Pages/Landing'
 import { Copilot } from './Pages/copilot/Copilot'
+import CommunityPage from './Pages/community/Community'
+import Login from './Pages/Login/Login'
+import Signup from './Pages/Signup/Signup'
+import ProtectedRoutes from './Pages/components/ProtectedRoutes'
+import ProfilePage from './Pages/profile/Profile'
+import AboutPage from './Pages/AboutUs'
+import SettingsPage from './Pages/Settings/Settings'
 
-/**
- * TIME CALENDER:
- * COPILOT PAGE REQUIRED 8 MORE DAYS MAX TO FINISH ALL FEATURES -> INLUDES HUGE ARCHITECTURAL CAHNGES IN THE BACKEDN
- * 
- * POSTS & PROFILE PAGES NEED 4 DAYS , 5 DAYS MAXIMUM
- * 
- * ENHANCING N8N AI GENERATION NEEDS 5 DAYS OF WORK
- * 
- * CUSTOM NODE GENERATION (IF TIME ALLOWS IT) -> 4 DAYS
- * 
- * WITH NO ADD ONS WE HAVE : 17 DAYS
- * 
- * WITH ADD ONS : 21 DAYS
- * 
- * AT THE TIME I'M WRITING THIS I'M LEFT WITH 19 DAYS
- */
+// day 22 I am fucked beyond comprehension
+// Test tracing and generation
+// Add the abiilty to send a workflow
+// Clean the copilot frontend / backend files
+// merge to main 
+// fix CV 
+// For after 12 am
+// Deploy the website
+// Create CI / CD
+// push to main
+// victory dance
 
+// big objectives must start at 24th to give myself a chance of finishing them
 // ADD THE ABILITY TO SEND USER WORKFLOWS TO ADD ON IT/FIX IT - HARD - BACKEND HEAVY
-// ENHANCE THE ABILITY TO CONTINUE THE CONVERSATION - HARD - BACKEND HEAVY
-// HISOTRIES OVER 2 WEEKS OLD MUST BE AUTOMATICALLY DELETED - MEDIUM - BEACKEND HEAVY
-// ADD PROMPT SAFEGURAD STAGE FOR VISCIOUS PROMPTS (forget everything, delete db exct/) - MEDIUM - BACKEND HEAVY
-
-// FIGURE OUT A BETTER WAY TO GET USER FEEDBACK CURRENTLY NOT VERY EFFICIENT NOR DOES IT MAKE SENSE - UNKNOWN - BAVKEND HEAVY
-
 // ADD THE ABILITY TO CREATE CUSTOM NODES - VERY HARD - F/B HEAVY ON BOTH
 // ADD THE ABILITY TO SAVE CREDENTIALS OR FIGURE OUT A WAY TO DO IT AUTOMATICALLY - HARD F/B HEAVY ON BOTH
-// Fix Retry taking so long to kick start again. Add Edit Message ability
-// APPROX TIME : 8 DAYS TO FINISH (EXCLUDING ENHANCING THE AI'S ABILITY TO GENERATE WORKFLOWS)
+// USE LANGCHAIN
+
+// white screen appearing on reload then page appears
+
+// objectives for today:
+/**
+ * Use hook to send copilot requests
+ * Authenticate all requests
+ * Clean copilot backend
+ * Clean copilot frontend
+ * Create Tests for everything except copilot
+ * Create CI CD
+ * Deploy
+ * Tommorrow we need to start langchain giving us 3/4 days headstart so today everything must be perfectly done and dusted
+ */
+
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route path="/copilot" element={<Copilot />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+
+        <Route path="/copilot" element={
+          <ProtectedRoutes>
+            <Copilot />
+          </ProtectedRoutes>
+        }/>
+        <Route path="/community" element={
+          <ProtectedRoutes>
+            <CommunityPage />
+          </ProtectedRoutes>
+        }/>
+        <Route path="/profile/:userId?" element={
+          <ProtectedRoutes>
+            <ProfilePage />
+          </ProtectedRoutes>
+        }/>
+        <Route path="/settings" element={
+          <ProtectedRoutes>
+            <SettingsPage />
+          </ProtectedRoutes>
+        }/>
+        <Route path="/aboutus" element={<AboutPage />} />
       </Routes>
     </BrowserRouter>
   )
