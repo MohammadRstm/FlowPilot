@@ -3,16 +3,14 @@ version: "3.9"
 services:
   backend:
     build:
-      context: ./backend
+      context: ./server
     container_name: laravel_backend
-    volumes:
-      - ./backend:/var/www
     depends_on:
       - db
 
   frontend:
     build:
-      context: ./frontend
+      context: ./client
     container_name: react_frontend
 
   nginx:
@@ -22,8 +20,8 @@ services:
       - "80:80"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - ./frontend/dist:/usr/share/nginx/html
-      - ./backend/storage:/var/www/storage
+      - ./client/dist:/usr/share/nginx/html
+      - ./server/storage:/var/www/storage
     depends_on:
       - frontend
       - backend
