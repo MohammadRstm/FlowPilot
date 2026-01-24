@@ -1,7 +1,7 @@
 <h1 align="center"><strong>FlowPilot</strong></h1>
 
 <p align="center">
-  <img src="https://your-domain.com/path-to-logo.png" alt="Copilot Logo" width="160" />
+  <img src="./client/src/assets/header-logo-removebg-preview.png" alt="Copilot Logo" width="160" />
 </p>
 
 <p>
@@ -38,7 +38,7 @@
 
 <p align="center">
   <img 
-    src="./docs/communication-flow.png" 
+    src="./client/src/assets/README-Diagrams/High-LevelWorkflow.png" 
     alt="FlowPilot Communication Flow Diagram"
     width="800"
   />
@@ -52,7 +52,7 @@
 
 <p align="center">
   <img 
-    src="./docs/communication-flow.png" 
+    src="./client/src/assets/README-Diagrams/GeneratorFlow.png" 
     alt="FlowPilot Communication Flow Diagram"
     width="800"
   />
@@ -69,20 +69,20 @@
 
 
 <h3>Sequence Diagram</h3>
-<table align="center">
+<table>
   <tr>
-    <td align="center" width="50%">
+    <td align="center" width="100%">
       <img 
-        src="https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg" 
+        src="./client/src/assets/README-Diagrams/SD-1.png" 
         alt="React Logo" 
         width="120"
       />
       <p><strong>Frontend</strong></p>
       <p>React</p>
     </td>
-    <td align="center" width="50%">
+    <td align="center" width="100%">
         <img 
-        src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Laravel.svg" 
+        src="./client/src/assets/README-Diagrams/SD-2.png" 
         alt="Laravel Logo" 
         width="120"
       />
@@ -91,18 +91,18 @@
     </td>
   </tr>
     <tr>
-    <td align="center" width="50%">
+    <td align="center" width="100%">
       <img 
-        src="https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg" 
+        src="./client/src/assets/README-Diagrams/SD-3.png" 
         alt="React Logo" 
         width="120"
       />
       <p><strong>Frontend</strong></p>
       <p>React</p>
     </td>
-    <td align="center" width="50%">
+    <td align="center" width="100%">
         <img 
-        src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Laravel.svg" 
+        src="./client/src/assets/README-Diagrams/SD-4.png" 
         alt="Laravel Logo" 
         width="120"
       />
@@ -114,7 +114,7 @@
 <h3>ER Diagram</h3>
 <p align="center">
   <img 
-    src="./docs/communication-flow.png" 
+    src="./client/src/assets/README-Diagrams/ER-Diagram.png" 
     alt="FlowPilot Communication Flow Diagram"
     width="800"
   />
