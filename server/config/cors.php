@@ -5,6 +5,7 @@ return [
     'paths' => [
     'api/*',
     'api/v0.1/*',
+    'sanctum/csrf-cookie'
     ],
 
 
@@ -13,6 +14,7 @@ return [
     'allowed_origins' => [
         'http://localhost:5173',
         'http://127.0.0.1:5173',
+        'http://localhost'
     ],
 
     'allowed_origins_patterns' => [],

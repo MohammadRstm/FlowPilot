@@ -11,27 +11,29 @@ class RankingFlows {
     public static function rank(array $analysis, array $points, ?callable $stage): array {
         $stage && $stage("ranking");
 
-        $workflowScores = self::rankWorkflows($analysis, $points["workflows"] ?? []);
-        $shouldReuse = self::shouldUseWorkflow($workflowScores);
-
-        // pass nodes (node hits) too so we can leverage node_score provenance
+        $workflowScores = self::rankWorkflows($analysis, $points["workflows"] ?? []); 
         $rankedSchemas = self::rankSchemas(
-            $analysis,
             $points["schemas"] ?? [],
             $points["nodes"] ?? []
         );
-
+            
         $results = [
             "schemas" => $rankedSchemas,
         ];
-
+                
+        $shouldReuse = self::shouldUseWorkflow($workflowScores);
         if ($shouldReuse) {
-            $results["workflows"] = array_slice($workflowScores, 0, self::$workflowsToBeUsedIndex);
-            Log::info('Reusing existing workflow', ['best_workflow_score' => $workflowScores[0]["score"] ?? null]);
+            $results["workflows"] = self::getBestWorkflow($workflowScores);
             return $results;
         }
 
         return $results;
+    }
+
+    private static function getBestWorkflow(array $workflowScores){
+        $bestWorkflow = array_slice($workflowScores, 0, self::$workflowsToBeUsedIndex);
+        Log::info('Reusing existing workflow', ['best_workflow_score' => $workflowScores[0]["score"] ?? null]);
+        return $bestWorkflow;
     }
 
     private static function shouldUseWorkflow($workflowScores) {
@@ -61,15 +63,30 @@ class RankingFlows {
         return $scored;
     }
 
-    private static function rankSchemas(
-        array $analysis,
-        array $schemaGroups,
-        array $nodeHits
-    ): array {
-        // Build allowed node set from filtered nodes + triggers
-        $allowedNodes = [];
+    private static function rankSchemas(array $schemaGroups,array $nodeHits): array {
 
-        foreach ($nodeHits as $hit) {
+        $allowedNodes = self::buildAllowedNodes($nodeHits);
+
+        $grouped = [];
+
+        foreach ($schemaGroups as $groupIdx => $group) {
+            if (!is_array($group)) continue;
+
+            self::groupSchemas($group , $allowedNodes , $grouped);
+            
+        }
+
+        Log::info("SchemaSelector complete", [
+            "nodes_with_schemas" => array_keys($grouped),
+            "schema_count_per_node" => array_map('count', $grouped),
+        ]);
+
+        return $grouped;
+    }
+
+    private static function buildAllowedNodes(array $nodeHits){
+        $allowedNodes = [];
+         foreach ($nodeHits as $hit) {
             $p = $hit['payload'] ?? [];
             if (!empty($p['node_id'])) {
                 $allowedNodes[strtolower($p['node_id'])] = true;
@@ -80,54 +97,31 @@ class RankingFlows {
             "allowed_nodes" => array_keys($allowedNodes),
         ]);
 
-        $grouped = [];
+        return $allowedNodes;
+    }
 
-        foreach ($schemaGroups as $groupIdx => $group) {
-            if (!is_array($group)) continue;
+    private static function groupSchemas(array $group , array $allowedNodes , array &$grouped){
+        foreach ($group as $hit) {
+            $schema = $hit['payload'] ?? null;
+            if (!$schema) continue;
 
-            foreach ($group as $hit) {
-                $schema = $hit['payload'] ?? null;
-                if (!$schema) continue;
-
-                $node = strtolower($schema['node_normalized'] ?? $schema['node'] ?? '');
-                if ($node === '' || !isset($allowedNodes[$node])) {
-                    Log::debug("Schema rejected: node not allowed", [
-                        "node" => $schema['node_normalized'] ?? null,
-                    ]);
-                    continue;
-                }
-
-                $hasConfig =
-                    !empty($schema['inputs']) ||
-                    !empty($schema['fields']);
-
-                $hasOutputs = !empty($schema['outputs']);
-
-                if (!$hasConfig || !$hasOutputs) {
-                    Log::debug("Schema rejected: not actionable", [
-                        "node" => $node,
-                        "has_config" => $hasConfig,
-                        "has_outputs" => $hasOutputs,
-                    ]);
-                    continue;
-                }
-
-                $grouped[$node][] = $schema;
-
-                Log::debug("Schema accepted", [
-                    "node" => $node,
-                    "resource" => $schema['resource'] ?? 'default',
-                    "operation" => $schema['operation'] ?? 'default',
-                ]);
+            $node = strtolower($schema['node_normalized'] ?? $schema['node'] ?? '');
+            if ($node === '' || !isset($allowedNodes[$node])) {
+                continue;
             }
+
+            $hasConfig =
+                !empty($schema['inputs']) ||
+                !empty($schema['fields']);
+
+            $hasOutputs = !empty($schema['outputs']);
+
+            if (!$hasConfig || !$hasOutputs) {
+                continue;
+            }
+
+            $grouped[$node][] = $schema;
         }
-
-        Log::info("SchemaSelector complete", [
-            "nodes_with_schemas" => array_keys($grouped),
-            "schema_count_per_node" => array_map('count', $grouped),
-        ]);
-
-        return $grouped;
     }
 
     private static function complexityScore(int $minRequired, int $actual): float {

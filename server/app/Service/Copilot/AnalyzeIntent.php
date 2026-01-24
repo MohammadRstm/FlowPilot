@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Log;
 
 class AnalyzeIntent{
 
-    // Orchestrater
     public static function analyze(array $messages ,?callable $stage ,?callable $trace): array {
         $stage && $stage("analyzing");
 

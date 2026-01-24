@@ -59,7 +59,7 @@ class LLMService{
         // prompt-injection/creating a final user message
         $prompt = Prompts::getSecureIntentCompilerPrompt($messages);
         $analyzedQuestion = self::callOpenAI($prompt);
-        Log::debug("Prompt" , ["context" => $messages]);
+
         if($analyzedQuestion["attack"]){
             throw new UserFacingException("Prompt injection detected");
         }else{
@@ -95,6 +95,7 @@ class LLMService{
 
         $workflowContext = WorkflowGeneration::buildWorkflowContext($finalPoints["workflows"] ?? []);
         $nodesContext = WorkflowGeneration::buildSchemasContext($finalPoints["schemas"]);
+
         $planningPrompt = Prompts::getWorkflowBuildingPlanPrompt($analysis, $workflowContext);
         $plan = self::callOpenAI($planningPrompt);
 
@@ -165,92 +166,7 @@ class LLMService{
         return self::callOpenAI($patchPrompt);
     }
 
-    /** WORKFLOW DATA INJECTION/VALIDATION */
-    public static function validateDataFlow($workflow , $question , $totalPoints){
-        // create data graph
-        $dataGraph = self::callOpenAI(
-                Prompts::getDataGraphBuilderPrompt(
-                    json_encode($workflow, JSON_UNESCAPED_SLASHES),
-                    json_encode($totalPoints, JSON_UNESCAPED_SLASHES)
-                )
-            );
-
-        // resolve references
-        $references = self::callOpenAI(
-            Prompts::getReferenceResolverPrompt(
-                json_encode($workflow, JSON_UNESCAPED_SLASHES),
-                json_encode($dataGraph, JSON_UNESCAPED_SLASHES)
-            )
-        );
-
-        // validate schema
-        $schemaErrors = self::callOpenAI(
-            Prompts::getSchemaValidatorPrompt(
-                json_encode($workflow, JSON_UNESCAPED_SLASHES),
-                json_encode($dataGraph, JSON_UNESCAPED_SLASHES),
-                json_encode($totalPoints, JSON_UNESCAPED_SLASHES)
-            )
-        );
-
-        // build execution graph
-        $paths = self::callOpenAI(
-            Prompts::getExecutionGraphBuilderPrompt(
-                json_encode($workflow, JSON_UNESCAPED_SLASHES)
-            )
-        );
-
-        //  branch & loop safety
-        $controlFlowIssues = self::callOpenAI(
-            Prompts::getBranchAndLoopSafetyPrompt(
-                json_encode($paths, JSON_UNESCAPED_SLASHES)
-            )
-        );
-
-        // intent validator
-        $intentErrors = self::callOpenAI(
-            Prompts::getIntentValidatorPrompt(
-                $question,
-                json_encode($paths, JSON_UNESCAPED_SLASHES),
-                json_encode($dataGraph, JSON_UNESCAPED_SLASHES)
-            )
-        );
-
-        // aggregate errors & score
-        return self::callOpenAI(
-            Prompts::getErrorAggragatorAndScorerPrompt(
-                json_encode($references, JSON_UNESCAPED_SLASHES),
-                json_encode($schemaErrors, JSON_UNESCAPED_SLASHES),
-                json_encode($controlFlowIssues, JSON_UNESCAPED_SLASHES),
-                json_encode($intentErrors, JSON_UNESCAPED_SLASHES)
-            )
-        );
-    }
-
-    public static function repairWorkflowDataFlow(string $question , string $workflow , array $errors , array $totalPoints){
-        // repair planner
-        $patchPlan = self::callOpenAI(
-            Prompts::getRepairPlannerPrompt(
-                $question,
-                json_encode($errors, JSON_UNESCAPED_SLASHES),
-                json_encode($totalPoints, JSON_UNESCAPED_SLASHES)
-            )
-        );
-
-        // patch applier
-        return self::callOpenAI(
-            Prompts::getPatchApplierPrompt(
-                json_encode($workflow, JSON_UNESCAPED_SLASHES),
-                json_encode($patchPlan, JSON_UNESCAPED_SLASHES)
-            )
-        );
-    }
-
-    public static function planSSARebind($question , $violations, $ssaTable){
-        $prompt = Prompts::getSSADataFlowPompt($question , json_encode($violations) , json_encode($ssaTable));
-        return self::callOpenAI($prompt);
-    }
-
-    /** WORKFLOW SAVOR */
+    /** WORKFLOW SAVER */
     public static function generateWorkflowQdrantPayload(string $json , string $question){
         $prompt = Prompts::getWorkflowMetadataPrompt($json , $question);
 

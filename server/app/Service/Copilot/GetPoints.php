@@ -44,7 +44,7 @@ class GetPoints{
             "schemas"   => $results["schemas"]
         ];
     }
-
+    
     private static function searchQdrant($densesVectors, $sparseVectors, $analysis){
         $workflows = self::searchWorkflows(
             $densesVectors["workflowDense"],
@@ -82,6 +82,7 @@ class GetPoints{
         );
     }
 
+    /**NODES SEARCH */
     private static function searchNodes(array $dense, array $sparse): array{
 
         $triggerHits = self::getTriggerPoints($dense , $sparse);
@@ -149,78 +150,12 @@ class GetPoints{
             } , $actionNodesHits)
         ]);
 
-        $actionNodesHits = self::filterByAdaptiveScore($actionNodesHits);
-
-        Log::info("Action nodes after score filter", [
-            "returned_after_filter" => array_map(function($h){
-                return[
-                    "name" => $h["payload"]["class_name"]
-                ];
-            } , $actionNodesHits)
-        ]);
-
-        $actionNodesHits = self::filterByAdaptiveScore($actionNodesHits);
-        $actionNodesHits = self::keepLatestVersions($actionNodesHits);
-
-        Log::info("Action nodes after version collapse", [
-            "kept" => array_map(fn($h) => $h["payload"]["class_name"], $actionNodesHits)
-        ]);
+        $actionNodesHits = self::filterActionNodesRerieved($actionNodesHits);
 
         return $actionNodesHits;
     }
 
-    private static function filterByAdaptiveScore(array $hits, int $maxKeep = 8): array{
-        if (empty($hits)) return [];
-
-        usort($hits, function ($a, $b) {
-            return ($b['score'] ?? 0) <=> ($a['score'] ?? 0);
-        });
-
-        $best = $hits[0]['score'] ?? 0.0;
-
-        if ($best <= 0.0) {
-            Log::info("filterByAdaptiveScore: best score is zero, returning empty");
-            return [];
-        }
-
-        if ($best >= 0.6) {
-            $ratio = 0.35;
-        } elseif ($best >= 0.4) {
-            $ratio = 0.45;
-        } elseif ($best >= 0.25) {
-            $ratio = 0.60;
-        } else {
-            $selected = array_slice($hits, 0, 1);
-            Log::info("filterByAdaptiveScore: best < 0.25, keeping top 1 only", [
-                'best' => round($best, 3),
-                'kept' => count($selected),
-                'top_scores' => array_map(fn($h) => round($h['score'],3), array_slice($hits,0,5)),
-            ]);
-            return $selected;
-        }
-
-        $threshold = $best * $ratio;
-
-        $kept = array_values(array_filter($hits, function ($hit) use ($threshold) {
-            return ($hit['score'] ?? 0) >= $threshold;
-        }));
-
-        if (count($kept) > $maxKeep) {
-            $kept = array_slice($kept, 0, $maxKeep);
-        }
-
-        Log::info("filterByAdaptiveScore", [
-            'best' => round($best, 3),
-            'ratio' => $ratio,
-            'threshold' => round($threshold, 3),
-            'kept' => count($kept),
-            'scores_kept' => array_map(fn($h) => round($h['score'],3), $kept),
-        ]);
-
-        return $kept;
-    }
-
-
+    /**SCHEMAS SEARCH */
     private static function searchSchemas(array $nodeHits): array{
         $nodesById = [];
         foreach ($nodeHits as $node) {
@@ -298,6 +233,79 @@ class GetPoints{
         }
 
         return $schemas;
+    }
+
+    /**ACTION NODES FILTERING */
+    private static function filterActionNodesRerieved(array $actionNodesHits){
+        $actionNodesHits = self::filterByAdaptiveScore($actionNodesHits);
+
+        Log::info("Action nodes after score filter", [
+            "returned_after_filter" => array_map(function($h){
+                return[
+                    "name" => $h["payload"]["class_name"]
+                ];
+            } , $actionNodesHits)
+        ]);
+
+        $actionNodesHits = self::filterByAdaptiveScore($actionNodesHits);
+        $actionNodesHits = self::keepLatestVersions($actionNodesHits);
+
+        Log::info("Action nodes after version collapse", [
+            "kept" => array_map(fn($h) => $h["payload"]["class_name"], $actionNodesHits)
+        ]);
+
+        return $actionNodesHits;
+    }
+
+    private static function filterByAdaptiveScore(array $hits, int $maxKeep = 8): array{
+        if (empty($hits)) return [];
+
+        usort($hits, function ($a, $b) {
+            return ($b['score'] ?? 0) <=> ($a['score'] ?? 0);
+        });
+
+        $best = $hits[0]['score'] ?? 0.0;
+
+        if ($best <= 0.0) {
+            Log::info("filterByAdaptiveScore: best score is zero, returning empty");
+            return [];
+        }
+
+        if ($best >= 0.6) {
+            $ratio = 0.35;
+        } elseif ($best >= 0.4) {
+            $ratio = 0.45;
+        } elseif ($best >= 0.25) {
+            $ratio = 0.60;
+        } else {
+            $selected = array_slice($hits, 0, 1);
+            Log::info("filterByAdaptiveScore: best < 0.25, keeping top 1 only", [
+                'best' => round($best, 3),
+                'kept' => count($selected),
+                'top_scores' => array_map(fn($h) => round($h['score'],3), array_slice($hits,0,5)),
+            ]);
+            return $selected;
+        }
+
+        $threshold = $best * $ratio;
+
+        $kept = array_values(array_filter($hits, function ($hit) use ($threshold) {
+            return ($hit['score'] ?? 0) >= $threshold;
+        }));
+
+        if (count($kept) > $maxKeep) {
+            $kept = array_slice($kept, 0, $maxKeep);
+        }
+
+        Log::info("filterByAdaptiveScore", [
+            'best' => round($best, 3),
+            'ratio' => $ratio,
+            'threshold' => round($threshold, 3),
+            'kept' => count($kept),
+            'scores_kept' => array_map(fn($h) => round($h['score'],3), $kept),
+        ]);
+
+        return $kept;
     }
 
     private static function parseNodeVersion(string $className): array {
@@ -398,10 +406,9 @@ class GetPoints{
         return implode(" ", $parts);
     }
 
-
+    /** QDRANT CALLER */
     private static function query(string $collection, ?array $dense, ?array $sparse, ?array $filters = [], mixed $includes = true, ?int $limit = 50): array{
         $endpoint = rtrim(env("QDRANT_CLUSTER_ENDPOINT", ''), '/');
-
 
         if (!$endpoint) {
             Log::error("QDRANT_CLUSTER_ENDPOINT is not configured");
@@ -414,6 +421,15 @@ class GetPoints{
             $withPayload = $includes ?? true;
         }
 
+        $payload = self::builtQueryPayload($limit , $withPayload , $dense , $sparse , $filters);
+
+        $response = self::callQdrant($endpoint , $collection , $payload);
+
+        $result = $response->json("result") ?? [];
+        return is_array($result) ? $result : [];
+    }
+
+    private static function builtQueryPayload(int $limit , bool $withPayload , array $dense , array $sparse , ?array $filters = []){
         $payload = [
             "limit" => $limit ?? 50,
             "with_payload" => $withPayload,
@@ -432,6 +448,10 @@ class GetPoints{
             $payload["filter"] = $filters;
         }
 
+        return $payload;
+    }
+
+    private static function callQdrant(string $endpoint , string $collection , array $payload ){
         try {
             /** @var Response  */
             $response = Http::withHeaders([
@@ -453,7 +473,6 @@ class GetPoints{
             return [];
         }
 
-        $result = $response->json("result") ?? [];
-        return is_array($result) ? $result : [];
+        return $response;
     }
 }
