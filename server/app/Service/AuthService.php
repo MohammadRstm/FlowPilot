@@ -65,12 +65,20 @@ class AuthService{
         }
 
         if(!$user){
-            $user = self::getUserByEmail($userData);
+            $user = User::create([
+                "first_name" => $userData["firstName"],
+                "last_name" => $userData["lastName"],
+                "email" => $userData["email"],
+                "user_role_id" => env("USER_ROLE_ID"),
+                "password" => null,
+                "photo_url" => '',
+                "email_verified_at" => now()
+            ]);
         }
 
         if(!$user){
             $isFromGoogle = 1;
-            self::createUser($userData ,$isFromGoogle);
+            $user = self::createUser($userData ,$isFromGoogle);
         }
 
         if (!$user->google_id) {

@@ -197,7 +197,10 @@ class UserService{
 
                 echo "event: $event\n";
                 echo "data: $data\n\n";// needs to have two new line charachters or else it breaks 
-                ob_flush(); flush();// this forces laravel to send now instead of waiting
+                if(ob_get_level() > 0){
+                    ob_flush();
+                }
+                flush();
             };
     }
 
