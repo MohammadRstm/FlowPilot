@@ -23,18 +23,11 @@ services:
     build:
       context: ./client
     container_name: react_frontend
-
-  nginx:
-    image: nginx:alpine
-    container_name: nginx_server
     ports:
       - "80:80"
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - ./client/dist:/usr/share/nginx/html
-    depends_on:
-      - frontend
-      - backend_nginx
+
+
+
 
   db:
     image: mysql:8.0

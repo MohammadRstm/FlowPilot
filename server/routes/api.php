@@ -10,6 +10,11 @@ use App\Http\Controllers\UserPostController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(["prefix" => "v0.1"] , function(){
+
+    Route::get('/api/ping', function() {
+    return response()->json(['ok' => true]);
+});
+
     
     Route::post('/google', [AuthController::class, 'googleLogin']);
     Route::post('/register', [AuthController::class, 'register']);
@@ -17,6 +22,7 @@ Route::group(["prefix" => "v0.1"] , function(){
     Route::get("/ask-stream" , [UserController::class , "askStream"]);
 
     Route::group(["prefix" => "auth", "middleware" => "jwt.auth"] , function(){
+
 
         Route::get('/me', [AuthController::class, 'me']);
         Route::post("/setPassword" , [AuthController::class , 'setPassword']);
