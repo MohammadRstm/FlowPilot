@@ -140,13 +140,6 @@ export function useCopilotChatController({
         submit(lastUser.content); 
     };
 
-    const edit = () =>{
-        const lastUser = getLastUserMessage();
-        if(!lastUser) return;
-
-        cancelGeneration();
-    }
-
     return {
         messageStore,
         setMessageStore,

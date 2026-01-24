@@ -8,6 +8,17 @@ services:
     depends_on:
       - db
 
+  backend_nginx:
+    image: nginx:alpine
+    container_name: laravel_nginx
+    ports:
+      - "8000:80"
+    volumes:
+      - ./server:/var/www
+      - ./server/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+
   frontend:
     build:
       context: ./client
@@ -21,10 +32,9 @@ services:
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
       - ./client/dist:/usr/share/nginx/html
-      - ./server/storage:/var/www/storage
     depends_on:
       - frontend
-      - backend
+      - backend_nginx
 
   db:
     image: mysql:8.0
