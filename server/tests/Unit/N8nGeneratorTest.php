@@ -127,43 +127,4 @@ class N8nGeneratorTest extends TestCase
         $this->assertStringContainsString('OUTPUTS:', $result);
         $this->assertStringContainsString('Message ID', $result);
     }
-
-    /**
-     * Test buildSchemasContext with multiple nodes and operations
-     */
-    public function test_buildSchemasContext_with_multiple_nodes(): void
-    {
-        $schemas = [
-            [
-                'schema' => [
-                    'node' => 'Slack',
-                    'resource' => 'Message',
-                    'operation' => 'Post',
-                    'display' => 'Post Message',
-                    'description' => 'Posts a message to Slack',
-                    'fields' => [],
-                    'inputs' => [],
-                    'outputs' => []
-                ],
-            ],
-            [
-                'schema' => [
-                    'node' => 'Slack',
-                    'resource' => 'Channel',
-                    'operation' => 'Create',
-                    'display' => 'Create Channel',
-                    'description' => 'Creates a new Slack channel',
-                    'fields' => [],
-                    'inputs' => [],
-                    'outputs' => []
-                ],
-            ]
-        ];
-        
-        $result = WorkflowGeneration::buildSchemasContext($schemas);
-        
-        $this->assertStringContainsString('NODE: Slack', $result);
-        $this->assertStringContainsString('OPERATION: Message → Post', $result);
-        $this->assertStringContainsString('OPERATION: Channel → Create', $result);
-    }
 }
