@@ -54,11 +54,6 @@ export const useCreatePost = () => {
       }
       showToast("Failed to create post", ToastMessage.ERROR);
     },
-
-    onSuccess: () => {
-      // Invalidate to refetch fresh data from server
-      showToast("Post released successfully", ToastMessage.SUCCESS);
-    },
   });
 };
 

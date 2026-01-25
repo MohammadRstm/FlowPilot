@@ -541,6 +541,7 @@ body {
 /* Post title */
 .post-title {
   margin-top: 14px;
+  margin-bottom: 14px;
   font-size: 18px;
   font-weight: 700;
   color: #f5b642;

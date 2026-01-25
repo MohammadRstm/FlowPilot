@@ -8,8 +8,7 @@ export const PostCardSkeleton = () =>{
                 <div className="skeleton-line tiny" />
             </div>
             </div>
-
-            <hr />
+            <br />
 
             <div className="skeleton-line title" />
             <div className="skeleton-line" />

@@ -61,7 +61,6 @@ const PostCard: React.FC<PostCardProps> = ({
           </div>
         )}
 
-        <hr style={{marginTop:"10px", marginBottom:"10px"}} />
 
         {post.title && <h3 className="post-title">{post.title}</h3>}
 

@@ -18,23 +18,18 @@ const CreatePostModal: React.FC<Props> = ({ isOpen, onClose, createPost }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    createPost.mutate(
-      {
+    setTitle("");
+    setDescription("");
+    setFile(null);
+    setImage(null);
+    onClose();
+
+    createPost.mutate({
         title,
         description,
         file: file ?? undefined,
         image: image ?? undefined,
-      },
-      {
-        onSuccess: () => {
-          setTitle("");
-          setDescription("");
-          setFile(null);
-          setImage(null);
-          onClose();
-        },
-      }
-    );
+      });
   };
 
   const handleImageDrop = (e: React.DragEvent<HTMLDivElement>) => {

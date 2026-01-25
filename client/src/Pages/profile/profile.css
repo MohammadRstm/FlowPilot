@@ -236,7 +236,6 @@
 }
 
 .post-header { display:flex; justify-content:space-between; align-items:center; gap:12px; }
-.post-title { margin:0; font-size:16px; }
 .post-body { margin:8px 0; color: rgba(255,255,255,0.9); }
 .post-stats { display:flex; gap:12px; font-size:13px; opacity:0.95; }
 
