@@ -28,9 +28,6 @@ services:
     ports:
       - "3000:80"
 
-
-
-
   db:
     image: mysql:8.0
     container_name: mysql_db

@@ -3,6 +3,8 @@ import { api } from "../../../api/client";
 import { returnDataFormat } from "../../utils/returnApiDataFormat";
 import { useToast } from "../../../context/toastContext";
 import { ToastMessage } from "../../components/toast/toast.types";
+import { useAuth } from "../../../context/useAuth";
+import type { PostDto } from "../types";
 
 interface CreatePostInputs {
   title: string;
@@ -14,19 +16,62 @@ interface CreatePostInputs {
 export const useCreatePost = () => {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (inputs: CreatePostInputs) => createNewPost(inputs),
 
-    onError: (_err, _newPost, context: any) => {
-      if (context?.previousPosts) {
-        queryClient.setQueryData(["posts"], context.previousPosts);
+    onMutate: async (inputs: CreatePostInputs) => {
+      // Cancel any in-flight queries
+      await queryClient.cancelQueries({ queryKey: ["community-posts"] });
+
+      // Get the previous data
+      const previousData = queryClient.getQueryData<any>(["community-posts"]);
+
+      // Create optimistic post
+      const optimisticPost: PostDto = {
+        id: Date.now(), // Temporary ID
+        author: `${user?.first_name} ${user?.last_name}`.trim(),
+        username: user?.email || "User",
+        avatar: user?.profile_pic || null,
+        title: inputs.title,
+        content: inputs.description || "",
+        photo: "", // Will be updated after server response
+        likes: 0,
+        comments: 0,
+        exports: 0,
+        liked_by_me: false,
+      };
+
+      // Update cache with optimistic post at the top
+      queryClient.setQueryData(["community-posts"], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: [
+            {
+              ...old.pages[0],
+              data: [optimisticPost, ...old.pages[0].data],
+            },
+            ...old.pages.slice(1),
+          ],
+        };
+      });
+
+      return { previousData };
+    },
+
+    onError: (_err, _inputs, context: any) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(["community-posts"], context.previousData);
       }
+      showToast("Failed to create post", ToastMessage.ERROR);
     },
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
-      showToast("Post released successfully" , ToastMessage.SUCCESS);
+      // Invalidate to refetch fresh data from server
+      queryClient.invalidateQueries({ queryKey: ["community-posts"] });
+      showToast("Post released successfully", ToastMessage.SUCCESS);
     },
   });
 };

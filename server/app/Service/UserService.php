@@ -186,7 +186,10 @@ class UserService{
     public static function returnFinalWorkflowResult($result){
         echo "event: result\n";
         echo "data: " . json_encode($result) . "\n\n";
-        ob_flush(); flush();
+        if(ob_get_level() > 0){
+            ob_flush();
+        }
+        flush();
     }
 
     public static function initializeStream(){

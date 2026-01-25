@@ -119,3 +119,6 @@
     width="800"
   />
 </p>
+
+<h3>MIT LICENSE</h3>
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)

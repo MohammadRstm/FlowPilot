@@ -32,14 +32,8 @@ import SettingsPage from './Pages/Settings/Settings'
 
 // objectives for today:
 /**
- * Use hook to send copilot requests
- * Authenticate all requests
- * Clean copilot backend
- * Clean copilot frontend
+ * fix posts appearing as soon as the user posts it
  * Create Tests for everything except copilot
- * Create CI CD
- * Deploy
- * Tommorrow we need to start langchain giving us 3/4 days headstart so today everything must be perfectly done and dusted
  */
 
 
