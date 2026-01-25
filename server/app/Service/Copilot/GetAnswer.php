@@ -20,10 +20,10 @@ class GetAnswer{
         $error = self::initializeError($stream);
 
         try{
-            $analysis = AnalyzeIntent::analyze($messages , $stage , $trace);// clean
-            $points = GetPoints::execute($analysis , $stage , $trace);// clean
-            $finalPoints = RankingFlows::rank($analysis, $points , $stage);// clean
-            $workflow = LLMService::generateAnswer($analysis, $finalPoints , $stage , $trace);// clean
+            $analysis = AnalyzeIntent::analyze($messages , $stage , $trace);
+            $points = GetPoints::execute($analysis , $stage , $trace);
+            $finalPoints = RankingFlows::rank($analysis, $points , $stage);
+            $workflow = LLMService::generateAnswer($analysis, $finalPoints , $stage , $trace);
 
             $validateWorkflowService = new ValidateFlowLogicService();
             $workflow = $validateWorkflowService->execute($workflow , $analysis , $finalPoints ,$stage ,  $trace);

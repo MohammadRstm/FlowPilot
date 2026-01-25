@@ -18,7 +18,11 @@ class UserService{
 
         $answer = GetAnswer::execute($messages , $stream);
         if(!$answer) throw new Exception("Failed to generate n8n workflow");
+
         $history = self::handleHistoryManagement($userId , $historyId , $messages , $answer);
+        if(!$history) throw new Exception("Failed to save copilot history");
+
+        
 
         return [
             'answer' => $answer,
