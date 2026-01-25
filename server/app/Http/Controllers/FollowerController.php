@@ -11,8 +11,8 @@ class FollowerController extends Controller{
     public function followUser(Request $request , int $toBeFollowed){ 
         $userId = $request->user()->id;
 
-        ProfileService::toggeleFollow($userId, $toBeFollowed);
-        return $this->successResponse([] , "User followed successfully");
+        $result = ProfileService::toggeleFollow($userId, $toBeFollowed);
+        return $this->successResponse($result , "User followed successfully");
     }
 
     public function isFollowed(Request $request , int $toBeChecked){ 

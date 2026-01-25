@@ -26,7 +26,7 @@ WORKDIR /var/www
 COPY . .
 
 # Install Laravel dependencies
-# RUN composer install --no-interaction --prefer-dist --optimize-autoloader (mounted in docker-compose so no need to build it twice)
+RUN composer install --no-dev --optimize-autoloader
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www
@@ -35,3 +35,8 @@ RUN chmod -R 755 /var/www/storage /var/www/bootstrap/cache
 EXPOSE 9000
 
 CMD ["php-fpm"]
+
+# in prod run :RUN php artisan config:clear \
+# && php artisan config:cache \
+# && php artisan route:cache \
+# && php artisan view:cache
