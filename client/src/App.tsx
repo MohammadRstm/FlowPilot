@@ -32,7 +32,7 @@ import SettingsPage from './Pages/Settings/Settings'
 
 // objectives for today:
 /**
- * fix posts appearing as soon as the user posts it
+ * 
  * Create Tests for everything except copilot
  */
 

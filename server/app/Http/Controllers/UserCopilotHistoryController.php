@@ -6,9 +6,7 @@ use App\Models\UserCopilotHistory;
 use App\Models\Message;
 use App\Http\Controllers\Controller;
 use App\Service\UserService;
-use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class UserCopilotHistoryController extends Controller{
   
@@ -50,7 +48,7 @@ class UserCopilotHistoryController extends Controller{
     }
 
     public function download(Request $request , UserCopilotHistory $history){
-        if ($history->user_id !== $request->user()->id()){
+        if ($history->user_id !== $request->user()->id){
             abort(403); 
         }
 

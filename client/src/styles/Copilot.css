@@ -750,6 +750,10 @@
   word-wrap: break-word;
 }
 
+.trace-block li{
+  margin-left: 12px;
+}
+
 .kv, .kv-value, .typed-line {
   max-width: 100%;
   white-space: pre-wrap;

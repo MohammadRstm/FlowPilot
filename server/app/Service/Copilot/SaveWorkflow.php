@@ -12,6 +12,7 @@ class SaveWorkflow{
 
     public static function save($requestForm){
         $json = json_encode($requestForm->input('workflow'));
+        
         if(!$json){
             throw new Exception("Workflow given not correct json");
         }
