@@ -22,13 +22,10 @@ export const useCreatePost = () => {
     mutationFn: async (inputs: CreatePostInputs) => createNewPost(inputs),
 
     onMutate: async (inputs: CreatePostInputs) => {
-      // Cancel any in-flight queries
       await queryClient.cancelQueries({ queryKey: ["community-posts"] });
 
-      // Get the previous data
       const previousData = queryClient.getQueryData<any>(["community-posts"]);
 
-      // Create optimistic post
       const optimisticPost: PostDto = {
         id: Date.now(), // Temporary ID
         author: `${user?.first_name} ${user?.last_name}`.trim(),
@@ -43,26 +40,16 @@ export const useCreatePost = () => {
         liked_by_me: false,
       };
 
-      // Update cache with optimistic post at the top
-      queryClient.setQueryData(["community-posts"], (old: any) => {
-        if (!old) return old;
-        return {
-          ...old,
-          pages: [
-            {
-              ...old.pages[0],
-              data: [optimisticPost, ...old.pages[0].data],
-            },
-            ...old.pages.slice(1),
-          ],
-        };
-      });
+      queryClient.setQueryData(
+        ["community-posts"],
+        prependOptimisticPost(optimisticPost)
+      );
 
       return { previousData };
     },
 
     onError: (_err, _inputs, context: any) => {
-      if (context?.previousData) {
+      if(context?.previousData){
         queryClient.setQueryData(["community-posts"], context.previousData);
       }
       showToast("Failed to create post", ToastMessage.ERROR);
@@ -70,7 +57,6 @@ export const useCreatePost = () => {
 
     onSuccess: () => {
       // Invalidate to refetch fresh data from server
-      queryClient.invalidateQueries({ queryKey: ["community-posts"] });
       showToast("Post released successfully", ToastMessage.SUCCESS);
     },
   });
@@ -97,3 +83,22 @@ const createNewPost = async (inputs : CreatePostInputs) =>{
 
     return returnDataFormat(resp);
 }
+
+
+const prependOptimisticPost =
+  (optimisticPost: PostDto) =>
+  (old: any) => {
+    if (!old) return old;
+
+    return {
+      ...old,
+      pages: old.pages.map((page: any, index: number) =>
+        index === 0
+          ? {
+              ...page,
+              data: [optimisticPost, ...page.data],
+            }
+          : page
+      ),
+    };
+  };

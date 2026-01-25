@@ -4,33 +4,37 @@ import { useCreatePost } from "../hook/useCreatePost";
 type Props = {
   isOpen: boolean;
   onClose: () => void;
+  createPost: ReturnType<typeof useCreatePost>;
 };
 
-const CreatePostModal: React.FC<Props> = ({ isOpen, onClose }) => {
+const CreatePostModal: React.FC<Props> = ({ isOpen, onClose, createPost }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [image, setImage] = useState<File | null>(null);
-
-  const createPost = useCreatePost();
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    createPost.mutate({
-      title,
-      description,
-      file: file ?? undefined,
-      image: image ?? undefined,
-    });
-
-    setTitle("");
-    setDescription("");
-    setFile(null);
-    setImage(null);
-    onClose();
+    createPost.mutate(
+      {
+        title,
+        description,
+        file: file ?? undefined,
+        image: image ?? undefined,
+      },
+      {
+        onSuccess: () => {
+          setTitle("");
+          setDescription("");
+          setFile(null);
+          setImage(null);
+          onClose();
+        },
+      }
+    );
   };
 
   const handleImageDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -49,7 +53,6 @@ const CreatePostModal: React.FC<Props> = ({ isOpen, onClose }) => {
         <h2>Create New Post</h2>
 
         <div className="create-post-form-container">
-          {/* LEFT COLUMN: Image */}
           <div className="image-column">
             <div
               className="image-dropzone"
@@ -78,7 +81,6 @@ const CreatePostModal: React.FC<Props> = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          {/* RIGHT COLUMN: Form */}
           <div className="form-column">
             <form className="create-post-form" onSubmit={handleSubmit}>
               <label>

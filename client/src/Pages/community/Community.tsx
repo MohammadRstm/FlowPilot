@@ -8,11 +8,14 @@ import CreatePostModal from "./components/CreatePostModal";
 import { adaptCommunityPost } from "./adapters/CommunityPostAdapter";
 import { useAuth } from "../../context/useAuth";
 import { Spinner } from "../components/Spinner";
+import { useCreatePost } from "./hook/useCreatePost";
 
 const CommunityPage: React.FC = () => {
   const { user, loading } = useAuth();
 
   const [showModal, setShowModal] = useState(false);
+  const createPost = useCreatePost();
+
 
   const handleStartPost = () => setShowModal(true);
 
@@ -21,7 +24,7 @@ const CommunityPage: React.FC = () => {
   }
 
   const {
-    posts,
+    pages,
     isPending,
     isFetchingMore,
     hasMore,
@@ -58,9 +61,11 @@ const CommunityPage: React.FC = () => {
               <PostCard key={i} post={null} isPending />
             ))}
 
-            {posts.map((post) => (
-              <PostCard key={post.id} post={adaptCommunityPost(post)} isPending={isPending} />
-            ))}
+            {pages.map((page) =>
+                page.data.map((post) => (
+                  <PostCard key={post.id} post={adaptCommunityPost(post)} />
+                ))
+            )}
 
             <div ref={loadMoreRef} />
 
@@ -102,6 +107,7 @@ const CommunityPage: React.FC = () => {
       <CreatePostModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
+        createPost={createPost}
       />
       </>
   );

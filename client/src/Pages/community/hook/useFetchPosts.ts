@@ -22,6 +22,7 @@ export function useFetchPosts() {
     query.data?.pages.flatMap((page) => page.data) ?? [];
 
   return {
+    pages: query.data?.pages ?? [],
     posts,
     isPending: query.isPending,
     isFetchingMore: query.isFetchingNextPage,
