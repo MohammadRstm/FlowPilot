@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\UserCopilotHistory;
 use App\Models\Message;
 use App\Http\Controllers\Controller;
+use App\Service\UserCopilotHistoryService;
 use App\Service\UserService;
 use Illuminate\Http\Request;
 
@@ -12,8 +13,7 @@ class UserCopilotHistoryController extends Controller{
   
     public function index(Request $request){
         $userId = $request->user()->id; 
-        $histories = UserService::getChatHistory($userId);
-
+        $histories = UserCopilotHistoryService::getUserHistories($userId);
         return $this->successResponse([
             'histories' => $histories,
         ]);
@@ -21,13 +21,8 @@ class UserCopilotHistoryController extends Controller{
 
     public function show(Request $request , UserCopilotHistory $userCopilotHistory){
         $userId = $request->user()->id;  
-        if ($userCopilotHistory->user_id !== $userId) {
-            return $this->errorResponse('History not found', [], 404);
-        }
 
-        $userCopilotHistory->load(['messages' => function ($query) {
-            $query->orderBy('created_at');
-        }]);
+        $userCopilotHistory = UserCopilotHistoryService::getUserCopilotHistoryDetials($userId , $userCopilotHistory);
 
         return $this->successResponse([
             'history' => $userCopilotHistory,
@@ -36,30 +31,14 @@ class UserCopilotHistoryController extends Controller{
 
     public function destroy(Request $request , UserCopilotHistory $userCopilotHistory){
         $userId = $request->user()->id; 
-        if ($userCopilotHistory->user_id !== $userId) {
-            return $this->errorResponse('History not found', [], 404);
-        }
-
-        Message::where('history_id', $userCopilotHistory->id)->delete();
-
-        $userCopilotHistory->delete();
+        UserCopilotHistoryService::deleteHistory($userId , $userCopilotHistory);
 
         return $this->successResponse([], 'History deleted');
     }
 
     public function download(Request $request , UserCopilotHistory $history){
-        if ($history->user_id !== $request->user()->id){
-            abort(403); 
-        }
-
-        $lastMessage = $history->messages()
-            ->latest('created_at')
-            ->first();
-
-        if (!$lastMessage || !$lastMessage->ai_response) {
-            abort(404, 'No AI response found');
-        }
-
+        $userId = $request->user()->id;
+        $lastMessage = UserCopilotHistoryService::getDownloadableContent($userId, $history);
         return response()->json(
             $lastMessage->ai_response,
             200,

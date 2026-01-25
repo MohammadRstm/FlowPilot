@@ -98,16 +98,7 @@ class UserService{
 
         $newMessage->save();
     }
-
-    public static function getChatHistory(int $userId){
-        return UserCopilotHistory::with(['messages' => function ($query) {
-                $query->orderBy('created_at');
-            }])
-            ->where('user_id', $userId)
-            ->orderByDesc('created_at')
-            ->get();
-    }
-
+    
     public static function getFriends(string $name , int $userId){
         if(empty($name)){
             throw new Exception("Name is empty");
