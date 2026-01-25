@@ -14,6 +14,7 @@ type PostCardProps = {
   showActions?: boolean;
   showStats?: boolean;
   isPending?:boolean
+  userId?: string | number;
 }
 
 const PostCard: React.FC<PostCardProps> = ({
@@ -22,6 +23,7 @@ const PostCard: React.FC<PostCardProps> = ({
   showHeader = true,
   showActions = true,
   showStats = true,
+  userId,
 }) =>{
     if(isPending){
         return <PostCardSkeleton />;
@@ -31,7 +33,7 @@ const PostCard: React.FC<PostCardProps> = ({
 
     const [open, setOpen] = useState(false);
 
-    const likeMutation = useToggleLike();
+    const likeMutation = useToggleLike(userId);
     const exportContent = useExportPost();
 
     const imageUrl = post.photo ? `${BASE_URL}/${post.photo}` : null;

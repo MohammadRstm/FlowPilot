@@ -27,7 +27,7 @@ const ProfilePage: React.FC = () => {
     isPending,
     } = useProfileQuery(userId);
 
-    const { mutate: downloadHistory, isPending: isDownloading } =
+    const { mutate: downloadHistory, isPending: isDownloading, downloadingId } =
     useDownloadHistory();
 
     const { mutate: followUser } = useFollowUser();
@@ -95,20 +95,22 @@ const ProfilePage: React.FC = () => {
 
           <div className="profile-column content-column" style={{ gridArea: "content" }}>
             {tab === "posts" ? (
-                <PostsList posts={posts} sortBy={sortBy} />
+                <PostsList posts={posts} sortBy={sortBy} userId={userId} />
             ) : (
                 isOwnProfile ? (
                 <WorkflowsList
                     workflows={workflows}
-                    onDownload={(url: string) => downloadHistory(url)}
+                    onDownload={(url: string, id: string | number) => downloadHistory(url, id)}
                     isDownloading={isDownloading}
+                    downloadingId={downloadingId}
                 />
                 ) : (
                     isBeingFollowed?.isFollowing && (
                         <WorkflowsList
                             workflows={workflows}
-                            onDownload={(url: string) => downloadHistory(url)}
+                            onDownload={(url: string, id: string | number) => downloadHistory(url, id)}
                             isDownloading={isDownloading}
+                            downloadingId={downloadingId}
                         />
                     )
                 )

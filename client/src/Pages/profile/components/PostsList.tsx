@@ -7,9 +7,10 @@ import { SortType } from "../types";
 type Props = {
   posts: any[];
   sortBy: SortType;
+  userId?: string | number;
 };
 
-const PostsList: React.FC<Props> = ({ posts, sortBy }) => {
+const PostsList: React.FC<Props> = ({ posts, sortBy, userId }) => {
   const sortedPosts = useMemo(() => {
     const list = [...posts];
     if (sortBy === SortType.LIKES) {
@@ -36,6 +37,7 @@ const PostsList: React.FC<Props> = ({ posts, sortBy }) => {
           post={adaptListPost(p)}
           showHeader={false}
           showActions={true}
+          userId={userId}
         />
       ))}
     </section>
