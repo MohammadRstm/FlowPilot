@@ -47,7 +47,7 @@ class GetAnswer{
         return fn($name) => $stream && $stream("stage", $name);// shorthand (sends chunks were events = 'stage' and payload is the name of the event)
     }
 
-    private static function initializeTrace($stream){
+    public static function initializeTrace($stream){
         return fn($type, $payload) => $stream && $stream("trace", [// shortand (sends more complex chunks where payload can be anything and events hold the type of the event themselves)
             "type" => $type,
             "payload" => $payload

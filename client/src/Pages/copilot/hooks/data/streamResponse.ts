@@ -44,6 +44,23 @@ export const streamCopilotQuestion = (
     evt.close();
   });
 
+  evt.addEventListener("postWorkflowSuccess", (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      showToast(data.message ?? "Workflow posted successfully to n8n instance.", "success");
+    }catch{
+      showToast("Workflow posted successfully to n8n instance.", "success");
+    }
+  });
+
+  evt.addEventListener("postWorkflowFailed", (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      showToast(data.message ?? "Failed to post workflow to n8n instance.", "error");
+    }catch{
+      showToast("Failed to post workflow to n8n instance.", "error");
+    }
+  });
 
   evt.onerror = () =>{
     onError?.();

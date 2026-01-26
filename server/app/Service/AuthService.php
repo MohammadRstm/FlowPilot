@@ -111,28 +111,6 @@ class AuthService{
     }
 
     public static function linkN8nAccount(Model $user , array $data){
-        /** @var Response */
-        $response = Http::withHeaders([
-            'X-N8N-API-KEY' => $data["api_key"],
-        ])->get(rtrim($data["base_url"], '/') . '/api/v1/workflows');
-
-        $contentType = $response->header('Content-Type');
-
-        if (!str_contains($contentType, 'application/json')) {
-            throw new UserFacingException('Invalid n8n response.Consider using a different api key');
-        }
-
-        $body = $response->json();
-
-        if (!isset($body['data']) || !is_array($body['data'])) {
-            throw new UserFacingException('Invalid n8n API response.Consider using a different api key');
-        }
-
-
-        if (!$response->successful()) {
-            throw new UserFacingException("Failed to connect to n8n");
-        }
-
         $user->n8n_base_url = $data["base_url"];
         $user->n8n_api_key = $data["api_key"];
         $user->save();

@@ -4,11 +4,12 @@ namespace App\Service\Copilot;
 
 use Exception;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Http;
 
 class PostWorkflow{
 
-    public static function postWorkflow(array $workflow , Model $user ,?callable $trace){
+    public static function postWorkflow(array $workflow , Model $user ,?callable $stream){
+
+        $trace = GetAnswer::initializeTrace($stream);
 
         if(!$user->n8n_api_key || !$user->n8n_base_url){
             return;
