@@ -25,11 +25,16 @@
         <env name="CACHE_STORE" value="array"/>
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
+        <env name="DB_FOREIGN_KEYS" value="true"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="TOKEN_EXPIRATION_TIME" value="604800"/>
+        <env name="JWT_SECRET" value="test_jwt_secret_key_for_testing-kjsdfhkluashoifj298u4euirewy578612rfiuwqy9-sfsdfewroejri3o24797156i34kj9u2874ojd938-d3y89324"/>
+        <env name="GOOGLE_CLIENT_ID" value="test_client_id"/>
+        <env name="USER_ROLE_ID" value="1"/>
     </php>
 </phpunit>

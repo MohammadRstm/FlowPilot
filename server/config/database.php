@@ -38,8 +38,8 @@ return [
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
             'busy_timeout' => null,
-            'journal_mode' => null,
-            'synchronous' => null,
+            'journal_mode' => env('APP_ENV') === 'testing' ? 'WAL' : null,
+            'synchronous' => env('APP_ENV') === 'testing' ? 0 : null,
             'transaction_mode' => 'DEFERRED',
         ],
 

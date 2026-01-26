@@ -8,14 +8,14 @@ on:
     branches:
       - main
 
-jobs:
+jobs: 
   build-test:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
+      # frontend setup
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
@@ -25,11 +25,25 @@ jobs:
         working-directory: ./client
         run: npm install
 
+      # backend setup
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
+          extensions: mbstring, pdo, pdo_sqlite
+          coverage: none
+          ini-values: "pdo_sqlite.journal_mode=WAL"
 
       - name: Install backend deps
         working-directory: ./server
         run: composer install --no-interaction
+
+      - name: Setup backend environment
+        working-directory: ./server
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run backend tests
+        working-directory: ./server
+        run: php artisan test --no-coverage

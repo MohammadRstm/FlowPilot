@@ -20,10 +20,10 @@ class GetAnswer{
         $error = self::initializeError($stream);
 
         try{
-            $analysis = AnalyzeIntent::analyze($messages , $stage , $trace);// clean
-            $points = GetPoints::execute($analysis , $stage , $trace);// clean
-            $finalPoints = RankingFlows::rank($analysis, $points , $stage);// clean
-            $workflow = LLMService::generateAnswer($analysis, $finalPoints , $stage , $trace);// clean
+            $analysis = AnalyzeIntent::analyze($messages , $stage , $trace);
+            $points = GetPoints::execute($analysis , $stage , $trace);
+            $finalPoints = RankingFlows::rank($analysis, $points , $stage);
+            $workflow = LLMService::generateAnswer($analysis, $finalPoints , $stage , $trace);
 
             $validateWorkflowService = new ValidateFlowLogicService();
             $workflow = $validateWorkflowService->execute($workflow , $analysis , $finalPoints ,$stage ,  $trace);
@@ -47,7 +47,7 @@ class GetAnswer{
         return fn($name) => $stream && $stream("stage", $name);// shorthand (sends chunks were events = 'stage' and payload is the name of the event)
     }
 
-    private static function initializeTrace($stream){
+    public static function initializeTrace($stream){
         return fn($type, $payload) => $stream && $stream("trace", [// shortand (sends more complex chunks where payload can be anything and events hold the type of the event themselves)
             "type" => $type,
             "payload" => $payload

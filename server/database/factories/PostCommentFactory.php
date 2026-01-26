@@ -10,7 +10,10 @@ class PostCommentFactory extends Factory{// can create comments even if users an
 
     public function definition(): array{
         return [
+            'user_id' => User::factory(),
+            'post_id' => UserPost::factory(),
             'content' => fake()->sentence(),
+            'likes' => fake()->numberBetween(0, 100),
         ];
     }
 }

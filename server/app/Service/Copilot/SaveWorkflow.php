@@ -11,7 +11,8 @@ use Illuminate\Support\Str;
 class SaveWorkflow{
 
     public static function save($requestForm){
-        $json = json_encode($requestForm->input('workflow'));
+        $json = $requestForm->input('workflow');
+        
         if(!$json){
             throw new Exception("Workflow given not correct json");
         }
@@ -51,10 +52,10 @@ class SaveWorkflow{
         }
     }
 
-    private static function buildPayload(string $json , string $question): array {
-        $metaData = LLMService::generateWorkflowQdrantPayload($json , $question); // description, tags, notes, category
+    private static function buildPayload(array $json , string $question): array {
+        $metaData = LLMService::generateWorkflowQdrantPayload(json_encode($json , JSON_UNESCAPED_SLASHES) , $question); // description, tags, notes, category
 
-        $decoded_workflow = json_decode($json , true);
+        $decoded_workflow = $json;
         if (!is_array($decoded_workflow)) {
             throw new \RuntimeException("Invalid workflow JSON passed to buildPayload");
         }

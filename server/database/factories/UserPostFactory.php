@@ -9,6 +9,7 @@ class UserPostFactory extends Factory{// only create posts if you have some user
 
     public function definition(): array{
         return [
+            'user_id' => User::factory(),
             'title' => fake()->title(),
             'description' => fake()->sentence(),
             'photo_url' => fake()->imageUrl(),

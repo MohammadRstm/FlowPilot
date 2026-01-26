@@ -2,7 +2,6 @@ import { useToggleCommentLike } from "../hook/useToggleCommentLike";
 
 const CommentItem: React.FC<{ comment: any }> = ({ comment }) => {
   const toggleLike = useToggleCommentLike(comment.post_id);
-    console.log(comment);
   return (
     <div className="comment">
         {comment.user?.photo_url ? (

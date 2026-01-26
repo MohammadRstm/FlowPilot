@@ -176,13 +176,13 @@ class LLMService{
                 "model" => "gpt-4.1-mini",
                 "temperature" => 0,
                 "messages" => [
-                    ["role"=>"system","content"=>"You are an n8n workflow analyzer"],
+                    ["role"=>"system","content"=>"You are an n8n workflow analyzer, You must return only json data as per the user's request."],
                     ["role"=>"user","content"=>$prompt]
                 ]
             ]);
-        
+        Log::debug("Workflow metadata response" , ["response" => $response->json()]);
        $metaData = trim($response->json("choices.0.message.content"));
-        $metaDataDecoded = json_decode($metaData, true);
+       $metaDataDecoded = json_decode($metaData, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             Log::error('Failed to decode metadata JSON', [

@@ -7,18 +7,29 @@ use App\Models\Message;
 use App\Models\User;
 use App\Models\UserCopilotHistory;
 use App\Service\Copilot\GetAnswer;
+use App\Service\Copilot\PostWorkflow;
 use App\Service\Copilot\SaveWorkflow;
 use Exception;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class UserService{
 
-    public static function getCopilotAnswer(array $messages, ?int $userId , ?int $historyId = null , ?callable $stream = null): array{
+    public static function getCopilotAnswer(array $messages, int $userId , ?int $historyId = null , ?callable $stream = null): array{
+
+        $user = User::find($userId);
+        if (!$user) {
+            throw new Exception("User not found");
+        }
 
         $answer = GetAnswer::execute($messages , $stream);
         if(!$answer) throw new Exception("Failed to generate n8n workflow");
-        $history = self::handleHistoryManagement($userId , $historyId , $messages , $answer);
+
+        $history = self::handleHistoryManagement($user->id , $historyId , $messages , $answer);
+        if(!$history) throw new Exception("Failed to save copilot history");
+
+        PostWorkflow::postWorkflow($answer , $user , $stream);
 
         return [
             'answer' => $answer,
@@ -98,16 +109,7 @@ class UserService{
 
         $newMessage->save();
     }
-
-    public static function getChatHistory(int $userId){
-        return UserCopilotHistory::with(['messages' => function ($query) {
-                $query->orderBy('created_at');
-            }])
-            ->where('user_id', $userId)
-            ->orderByDesc('created_at')
-            ->get();
-    }
-
+    
     public static function getFriends(string $name , int $userId){
         if(empty($name)){
             throw new Exception("Name is empty");
@@ -186,7 +188,10 @@ class UserService{
     public static function returnFinalWorkflowResult($result){
         echo "event: result\n";
         echo "data: " . json_encode($result) . "\n\n";
-        ob_flush(); flush();
+        if(ob_get_level() > 0){
+            ob_flush();
+        }
+        flush();
     }
 
     public static function initializeStream(){

@@ -1,17 +1,38 @@
 import { useMutation } from "@tanstack/react-query"
 import { api } from "../../../api/client";
+import { useState } from "react";
 
 export const useDownloadHistory = () => {
-  return useMutation({
-    mutationFn: downloadHistoryRequest,
+  const [downloadingId, setDownloadingId] = useState<string | number | null>(null);
+
+  const mutation = useMutation({
+    mutationFn: (data: { url: string; id: string | number }) => {
+      setDownloadingId(data.id);
+      return downloadHistoryRequest(data.url);
+    },
     onSuccess: (blobData) => {
       createDownloadFile(blobData)
     },
+    onSettled: () => {
+      setDownloadingId(null);
+    },
   });
+
+  return {
+    mutate: (url: string, id: string | number) => mutation.mutate({ url, id }),
+    isPending: mutation.isPending,
+    downloadingId,
+  };
 };
 
 const downloadHistoryRequest = async (url: string) => {
-  const res = await api.get("auth/profile" + url, {
+  // Check if URL is absolute (contains http/https)
+  const isAbsoluteUrl = url.startsWith('http://') || url.startsWith('https://');
+  
+  // If absolute URL, use it directly; otherwise, prepend the auth/profile path
+  const endpoint = isAbsoluteUrl ? url : "auth/profile" + url;
+  
+  const res = await api.get(endpoint, {
     responseType: "blob",
   });
 
