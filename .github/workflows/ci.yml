@@ -32,11 +32,18 @@ jobs:
           php-version: '8.2'
           extensions: mbstring, pdo, pdo_sqlite
           coverage: none
+          ini-values: "pdo_sqlite.journal_mode=WAL"
 
       - name: Install backend deps
         working-directory: ./server
         run: composer install --no-interaction
 
+      - name: Setup backend environment
+        working-directory: ./server
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
       - name: Run backend tests
         working-directory: ./server
-        run: php artisan test
+        run: php artisan test --no-coverage
