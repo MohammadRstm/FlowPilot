@@ -36,12 +36,6 @@ jobs:
       - name: Install backend deps
         working-directory: ./server
         run: composer install --no-interaction
-      
-      - name: Prepare Laravel environment
-        working-directory: ./server
-        run: |
-          cp .env.testing.example .env.testing || true
-          php artisan key:generate --env=testing
 
       - name: Run backend tests
         working-directory: ./server
