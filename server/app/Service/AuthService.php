@@ -150,12 +150,13 @@ class AuthService{
 
     private static function createToken(User $user): string{
         $now = time();
+        $expirationTime = (int)env('TOKEN_EXPIRATION_TIME', 604800); // 7 days default
 
         $payload = [
             'iss' => config('app.url'),
             'sub' => $user->id,
             'iat' => $now,
-            'exp' => $now + (int)env('TOKEN_EXPIRATION_TIME'), // 7 days
+            'exp' => $now + $expirationTime,
         ];
 
         return JWT::encode($payload, self::getJwtSecret(), 'HS256');

@@ -32,5 +32,9 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="TOKEN_EXPIRATION_TIME" value="604800"/>
+        <env name="JWT_SECRET" value="test_jwt_secret_key_for_testing"/>
+        <env name="GOOGLE_CLIENT_ID" value="test_client_id"/>
+        <env name="USER_ROLE_ID" value="1"/>
     </php>
 </phpunit>
