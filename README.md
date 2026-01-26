@@ -103,7 +103,7 @@
       </ul>
     </div>
     <div style="flex: 1; min-width: 300px;">
-      <img src="./readme/Demo-Copilot.png" alt="AI Copilot Demo" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+      <img src="./readme/demo/Demo-Copilot.png" alt="AI Copilot Demo" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
     </div>
   </div>
 
@@ -120,7 +120,7 @@
       </ul>
     </div>
     <div style="flex: 1; min-width: 300px;">
-      <img src="./readme/Demo-Community.png" alt="Community Hub Demo" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+      <img src="./readme/demo/Demo-Community.png" alt="Community Hub Demo" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
     </div>
   </div>
 
@@ -138,20 +138,20 @@
       </ul>
     </div>
     <div style="flex: 1; min-width: 300px;">
-      <img src="./readme/Demo-Profile.png" alt="User Profiles Demo" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+      <img src="./readme/demo/Demo-Profile.png" alt="User Profiles Demo" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
     </div>
   </div>
 </div>
 <br/>
 <br/>
 <br/>
-<image src="./readme/cards/title5.svg"/>
+<image src="./readme/cards/demo.svg"/>
 <br/>
 <br/>
 <div style="display: flex; gap: 16px;">
-  <img src="./readme/demo-copilot-1.gif" alt="Copilot Demo 1"
+  <img src="./readme/demo/demo-copilot-1.gif" alt="Copilot Demo 1"
        style="width: 50%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
-  <img src="./readme/demo-copilot-2.gif" alt="Copilot Demo 2"
+  <img src="./readme/demo/demo-copilot-2.gif" alt="Copilot Demo 2"
        style="width: 50%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
 </div>
 <br/>
@@ -292,6 +292,28 @@ This structure ensures:
 <p align="center">
   <strong>In short:</strong> build on <code>dev</code>, ship from <code>main</code>, and keep commits clean and meaningful.
 </p>
+<br />
+<br />
+<br />
+<image src="./readme/cards/developmentAndTesting.svg"/>
+<br />
+<p>This project was built using a test-driven and validation-first mindset.
+Every major feature was developed alongside tests to ensure reliability, prevent regressions, and maintain production-grade stability as the system evolved.</p>
+<br />
+<h3>Unit tests</h3>
+
+<div style="background-color: #000000; padding: 20px; border-radius: 8px; overflow-y: auto; margin: 20px 0; max-height: 600px;">
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <img src="./readme/testing/testing-1.png" alt="Testing 1" style="width: 100%; height: auto; border-radius: 6px;">
+    <img src="./readme/testing/testing-2.png" alt="Testing 2" style="width: 100%; height: auto; border-radius: 6px;">
+    <img src="./readme/testing/testing-3.png" alt="Testing 3" style="width: 100%; height: auto; border-radius: 6px;">
+    <img src="./readme/testing/testing-4.png" alt="Testing 4" style="width: 100%; height: auto; border-radius: 6px;">
+    <img src="./readme/testing/testing-5.png" alt="Testing 5" style="width: 100%; height: auto; border-radius: 6px;">
+    <img src="./readme/testing/testing-6.png" alt="Testing 6" style="width: 100%; height: auto; border-radius: 6px;">
+    <img src="./readme/testing/testing-7.png" alt="Testing 7" style="width: 100%; height: auto; border-radius: 6px;">
+    <img src="./readme/testing/testing-8.png" alt="Testing 8" style="width: 100%; height: auto; border-radius: 6px;">
+  </div>
+</div>
 
 
 <h3>MIT LICENSE</h3>
