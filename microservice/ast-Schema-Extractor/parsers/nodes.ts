@@ -4,15 +4,16 @@ import { resolveInitializer } from "../ast/resolver";
 import { extractLiteral } from "../ast/literals";
 import { getObjectProperty } from "../ast/objects";
 import { parseField } from "./fields";
+import { createNodeSchema } from "../domain/schema";
 
 /**
  * Parses a node definition file and extracts schema-relevant data.
  */
 export function parseNode(sourceFile: SourceFile) {
-  const exports = sourceFile.getVariableDeclarations();
-  if (!exports.length) return null;
+  const declarations = sourceFile.getVariableDeclarations();
+  if (!declarations.length) return null;
 
-  const declaration = exports[0];
+  const declaration = declarations[0];
   const initializer = resolveInitializer(declaration.getInitializer());
 
   if (!initializer || !Node.isObjectLiteralExpression(initializer)) {
@@ -32,11 +33,15 @@ export function parseNode(sourceFile: SourceFile) {
     .filter(Node.isObjectLiteralExpression)
     .map(parseField);
 
-  return {
+  return createNodeSchema({
     name: extractLiteral(getObjectProperty(descriptionNode, "name")),
-    displayName: extractLiteral(getObjectProperty(descriptionNode, "displayName")),
-    description: extractLiteral(getObjectProperty(descriptionNode, "description")),
+    displayName: extractLiteral(
+      getObjectProperty(descriptionNode, "displayName")
+    ),
+    description: extractLiteral(
+      getObjectProperty(descriptionNode, "description")
+    ),
     fields,
     file: sourceFile.getFilePath(),
-  };
+  });
 }

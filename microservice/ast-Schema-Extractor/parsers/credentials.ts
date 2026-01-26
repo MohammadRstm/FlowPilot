@@ -1,36 +1,32 @@
-import { SourceFile, Node, SyntaxKind } from "ts-morph";
+import { SourceFile, Node } from "ts-morph";
 import { extractLiteral } from "../ast/literals";
 import { getObjectProperty } from "../ast/objects";
 import { resolveInitializer } from "../ast/resolver";
+import { createCredentialSchema } from "../domain/schema";
 
 /**
  * Parses a credential file and extracts credential metadata.
  *
- * This is intentionally conservative:
- * - Only explicit object literals are parsed
- * - Dynamic values are ignored as n8n handles most of it at runtime
+ * Intentionally conservative:
+ * - Only explicit object literals
+ * - Dynamic runtime values are ignored
  */
 export function parseCredential(sourceFile: SourceFile) {
-  const exported = sourceFile.getVariableDeclarationOrThrow(
-    sourceFile.getVariableDeclarations()[0]?.getName() ?? ""
-  );
+  const declarations = sourceFile.getVariableDeclarations();
+  if (!declarations.length) return null;
 
+  const exported = declarations[0];
   const initializer = resolveInitializer(exported.getInitializer());
+
   if (!initializer || !Node.isObjectLiteralExpression(initializer)) {
     return null;
   }
 
-  const name = extractLiteral(
-    getObjectProperty(initializer, "name")
-  );
-
-  const displayName = extractLiteral(
-    getObjectProperty(initializer, "displayName")
-  );
-
-  return {
-    name,
-    displayName,
+  return createCredentialSchema({
+    name: extractLiteral(getObjectProperty(initializer, "name")),
+    displayName: extractLiteral(
+      getObjectProperty(initializer, "displayName")
+    ),
     file: sourceFile.getFilePath(),
-  };
+  });
 }
