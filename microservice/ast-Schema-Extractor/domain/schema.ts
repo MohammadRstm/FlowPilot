@@ -30,6 +30,7 @@ export interface NodeSchema {
   fields: FieldSchema[];
   credentials: CredentialSchema[];
   file: string;
+  summary?:string;
 }
 
 /**
