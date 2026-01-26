@@ -1,8 +1,8 @@
-  `<image src="./readme/cards/title1.svg"/>
+<image src="./readme/cards/title.svg"/>
 <br/>
 <br/>
 <br/>
-<image src="./readme/cards/title2.svg"/>
+<image src="./readme/cards/projectOverview.svg"/>
 <br/>
 <p>
   <strong>
@@ -37,7 +37,7 @@
     </td>
      <td align="center" width="33%">
       <img 
-        src="./client/src/assets/README-Diagrams/mysql-removebg-preview.png" 
+        src="./readme/README-Diagrams/mysql-removebg-preview.png" 
         alt="React Logo" 
         width="120"
       />
@@ -49,7 +49,7 @@
 <h3 align="center"><strong>General Communication Flow</strong></h3>
 <p align="center">
   <img 
-    src="./client/src/assets/README-Diagrams/High-LevelWorkflow.png" 
+    src="./readme/README-Diagrams/High-LevelWorkflow.png" 
     alt="FlowPilot Communication Flow Diagram"
     width="800"
   />
@@ -65,7 +65,7 @@
 <h3 align="center"><strong>Copilot Communication Flow</strong></h3>
 <p align="center">
   <img 
-    src="./client/src/assets/README-Diagrams/GeneratorFlow.png" 
+    src="./readme/README-Diagrams/GeneratorFlow.png" 
     alt="FlowPilot Communication Flow Diagram"
     width="800"
   />
@@ -75,18 +75,18 @@
     n8n Generation workflow between the frontend, backend, generation module, LLM, vector-db and an open SSE connection.
   </em>
 </p>
-<image src="./readme/cards/title3.svg"/>
+<image src="./readme/cards/systemDesign.svg"/>
 <h3>Sequence Diagram</h3>
 
-<img src="./client/src/assets/README-Diagrams/NSD1.png" alt="Start" style="width: 100%;" />
+<img src="./readme/README-Diagrams/NSD1.png" alt="Start" style="width: 100%;" />
  
 <h3>ER Diagram</h3>
-<img src="./client/src/assets/README-Diagrams/ER-Diagram.png" alt="Start" style="width: 100%;" />
+<img src="./readme/README-Diagrams/ER-Diagram.png" alt="Start" style="width: 100%;" />
  
 <br/>
 <br/>
 <br/>
-<image src="./readme/cards/title4.svg"/>
+<image src="./readme/cards/projectHighlights.svg"/>
 
 <div style="display: flex; flex-direction: column; gap: 40px; margin: 30px 0;">
   
