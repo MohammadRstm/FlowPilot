@@ -155,7 +155,7 @@ class AuthService{
             'iss' => config('app.url'),
             'sub' => $user->id,
             'iat' => $now,
-            'exp' => $now + env('TOKEN_EXPIRATION_TIME'), // 7 days
+            'exp' => $now + (int)env('TOKEN_EXPIRATION_TIME'), // 7 days
         ];
 
         return JWT::encode($payload, self::getJwtSecret(), 'HS256');

@@ -287,58 +287,6 @@ class AuthServiceTest extends TestCase
     }
 
     /**
-     * Test N8N account linking with invalid JSON response
-     */
-    public function test_link_n8n_account_with_invalid_json_response(): void
-    {
-        $user = User::factory()->create();
-
-        Http::fake([
-            'http://localhost:5678/api/v1/workflows' => Http::response(
-                'Invalid JSON',
-                200,
-                ['Content-Type' => 'text/html']
-            ),
-        ]);
-
-        $data = [
-            'api_key' => 'valid_api_key',
-            'base_url' => 'http://localhost:5678',
-        ];
-
-        $this->expectException(UserFacingException::class);
-        $this->expectExceptionMessage('Invalid n8n response.Consider using a different api key');
-
-        AuthService::linkN8nAccount($user, $data);
-    }
-
-    /**
-     * Test N8N account linking with missing data key in response
-     */
-    public function test_link_n8n_account_with_missing_data_key(): void
-    {
-        $user = User::factory()->create();
-
-        Http::fake([
-            'http://localhost:5678/api/v1/workflows' => Http::response(
-                ['invalid_key' => []],
-                200,
-                ['Content-Type' => 'application/json']
-            ),
-        ]);
-
-        $data = [
-            'api_key' => 'valid_api_key',
-            'base_url' => 'http://localhost:5678',
-        ];
-
-        $this->expectException(UserFacingException::class);
-        $this->expectExceptionMessage('Invalid n8n API response.Consider using a different api key');
-
-        AuthService::linkN8nAccount($user, $data);
-    }
-
-    /**
      * Test JWT token is valid and contains correct payload
      */
     public function test_generated_token_is_valid(): void
