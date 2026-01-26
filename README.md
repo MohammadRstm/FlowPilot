@@ -1,9 +1,11 @@
-<h1 align="center"><strong>FlowPilot</strong></h1>
-
-<p align="center">
-  <img src="./client/src/assets/header-logo-removebg-preview.png" alt="Copilot Logo" width="160" />
-</p>
-
+<image src="./readme/cards/title1.svg"/>
+<br/>
+<br/>
+<br/>
+<image src="./readme/cards/title2.svg"/>
+<br/>
+<br/>
+<br/>
 <p>
   <strong>
     Flowpilot is a one of a kind n8n workflow generator.Generation of production ready, deployable and testable workflows is what Flowpilot strives in.
