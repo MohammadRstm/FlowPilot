@@ -1,7 +1,7 @@
 import { Node, ObjectLiteralExpression } from "ts-morph";
 import { extractLiteral } from "../ast/literals";
 import { getObjectProperty } from "../ast/objects";
-import { createFieldSchema } from "../schemas/fieldSchema";
+import { createFieldSchema } from "../domain/schema";
 
 /**
  * Parses a single field definition inside `properties`.

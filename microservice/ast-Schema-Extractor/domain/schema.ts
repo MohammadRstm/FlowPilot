@@ -30,7 +30,9 @@ export interface NodeSchema {
   fields: FieldSchema[];
   credentials: CredentialSchema[];
   file: string;
-  summary?:string;
+  summary?: string;
+  inputs: string[];
+  outputs: string[];
 }
 
 /**
@@ -64,6 +66,8 @@ export function createNodeSchema(
     fields: [],
     credentials: [],
     file: "",
+    inputs: [],
+    outputs: [],
     ...partial,
   };
 }
