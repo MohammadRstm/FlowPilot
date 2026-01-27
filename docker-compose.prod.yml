@@ -12,10 +12,14 @@ services:
   backend:
     build:
       context: ./server
+    expose:
+      - "9000"
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
     restart: always
+    volumes:
+      - ./server:/var/www
 
   backend_nginx:
     image: nginx:alpine
@@ -23,6 +27,7 @@ services:
       - "8000:80"
     volumes:
       - ./server/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./server:/var/www
     depends_on:
       - backend
     restart: always
