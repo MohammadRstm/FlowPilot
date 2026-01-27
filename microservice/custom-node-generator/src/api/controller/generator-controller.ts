@@ -1,6 +1,7 @@
-import { ANALYZE_SYSTEM_PROMPT } from "../prompts/analyze.prompt";
-import { DECLARATIVE_BUILD_SYSTEM_PROMPT } from "../prompts/buildDeclarative.prompt";
-import { PROGRAMMATIC_BUILD_SYSTEM_PROMPT } from "../prompts/buildProgrammatic.prompt";
+import { DECLARATIVE_BUILD_SYSTEM_PROMPT } from "../../ai/prompts/buildDeclarativeNode.prompt";
+import { PROGRAMMATIC_BUILD_SYSTEM_PROMPT } from "../../ai/prompts/buildProgrammaticNode.prompt";
+import { ANALYZE_SYSTEM_PROMPT } from "../../ai/prompts/nodeAnalysis.prompt";
+
 
 export async function planAndGenerateNode(userRequest: string) {
   // STEP 1 — Analyze
