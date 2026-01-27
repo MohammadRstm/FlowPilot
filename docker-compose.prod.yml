@@ -12,6 +12,7 @@ services:
   backend:
     build:
       context: ./server
+      dockerfile: DockerFile
     expose:
       - "9000"
     environment:
