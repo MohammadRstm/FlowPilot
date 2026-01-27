@@ -218,7 +218,6 @@ class IngestN8nNodes extends Command{
         );
     }
 
-
     private static function callOpenAI($prompt){
         $model = env("OPENAI_MODEL");
 

@@ -198,13 +198,14 @@ class IngestN8nSchemas extends Command
         Log::info('[n8n] Upserting batch', ['count' => count($points)]);
 
         try {
+            /** @var Response */
             $resp = Http::withHeaders([
                 'api-key' => $apiKey,
                 'Accept' => 'application/json',
             ])->put($upsertUrl, ['points' => $points]);
 
             if ($resp->ok()) {
-                $this->info("✅ Upserted " . ($currentSuccess + count($points)) . "/{$total}");
+                $this->info("Upserted " . ($currentSuccess + count($points)) . "/{$total}");
                 return count($points);
             }
 
