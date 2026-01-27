@@ -19,8 +19,6 @@ services:
       APP_ENV: production
       APP_DEBUG: "false"
     restart: always
-    volumes:
-      - ./server:/var/www
 
   backend_nginx:
     image: nginx:alpine
