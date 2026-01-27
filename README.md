@@ -315,6 +315,21 @@ Every major feature was developed alongside tests to ensure reliability, prevent
   </div>
 </div>
 
+<br />
 
-<h3>MIT LICENSE</h3>
+<h3>Feature tests</h3>
+<div style="background-color: #000000; padding: 20px; border-radius: 8px; overflow-y: auto; margin: 20px 0; max-height: 600px;">
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <img src="./readme/testing/testing-feat-1.png" alt="Testing 1" style="width: 100%; height: auto; border-radius: 6px;">
+    <img src="./readme/testing/testing-feat-2.png" alt="Testing 2" style="width: 100%; height: auto; border-radius: 6px;">
+    <img src="./readme/testing/testing-feat-3.png" alt="Testing 3" style="width: 100%; height: auto; border-radius: 6px;">
+    <img src="./readme/testing/testing-feat-4.png" alt="Testing 4" style="width: 100%; height: auto; border-radius: 6px;">
+  </div>
+</div>
+
+
+## 📄 License
+
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+This project is licensed under the MIT License.
+
