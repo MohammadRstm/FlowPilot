@@ -1,3 +1,5 @@
+import { NodeSpec } from "../types/nodeSpec";
+
 export function validateNodeSpec(spec: NodeSpec) {
   validateNames(spec);
   validateNoMaliciousCode(spec);
