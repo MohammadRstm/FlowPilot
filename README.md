@@ -148,12 +148,34 @@
 <image src="./readme/cards/demo.svg"/>
 <br/>
 <br/>
-<div style="display: flex; gap: 16px;">
-  <img src="./readme/demo/demo-copilot-1.gif" alt="Copilot Demo 1"
-       style="width: 50%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
-  <img src="./readme/demo/demo-copilot-2.gif" alt="Copilot Demo 2"
-       style="width: 50%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
-</div>
+<h3>Simple workflow generation</h3>
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="./readme/demo/demo-copilot-1.gif" width="100%" style="border-radius:8px;" />
+    </td>
+    <td align="center" width="50%">
+      <img src="./readme/demo/demo-copilot-2.gif" width="100%" style="border-radius:8px;" />
+    </td>
+  </tr>
+</table>
+
+<br/>
+
+<h3>Complicated workflow generation</h3>
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="./readme/demo/demo-copilot-3.gif" width="100%" style="border-radius:8px;" />
+    </td>
+    <td align="center" width="50%">
+      <img src="./readme/demo/demo-copilot-4.gif" width="100%" style="border-radius:8px;" />
+    </td>
+  </tr>
+</table>
+
 <br/>
 <br/>
 <br/>
@@ -275,6 +297,34 @@ git merge main
 git push
 ```
 
+## Graph Example:
+
+```
+main
+ ↑
+ │ (merge when dev is stable)
+ │
+dev
+ ├── chore/project-scaffold
+ ├── chores/DeploymentPreperation
+ ├── feat/Microservices
+ │   └── feat/Microservices-SchemaExtractor-AST
+ │
+ ↑ (merge back to main)
+ │
+ ├── feature/Client
+ │   ├── feature/Client-copilot
+ │   └── feature/Client-landingPage
+ ├── feature/Copilot
+ │   └── feature/Copilot-langChain
+ ├── feature/Server-Client/Posting-workflows
+ │
+ ↑ (merge back to main)
+ │
+ ├── feature/Server-Client/userProfile
+ ├── refactor/Server-Client/cleaning
+ └── refactor/Server-copilot
+```
 ---
 
 <h3>Why This Workflow?</h3>
@@ -315,6 +365,20 @@ Every major feature was developed alongside tests to ensure reliability, prevent
   </div>
 </div>
 
+<br />
 
-<h3>MIT LICENSE</h3>
+<h3>Feature tests</h3>
+<div style="background-color: #000000; padding: 20px; border-radius: 8px; overflow-y: auto; margin: 20px 0; max-height: 600px;">
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <img src="./readme/testing/testing-feat-1.png" alt="Testing 1" style="width: 100%; height: auto; border-radius: 6px;">
+    <img src="./readme/testing/testing-feat-2.png" alt="Testing 2" style="width: 100%; height: auto; border-radius: 6px;">
+    <img src="./readme/testing/testing-feat-3.png" alt="Testing 3" style="width: 100%; height: auto; border-radius: 6px;">
+    <img src="./readme/testing/testing-feat-4.png" alt="Testing 4" style="width: 100%; height: auto; border-radius: 6px;">
+  </div>
+</div>
+
+## 📄 License
+
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+This project is licensed under the MIT License.
+
