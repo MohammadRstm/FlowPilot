@@ -48,7 +48,7 @@ const FollowModal: React.FC<FollowModalProps> = ({ title, users, onClose, onUser
             scoredUsers.map((u) => (
               <div key={u.id} className="follow-row" onClick={() => onUserClick(u)}>
                 <div className="follow-left">
-                  <div className="follow-avatar">{u.photo_url ? <img src={u.photo_url} alt={u.full_name} /> : <span>{u.full_name[0]}</span>}</div>
+                  <div className="follow-avatar">{u.photo_url ? <img src={import.meta.env.VITE_PHOTO_BASE_URL + u.photo_url} alt={u.full_name} /> : <span>{u.full_name[0]}</span>}</div>
 
                   <div className="follow-info">
                     <div className="follow-name">{u.full_name}</div>
