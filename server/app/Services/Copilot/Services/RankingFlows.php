@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service\Copilot\Service;
+namespace App\Services\Copilot\Services;
 
 use Illuminate\Support\Facades\Log;
 

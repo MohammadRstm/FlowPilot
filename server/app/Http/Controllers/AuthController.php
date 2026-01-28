@@ -7,8 +7,8 @@ use App\Http\Requests\LinkN8nAccountRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\SetPasswordRequest;
-use App\Service\AuthService;
-use App\Service\UserService;
+use App\Services\AuthService;
+use App\Services\UserService;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller{

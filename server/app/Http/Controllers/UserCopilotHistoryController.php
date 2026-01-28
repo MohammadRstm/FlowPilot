@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\UserCopilotHistory;
-use App\Service\UserCopilotHistoryService;
+use App\Services\UserCopilotHistoryService;
 use Illuminate\Http\Request;
 
 class UserCopilotHistoryController extends AuthenticatedController{

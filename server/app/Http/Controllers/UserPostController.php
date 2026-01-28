@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CreatePostRequest;
-use App\Service\UserPostService;
+use App\Services\UserPostService;
 use Illuminate\Http\Request;
 
 class UserPostController extends AuthenticatedController{

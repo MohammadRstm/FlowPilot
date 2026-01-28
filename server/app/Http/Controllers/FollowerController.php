@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Service\ProfileService;
-use Illuminate\Http\Request;
+use App\Services\ProfileService;
 
 class FollowerController extends AuthenticatedController{
     

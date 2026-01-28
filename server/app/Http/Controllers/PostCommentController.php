@@ -3,8 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CommentPostRequest;
-use App\Service\PostCommentService;
-use Illuminate\Http\Request;
+use App\Services\PostCommentService;
 
 class PostCommentController extends AuthenticatedController{
 

@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Service\Copilot;
+namespace App\Services\Copilot;
 
 use App\Exceptions\UserFacingException;
-use App\Service\Copilot\Service\AnalyzeIntent;
-use App\Service\Copilot\Service\GetPoints;
-use App\Service\Copilot\Service\LLMService;
-use App\Service\Copilot\Service\RankingFlows;
-use App\Service\Copilot\Service\ValidateFlowLogicService;
+use App\Services\Copilot\Services\AnalyzeIntent;
+use App\Services\Copilot\Services\GetPoints;
+use App\Services\Copilot\Services\LLMService;
+use App\Services\Copilot\Services\RankingFlows;
+use App\Services\Copilot\Services\ValidateFlowLogicService;
 use Illuminate\Support\Facades\Log;
 
 class GetAnswer{

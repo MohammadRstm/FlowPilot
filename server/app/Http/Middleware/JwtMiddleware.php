@@ -26,8 +26,6 @@ class JwtMiddleware
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        
-
         $token = substr($header, 7);
 
         try {

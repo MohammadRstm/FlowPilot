@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Service\Copilot\Service;
+namespace App\Services\Copilot\Services;
 
-use function PHPUnit\Framework\isArray;
 
 class WorkflowGeneration{
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service;
+namespace App\Services;
 
 use App\Exceptions\UserFacingException;
 use App\Models\PostsLike;
