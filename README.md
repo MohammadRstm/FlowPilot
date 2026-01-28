@@ -244,31 +244,109 @@
 </table>
 <br />
 <br />
-
-
 <br />
 <image src="./readme/cards/developmentAndTesting.svg"/>
+<br />
 <br />
 <p>This project was built using a test-driven and validation-first mindset.
 Every major feature was developed alongside tests to ensure reliability, prevent regressions, and maintain production-grade stability as the system evolved.</p>
 <br />
-<h3>Unit tests</h3>
-
-<div style="background-color: #000000; padding: 20px; border-radius: 8px; overflow-y: auto; margin: 20px 0; max-height: 600px;">
-  <div style="display: flex; flex-direction: column; gap: 20px;">
-    <img src="./readme/testing/testing-1.png" alt="Testing 1" style="width: 100%; height: auto; border-radius: 6px;">
-    <img src="./readme/testing/testing-2.png" alt="Testing 2" style="width: 100%; height: auto; border-radius: 6px;">
-    <img src="./readme/testing/testing-3.png" alt="Testing 3" style="width: 100%; height: auto; border-radius: 6px;">
-    <img src="./readme/testing/testing-4.png" alt="Testing 4" style="width: 100%; height: auto; border-radius: 6px;">
-    <img src="./readme/testing/testing-5.png" alt="Testing 5" style="width: 100%; height: auto; border-radius: 6px;">
-    <img src="./readme/testing/testing-6.png" alt="Testing 6" style="width: 100%; height: auto; border-radius: 6px;">
-    <img src="./readme/testing/testing-7.png" alt="Testing 7" style="width: 100%; height: auto; border-radius: 6px;">
-    <img src="./readme/testing/testing-8.png" alt="Testing 8" style="width: 100%; height: auto; border-radius: 6px;">
-  </div>
-</div>
-
 <br />
 
+<h1>Frontend</h1>
+<table>
+  <tr>
+    <th align="center" width="33%">Folder Structure</th>
+    <th align="center" width="33%">Centralized Error Handler</th>
+    <th align="center" width="33%">API Interceptor</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="./readme/development/fe-folder-structure.png" width="100%"></td>
+    <td align="center"><img src="./readme/development/centralized-error-handler-fe.png" width="100%"></td>
+    <td align="center"><img src="./readme/development/api-interceptor.png" width="100%"></td>
+  </tr>
+</table>
+
+<h1>Backend</h1>
+<table>
+  <tr>
+    <th align="center" width="33%">Controller</th>
+    <th align="center" width="33%">Service</th>
+    <th align="center" width="33%">Centralized Error Handler</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="./readme/development/Controller.png" width="100%"></td>
+    <td align="center"><img src="./readme/development/service.png" width="100%"></td>
+    <td align="center"><img src="./readme/development/centralized-error-handler-be.png" width="100%"></td>
+  </tr>
+</table>
+<br />
+<br />
+<br />
+<h1>Github Actions</h1>
+<img src="./readme/ci-cd.png">
+<br />
+<br />
+<h1>Git Philosophy </h1>
+<p align="center">
+  This project follows a structured Git workflow designed to keep the codebase clean,
+  scalable, and production-ready at all times.
+</p>
+
+<br/>
+
+<h3>Branching Model</h3>
+
+<table align="center">
+  <tr>
+    <th>Branch</th>
+    <th>Purpose</th>
+  </tr>
+  <tr>
+    <td><strong>main</strong></td>
+    <td>Production-ready, always stable and deployable</td>
+  </tr>
+  <tr>
+    <td><strong>dev</strong></td>
+    <td>Integration branch where completed features are merged</td>
+  </tr>
+</table>
+
+<p align="center"><em>No direct commits are made to <strong>main</strong>.</em></p>
+
+---
+
+<h3>Branch Types</h3>
+
+<p>All work is created from <strong>dev</strong> using task-based branches:</p>
+
+<table align="center">
+  <tr>
+    <th>Prefix</th>
+    <th>Usage</th>
+  </tr>
+  <tr><td><code>feature/</code></td><td>New features</td></tr>
+  <tr><td><code>fix/</code></td><td>Bug fixes</td></tr>
+  <tr><td><code>hotfix/</code></td><td>Urgent production fixes</td></tr>
+  <tr><td><code>refactor/</code></td><td>Code improvements</td></tr>
+  <tr><td><code>chore/</code></td><td>Tooling, config, dependencies</td></tr>
+  <tr><td><code>docs/</code></td><td>Documentation updates</td></tr>
+</table>
+
+<p><strong>Naming format:</strong> <code>type/short-description</code></p>
+
+Examples:
+```bash
+feature/user-auth
+fix/login-validation
+refactor/api-layer
+docs/readme-update
+```
+
+---
+<br />
+<br />
+<h1>Tests</h1>
 <h3>Feature tests</h3>
 <div style="background-color: #000000; padding: 20px; border-radius: 8px; overflow-y: auto; margin: 20px 0; max-height: 600px;">
   <div style="display: flex; flex-direction: column; gap: 20px;">
@@ -278,3 +356,21 @@ Every major feature was developed alongside tests to ensure reliability, prevent
     <img src="./readme/testing/testing-feat-4.png" alt="Testing 4" style="width: 100%; height: auto; border-radius: 6px;">
   </div>
 </div>
+
+
+<h3>Unit tests</h3>
+
+<div style="background-color: #000000; padding: 20px; border-radius: 8px; overflow-y: auto; margin: 20px 0; max-height: 600px;">
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <!-- <img src="./readme/testing/testing-1.png" alt="Testing 1" style="width: 100%; height: auto; border-radius: 6px;">
+    <img src="./readme/testing/testing-2.png" alt="Testing 2" style="width: 100%; height: auto; border-radius: 6px;">
+    <img src="./readme/testing/testing-3.png" alt="Testing 3" style="width: 100%; height: auto; border-radius: 6px;">
+    <img src="./readme/testing/testing-4.png" alt="Testing 4" style="width: 100%; height: auto; border-radius: 6px;">
+    <img src="./readme/testing/testing-5.png" alt="Testing 5" style="width: 100%; height: auto; border-radius: 6px;">
+    <img src="./readme/testing/testing-6.png" alt="Testing 6" style="width: 100%; height: auto; border-radius: 6px;">
+    <img src="./readme/testing/testing-7.png" alt="Testing 7" style="width: 100%; height: auto; border-radius: 6px;"> -->
+    <img src="./readme/testing/testing-8.png" alt="Testing 8" style="width: 100%; height: auto; border-radius: 6px;">
+  </div>
+</div>
+
+<br />

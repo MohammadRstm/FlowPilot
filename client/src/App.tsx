@@ -10,32 +10,12 @@ import ProfilePage from './Pages/profile/Profile'
 import AboutPage from './Pages/AboutUs'
 import SettingsPage from './Pages/Settings/Settings'
 
-// day 22 I am fucked beyond comprehension
-// Test tracing and generation
-// Add the abiilty to send a workflow
-// Clean the copilot frontend / backend files
-// merge to main 
-// fix CV 
-// For after 12 am
-// Deploy the website
-// Create CI / CD
-// push to main
-// victory dance
-
-// big objectives must start at 24th to give myself a chance of finishing them
+// big objectives
 // ADD THE ABILITY TO SEND USER WORKFLOWS TO ADD ON IT/FIX IT - HARD - BACKEND HEAVY
 // ADD THE ABILITY TO CREATE CUSTOM NODES - VERY HARD - F/B HEAVY ON BOTH
 // ADD THE ABILITY TO SAVE CREDENTIALS OR FIGURE OUT A WAY TO DO IT AUTOMATICALLY - HARD F/B HEAVY ON BOTH
-// USE LANGCHAIN
 
 // white screen appearing on reload then page appears
-
-// objectives for today:
-/**
- * 
- * Create Tests for everything except copilot
- */
-
 
 function App() {
   return (
