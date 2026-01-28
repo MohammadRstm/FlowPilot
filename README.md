@@ -372,5 +372,113 @@ docs/readme-update
     <img src="./readme/testing/testing-8.png" alt="Testing 8" style="width: 100%; height: auto; border-radius: 6px;">
   </div>
 </div>
-
 <br />
+<br />
+<img src="./readme/cards/deployment.svg">
+<br />
+
+<h2>Deployment Architecture</h2>
+
+<img src="./readme/deployment/images.png">
+<br />
+
+<p>FlowPilot uses Docker to containerize the frontend, backend, and database components, ensuring consistent deployment across development, staging, and production environments.</p>
+
+<h3>Database Configuration</h3>
+<p>Database setup and initialization using Docker:</p>
+<img src="./readme/deployment/db-build.png" alt="Database Build" style="width: 100%; max-width: 800px;">
+
+<br/>
+<br/>
+
+<h3>Frontend Deployment</h3>
+<p>The frontend is containerized separately for both development and production environments:</p>
+<table>
+  <tr>
+    <th align="center" width="50%">Development Frontend</th>
+    <th align="center" width="50%">Root Docker Frontend Config</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="./readme/deployment/docker-fe.png" alt="Frontend Docker" width="100%"></td>
+    <td align="center"><img src="./readme/deployment/root-docker-fe.png" alt="Root Frontend Config" width="100%"></td>
+  </tr>
+</table>
+
+<br/>
+<br/>
+
+<h3>Backend Deployment</h3>
+<p>The backend services are containerized with appropriate configurations for both development and production:</p>
+<table>
+  <tr>
+    <th align="center" width="50%">Development Backend</th>
+    <th align="center" width="50%">Root Docker Backend Config</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="./readme/deployment/docker-be.png" alt="Backend Docker" width="100%"></td>
+    <td align="center"><img src="./readme/deployment/root-docker-be.png" alt="Root Backend Config" width="100%"></td>
+  </tr>
+</table>
+
+<br/>
+<br/>
+
+<h2>Development vs Production Separation</h2>
+<p>FlowPilot maintains a clear separation between development and production environments using Docker Compose configurations:</p>
+
+<h3>Development Environment</h3>
+<p><strong>Command:</strong> <code>docker compose -f docker-compose.dev.yml up --build</code></p>
+<ul>
+  <li><strong>Frontend:</strong> Uses Vite dev server with hot module reloading (HMR) for instant code feedback</li>
+  <li><strong>Backend:</strong> Runs in local mode with debugging enabled (<code>APP_DEBUG=true</code>)</li>
+  <li><strong>Volumes:</strong> Source code is mounted for live code synchronization without rebuilding</li>
+  <li><strong>Database:</strong> Uses ephemeral MySQL container (data not persisted)</li>
+  <li><strong>File Watching:</strong> Chokidar polling enabled for cross-platform file change detection</li>
+  <li><strong>Port Mapping:</strong> Frontend on 3000, Backend API on 8000</li>
+</ul>
+
+<h3>Production Environment</h3>
+<p><strong>Command:</strong> <code>docker compose -f docker-compose.prod.yml up --build -d</code></p>
+<ul>
+  <li><strong>Frontend:</strong> Multi-stage build producing optimized static files served by Nginx</li>
+  <li><strong>Backend:</strong> Production-optimized Laravel with caching and route optimization (<code>APP_DEBUG=false</code>)</li>
+  <li><strong>Volumes:</strong> Only configuration files are mounted; source code is copied during build</li>
+  <li><strong>Database:</strong> Named volume (<code>db_data</code>) for persistent data across container restarts</li>
+  <li><strong>Restart Policy:</strong> <code>restart: always</code> ensures services recover from failures</li>
+  <li><strong>Environment Variables:</strong> Loaded from <code>.env.prod</code> for sensitive configuration</li>
+  <li><strong>Detached Mode:</strong> Services run in background (with <code>-d</code> flag)</li>
+</ul>
+
+<h3>Key Architectural Differences</h3>
+<table align="center">
+  <tr>
+    <th>Aspect</th>
+    <th>Development</th>
+    <th>Production</th>
+  </tr>
+  <tr>
+    <td><strong>Build Strategy</strong></td>
+    <td>Lightweight, includes dev dependencies</td>
+    <td>Multi-stage, optimized for size and performance</td>
+  </tr>
+  <tr>
+    <td><strong>Code Mounting</strong></td>
+    <td>Live volumes for hot reload</td>
+    <td>Copied into image at build time</td>
+  </tr>
+  <tr>
+    <td><strong>Persistence</strong></td>
+    <td>Ephemeral (data lost on container stop)</td>
+    <td>Named volumes for database durability</td>
+  </tr>
+  <tr>
+    <td><strong>Debugging</strong></td>
+    <td>Enabled with verbose logging</td>
+    <td>Disabled for security and performance</td>
+  </tr>
+  <tr>
+    <td><strong>Auto-Recovery</strong></td>
+    <td>Manual restart required</td>
+    <td>Automatic via restart policy</td>
+  </tr>
+</table>
