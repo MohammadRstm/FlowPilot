@@ -121,8 +121,8 @@ class ProfileService{
 
             if ($user->photo_url) {
                 $oldPath = $folder . '/' . $user->id . '-' . basename($user->photo_url);
-                if (Storage::exists($oldPath)) {
-                    Storage::delete($oldPath);
+                if ($disk->exists($oldPath)) {
+                    $disk->delete($oldPath);
                 }
             }
 

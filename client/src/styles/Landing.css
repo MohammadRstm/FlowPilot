@@ -255,10 +255,6 @@ body {
   animation: pulse 4s ease-in-out infinite;
 }
 
-@keyframes pulse {
-  0%, 100% { box-shadow: 0 0 40px #ff9b0060; }
-  50% { box-shadow: 0 0 90px #ff9b00cc; }
-}
 
 /* Nodes */
 .node {
