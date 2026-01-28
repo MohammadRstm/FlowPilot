@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Console\Commands\Services\IngestionService;
+use App\Console\Commands\Services\prompt;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -53,30 +54,32 @@ class IngestN8nNodes extends Command{
             'Authorization' => 'token ' . env('GITHUB_TOKEN'),
         ])->timeout(30)->get($url);
 
-        if (!$response->ok()) {
+        if(!$response->ok()){
             $this->warn("Failed to fetch: {$url}");
             return;
         }
 
-        foreach ($response->json() as $item) {
-            if ($item['type'] === 'dir') {
+        foreach($response->json() as $item){
+            if($item['type'] === 'dir'){
                 $this->crawl($item['url']);
                 continue;
             }
 
             if ($item['type'] === 'file' && str_ends_with($item['name'], '.node.ts')){
-                if ($this->lastIngestedPath && $this->lastIngestedPath !== $item['path']) {
-                    continue;
-                } else {
-                    $this->lastIngestedPath = null; // found, start ingesting from here
-                }
-                $this->ingestNodeTsFile($item['download_url'], $item['path']);
-                try{
-                    file_put_contents($this->resumeFile, json_encode(['last_ingested' => $item['path']] , JSON_PRETTY_PRINT));
-                }catch(\Exception $ex){
-                    $this->warn("Could not save resume file: {$ex->getMessage()}");
-                }
+                if ($this->lastIngestedPath && $this->lastIngestedPath !== $item['path']) continue;
+                $this->processFile($item);
             }
+        }
+    }
+
+    private function processFile(array $item): void{
+        $this->lastIngestedPath = null; // found, start ingesting from here
+        
+        $this->ingestNodeTsFile($item['download_url'], $item['path']);
+        try{
+            file_put_contents($this->resumeFile, json_encode(['last_ingested' => $item['path']] , JSON_PRETTY_PRINT));
+        }catch(\Exception $ex){
+            $this->warn("Could not save resume file: {$ex->getMessage()}");
         }
     }
 
@@ -98,9 +101,10 @@ class IngestN8nNodes extends Command{
         $this->parsed++;
 
         // AI fallback if critical fields missing
-        if (empty($parsed['description']) || empty($parsed['display_name'])) {
+        if(empty($parsed['description']) || empty($parsed['display_name'])){
             $this->warn('  ↳ Missing fields, using AI fallback');
             $aiData = $this->aiFallback($parsed, $path);
+
             $parsed = array_merge($parsed, $aiData);
             $this->aiUsed++;
         }
@@ -156,23 +160,7 @@ class IngestN8nNodes extends Command{
     private function aiFallback(array $parsed, string $path): array{
         $node_type = $parsed["node_type"];
         $class_name = $parsed["class_name"];
-        $prompt = <<<PROMPT
-        You are documenting an n8n automation node.
-
-        Node class: $class_name
-        Path: {$path}
-        Type: $node_type
-
-        Generate:
-        1. A human-friendly display name
-        2. A concise one-sentence description of what this node does
-
-        Return JSON:
-        {
-        "display_name": "...",
-        "description": "..."
-        }
-        PROMPT;
+        $prompt = prompt::getAIFallBackDescriptionPrompt($class_name, $path, $node_type);
 
         $result = $this->callOpenAI($prompt);
         if(!$result){
@@ -190,13 +178,7 @@ class IngestN8nNodes extends Command{
     }
 
     private function storeInQdrant(array $node): void{
-        $text = implode("\n", array_filter([
-            "n8n {$node['node_type']} node",
-            $node['display_name'],
-            $node['description'],
-            "Service: " . ucfirst($node['service']),
-            "Groups: " . implode(', ', $node['groups']),
-        ]));
+        $text = $this->getEmbeddingText($node);
 
         $denseVector = IngestionService::embed($text);
         $sparseVector = IngestionService::buildSparseVector($text);
@@ -218,7 +200,7 @@ class IngestN8nNodes extends Command{
         );
     }
 
-    private static function callOpenAI($prompt){
+    private function callOpenAI($prompt){
         $model = env("OPENAI_MODEL");
 
         /** @var Response $response */
@@ -241,14 +223,30 @@ class IngestN8nNodes extends Command{
         }
 
 
+        $decodedFallBack = $this->aiMarkdownFallback($results);
+
+        return $decodedFallBack ?? null;
+    }
+
+    private function aiMarkdownFallback($results){
         if(preg_match('/\{.*\}|\[.*\]/s', $results, $m)){// AI may have included some markdown or explanation
             $candidate = $m[0];
             $decoded2 = json_decode($candidate, true);
             if (json_last_error() === JSON_ERROR_NONE && $decoded2 !== null) {
                 return $decoded2;
             }
+        }else{
+            return null;
         }
+    }
 
-        return null;
+    private function getEmbeddingText(array $node): string{
+        return implode("\n", array_filter([
+            "n8n {$node['node_type']} node",
+            $node['display_name'],
+            $node['description'],
+            "Service: " . ucfirst($node['service']),
+            "Groups: " . implode(', ', $node['groups']),
+        ]));
     }
 }
