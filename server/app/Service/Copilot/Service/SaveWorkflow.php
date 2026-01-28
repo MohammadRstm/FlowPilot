@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service\Copilot;
+namespace App\Service\Copilot\Service;
 
 use App\Console\Commands\Services\IngestionService;
 use Exception;

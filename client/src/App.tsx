@@ -9,6 +9,7 @@ import ProtectedRoutes from './Pages/components/ProtectedRoutes'
 import ProfilePage from './Pages/profile/Profile'
 import AboutPage from './Pages/AboutUs'
 import SettingsPage from './Pages/Settings/Settings'
+import { useBackgroundStreamNotifications } from './Pages/copilot/hooks/useBackgroundStreamNotifications.hook'
 
 // big objectives
 // ADD THE ABILITY TO SEND USER WORKFLOWS TO ADD ON IT/FIX IT - HARD - BACKEND HEAVY
@@ -18,6 +19,9 @@ import SettingsPage from './Pages/Settings/Settings'
 // white screen appearing on reload then page appears
 
 function App() {
+  // Listen for background stream completions globally
+  useBackgroundStreamNotifications();
+
   return (
     <BrowserRouter>
       <Routes>

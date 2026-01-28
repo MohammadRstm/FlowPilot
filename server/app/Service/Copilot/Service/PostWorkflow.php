@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Service\Copilot;
+namespace App\Service\Copilot\Service;
 
+use App\Service\Copilot\GetAnswer;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service\Copilot;
+namespace App\Service\Copilot\Service;
 
 use function PHPUnit\Framework\isArray;
 
@@ -61,7 +61,7 @@ class WorkflowGeneration{
         }
 
         $out = [];
-        $out[] = "You may ONLY use the following n8n node operations.";
+        $out[] = "You may ONLY use the following n8n node operations.if you don't find one here then use the one you know of.";
         $out[] = "Every operation below is valid, ranked, and schema-verified.";
         $out[] = "Do NOT invent nodes, resources, operations, or fields.";
         $out[] = "";

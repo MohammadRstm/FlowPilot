@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Service\Copilot;
+namespace App\Service\Copilot\Service;
 
-use Exception;
-use Illuminate\Support\Facades\Log;
+use App\Service\Copilot\Service\LLMService;
 
 class AnalyzeIntent{
 

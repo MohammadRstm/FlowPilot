@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import type { GenerationStage, ChatMessage } from "../../types";
-import { streamCopilotQuestion } from "../data/streamResponse";
 import { useToast } from "../../../../context/toastContext";
+import { backgroundStreamService } from "../../services/backgroundStreamService";
 
 export function useCopilotStream({
   onStage,
@@ -17,52 +17,58 @@ export function useCopilotStream({
   onError: () => void;
 }) {
   const { showToast } = useToast();
-  const streamRef = useRef<EventSource | null>(null); // SSE connection
   const runIdRef = useRef(0);
+  const currentKeyRef = useRef<number | "new">("new");
 
-    const cancel = () => {
-        streamRef.current?.close();
-        streamRef.current = null;
-    };
-
+  const cancel = () => {
+    backgroundStreamService.stopStream(currentKeyRef.current);
+  };
 
   const run = (
     messages: ChatMessage[],
-    historyId: number | null,// active key 
+    historyId: number | null,
     key: number | "new" = "new",
     userId: number
   ) => {
     runIdRef.current += 1;
-    const id =runIdRef.current;
-    // close any previous SSE connection
-    streamRef.current?.close();
+    const id = runIdRef.current;
+    currentKeyRef.current = key;
 
     // immediately enqueue "analyzing" stage
     onStage("analyzing");
-    // open new SSE connection
-    streamRef.current = streamCopilotQuestion(
-      userId,
+
+    // Use background stream service - stream continues even after navigation
+    backgroundStreamService.startStream(
+      key,
       messages,
-      showToast,
       historyId,
-      (stage) => {
-        onStage(stage as GenerationStage);
-        onProgress(key, stage as GenerationStage);
-      },
-      (trace) => {
-        if (id !== runIdRef.current) return;
-        onTrace(key, trace);
-      },
-      (answer, historyId) => {
-        if (id !== runIdRef.current) return;
-        onComplete(answer, historyId);
-      },
-      () =>{
-        if (id !== runIdRef.current) return;
-        onError();
+      userId,
+      (message: string, type?: string) => showToast(message, type as any),
+      {
+        onStage: (_streamKey, stage) => {
+          if (id !== runIdRef.current) return;
+          onStage(stage);
+        },
+        onProgress: (_streamKey, stage) => {
+          if (id !== runIdRef.current) return;
+          onProgress(_streamKey, stage);
+        },
+        onTrace: (_streamKey, trace) => {
+          if (id !== runIdRef.current) return;
+          onTrace(_streamKey, trace);
+        },
+        onComplete: (_streamKey, answer, historyId) => {
+          if (id !== runIdRef.current) return;
+          onComplete(answer, historyId);
+        },
+        onError: (_streamKey) => {
+          if (id !== runIdRef.current) return;
+          onError();
+        },
       }
     );
   };
+
   const runId = runIdRef.current;
-  return { run, cancel , runId};
+  return { run, cancel, runId };
 }
