@@ -26,6 +26,9 @@ export const useCreatePost = () => {
 
       const previousData = queryClient.getQueryData<any>(["community-posts"]);
 
+      // Create temporary photo URL if image exists
+      const tempPhotoUrl = inputs.image ? URL.createObjectURL(inputs.image) : "";
+
       const optimisticPost: PostDto = {
         id: Date.now(), // Temporary ID
         author: `${user?.first_name} ${user?.last_name}`.trim(),
@@ -33,7 +36,7 @@ export const useCreatePost = () => {
         avatar: user?.profile_pic || null,
         title: inputs.title,
         content: inputs.description || "",
-        photo: "", // Will be updated after server response
+        photo: tempPhotoUrl,
         likes: 0,
         comments: 0,
         exports: 0,
@@ -45,12 +48,25 @@ export const useCreatePost = () => {
         prependOptimisticPost(optimisticPost)
       );
 
-      return { previousData };
+      return { previousData, tempPhotoUrl };
+    },
+
+    onSuccess: (_data, _inputs, context: any) => {
+      // queryClient.invalidateQueries({ queryKey: ["community-posts"] });
+      
+      if (context?.tempPhotoUrl) {
+        setTimeout(() => {
+          URL.revokeObjectURL(context.tempPhotoUrl);
+        }, 500);
+      }
     },
 
     onError: (_err, _inputs, context: any) => {
       if(context?.previousData){
         queryClient.setQueryData(["community-posts"], context.previousData);
+      }
+      if (context?.tempPhotoUrl) {
+        URL.revokeObjectURL(context.tempPhotoUrl);
       }
       showToast("Failed to create post", ToastMessage.ERROR);
     },

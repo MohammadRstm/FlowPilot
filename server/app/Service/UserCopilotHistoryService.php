@@ -41,9 +41,7 @@ class UserCopilotHistoryService{
     }
 
     public static function getDownloadableContent(int $userId , Model $history){
-        if($history->user_id !== $userId){
-            abort(403); 
-        }
+
 
         $lastMessage = $history->messages()
             ->latest('created_at')

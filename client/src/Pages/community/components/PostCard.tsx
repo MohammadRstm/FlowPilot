@@ -36,7 +36,11 @@ const PostCard: React.FC<PostCardProps> = ({
     const likeMutation = useToggleLike(userId);
     const exportContent = useExportPost();
 
-    const imageUrl = post.photo ? `${BASE_URL}/${post.photo}` : null;
+    const imageUrl = post.photo 
+      ? post.photo.startsWith('blob:') 
+        ? post.photo 
+        : `${BASE_URL}/${post.photo}`
+      : null;
 
   return (
     <>

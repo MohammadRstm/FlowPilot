@@ -113,26 +113,27 @@ class ProfileService{
     public static function uploadFile(Model $user , UploadedFile $file){
          try {
             $folder = 'avatar_photos';
+            $disk = Storage::disk('public');
 
-            if (!Storage::exists($folder)) {
-                Storage::makeDirectory($folder);
+            if (!$disk->exists($folder)) {
+                $disk->makeDirectory($folder);
             }
 
             if ($user->photo_url) {
                 $oldPath = $folder . '/' . $user->id . '-' . basename($user->photo_url);
-                if (Storage::exists($oldPath)) {
-                    Storage::delete($oldPath);
+                if ($disk->exists($oldPath)) {
+                    $disk->delete($oldPath);
                 }
             }
 
             $extension = $file->getClientOriginalExtension();
             $filename = $user->id . '-' . Str::uuid() . '.' . $extension;
 
-            $path = Storage::disk('public')->putFileAs($folder, $file, $filename);
+           
+            $path = $disk->putFileAs($folder, $file, $filename);
 
             $user->photo_url = '/storage' . "/" .  $path;
-            $user->save();
-            Log::debug("Success" , ["context" => $path]);
+            $user->save();            
         } catch (Exception $e) {
             throw new Exception($e->getMessage());
         }
