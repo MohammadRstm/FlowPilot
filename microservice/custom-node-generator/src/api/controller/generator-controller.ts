@@ -1,10 +1,11 @@
+import { analyzerAgent, builderAgent } from "../../ai/llmClient";
 import { DECLARATIVE_BUILD_SYSTEM_PROMPT } from "../../ai/prompts/buildDeclarativeNode.prompt";
 import { PROGRAMMATIC_BUILD_SYSTEM_PROMPT } from "../../ai/prompts/buildProgrammaticNode.prompt";
 import { ANALYZE_SYSTEM_PROMPT } from "../../ai/prompts/nodeAnalysis.prompt";
 
 
-export async function planAndGenerateNode(userRequest: string) {
-  // STEP 1 — Analyze
+export async function planAndGenerateNode(userRequest: string){
+
   const analysis = await analyzerAgent.invoke({
     messages: [
       { role: "system", content: ANALYZE_SYSTEM_PROMPT },
@@ -14,7 +15,6 @@ export async function planAndGenerateNode(userRequest: string) {
 
   const nodeType = analysis.structuredResponse.nodeType;
 
-  // STEP 2 — Build
   const systemPrompt =
     nodeType === "declarative"
       ? DECLARATIVE_BUILD_SYSTEM_PROMPT

@@ -1,4 +1,4 @@
-import { NodeSpec } from "../types/NodeSpec";
+import { NodeSpec } from "../types/nodeSpec";
 
 export function generateNodeJson(spec: NodeSpec) {
   return {

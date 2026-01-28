@@ -1,9 +1,8 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { createAgent, providerStrategy } from "langchain";
-import { z } from "zod";
 
 import { NodeAnalysisSchema } from "./schemas/nodeAnalysis.schema";
-import { NodeSpecSchema } from "./schemas/nodeSpec.schema";
+import { NodeSpecSchema } from "../types/nodeSpec";
 
 
 
