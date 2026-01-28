@@ -6,12 +6,22 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\AvatarUploadRequest;
 use App\Service\ProfileService;
 use App\Service\UserService;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
 class ProfileController extends Controller{
 
+    protected Model $authUser;
+
+    public function __construct(){
+        $this->middleware(function ($request, $next) {
+            $this->authUser = $request->user();
+            return $next($request);
+        });
+    }
+
     public function getProfileDetails(Request $request){ 
-        $viewerId = $request->user()->id;// user viewing the profile (who made the request)
+        $viewerId = $this->authUser->id;// user viewing the profile (who made the request)
         $userId = (int) ($request->query('user_id') ?? $viewerId);// user being viewed
 
         $profileDetails = ProfileService::getProfileDetails(
@@ -22,17 +32,14 @@ class ProfileController extends Controller{
     }
 
     public function getFriends(Request $request , string $name){
-        $userId = $request->user()->id;
-
-        $suggestions = UserService::getFriends($name , $userId);
+        $suggestions = UserService::getFriends($name , $this->authUser->id);
         return $this->successResponse($suggestions);
     }
 
     public function uploadAvatar(AvatarUploadRequest $request){
-        $user = $request->user();
         $avatar = $request->file("avatar");
 
-        ProfileService::uploadFile($user , $avatar);
+        ProfileService::uploadFile($this->authUser , $avatar);
         return $this->successResponse([] , "uploaded successfully");
     }
     
