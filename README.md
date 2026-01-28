@@ -119,6 +119,52 @@
 <image src="./readme/cards/demo.svg"/>
 <br/>
 <br/>
+<h1>Landing</h1>
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="./readme/demo/Landing.png" width="100%" style="border-radius:8px;" />
+    </td>
+    <td align="center" width="50%">
+      <img src="./readme/demo/demo-Landing.gif" width="100%" style="border-radius:8px;" />
+    </td>
+  </tr>
+</table>
+<br/>
+<br/>
+<h1>Login</h1>
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="./readme/demo/Login.png" width="100%" style="border-radius:8px;" />
+    </td>
+    <td align="center" width="50%">
+      <img src="./readme/demo/demo-login-1.gif" width="100%" style="border-radius:8px;" />
+    </td>
+  </tr>
+</table>
+<p align="center">
+  <img src="./readme/demo/demo-login-2.gif" width="50%">
+</p>
+<br/>
+<br/>
+<h1>Signup</h1>
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="./readme/demo/Signup.png" width="100%" style="border-radius:8px;" />
+    </td>
+    <td align="center" width="50%">
+      <img src="./readme/demo/demo-signup-1.gif" width="100%" style="border-radius:8px;" />
+    </td>
+  </tr>
+</table>
+<p align="center">
+  <img src="./readme/demo/demo-signup-2.gif" width="50%">
+</p>
+<br/>
+<br/>
+
 <h1>Copilot</h1>
 <h3>Simple workflow generation</h3>
 
@@ -147,12 +193,59 @@
     </td>
   </tr>
 </table>
-
 <br/>
 <br/>
+<h1>Community Hub</h1>
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="./readme/demo/Community.png" width="100%" style="border-radius:8px;" />
+    </td>
+    <td align="center" width="50%">
+      <img src="./readme/demo/demo-community.gif" width="100%" style="border-radius:8px;" />
+    </td>
+  </tr>
+</table>
+<br />
+<br />
+<h1>Profile</h1>
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="./readme/demo/Profile.png" width="100%" style="border-radius:8px;" />
+    </td>
+    <td align="center" width="50%">
+      <img src="./readme/demo/demo-profile.gif" width="100%" style="border-radius:8px;" />
+    </td>
+  </tr>
+</table>
+<br />
+<br />
+<h1>Settings</h1>
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="./readme/demo/Settings-1.png" width="100%" style="border-radius:8px;" />
+    </td>
+    <td align="center" width="50%">
+      <img src="./readme/demo/Settings-2.png" width="100%" style="border-radius:8px;" />
+    </td>
+  </tr>
+</table>
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="./readme/demo/Settings-3.png" width="100%" style="border-radius:8px;" />
+    </td>
+    <td align="center" width="50%">
+      <img src="./readme/demo/Settings-4.png" width="100%" style="border-radius:8px;" />
+    </td>
+  </tr>
+</table>
+<br />
+<br />
 
-<br />
-<br />
+
 <br />
 <image src="./readme/cards/developmentAndTesting.svg"/>
 <br />
