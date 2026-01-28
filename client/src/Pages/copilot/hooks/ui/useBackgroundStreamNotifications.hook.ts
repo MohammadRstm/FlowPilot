@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { useToast } from "../../../context/toastContext";
-import { backgroundStreamService } from "../services/backgroundStreamService";
+import { useToast } from "../../../../context/toastContext";
+import { backgroundStreamService } from "../../services/backgroundStreamService";
 
 /**
  * Global hook that listens for background stream completions
@@ -14,7 +14,7 @@ export function useBackgroundStreamNotifications() {
     const checkStreams = setInterval(() => {
       const activeStreams = backgroundStreamService.getActiveStreams();
 
-      // Check if any streams are in "done" stage and show notification
+      // check if any streams are in "done" stage and show notification
       activeStreams.forEach((stream) => {
         if (stream.stage === "done") {
           showToast("Your workflow is ready!", "success");

@@ -19,7 +19,7 @@ import { buildWorkflowFile, commitHistory, finalizeAssistantMessage } from "./ut
 import { useCopilotHistoryController } from "./hooks/ui/useCopilotHistoryController.hook";
 import { HistoryPanel } from "./components/HistoryPanel/HistoryPanel";
 import { useAuth } from "../../context/useAuth";
-import { useBackgroundStreamNotifications } from "./hooks/useBackgroundStreamNotifications.hook";
+import { useBackgroundStreamNotifications } from "./hooks/ui/useBackgroundStreamNotifications.hook";
 import { useCopilotStream } from "./hooks/ui/useCopilotStream.hook";
 
 export const Copilot =() => {

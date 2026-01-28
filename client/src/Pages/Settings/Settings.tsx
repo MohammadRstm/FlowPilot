@@ -37,16 +37,23 @@ const SettingsPage = () => {
   const hasPassword = data?.normalAccount;
   const hasGoogle = data?.googleAccount;
 
-
   const handleSetPassword = () => {
-    if (newPassword !== confirmPassword) return;
+    setPasswordMutation.mutate(
+      {
+        current_password: hasPassword ? currentPassword : undefined,
+        new_password: newPassword,
+        new_password_confirmation: confirmPassword,
+      },
+      {
+        onSuccess: () => {
+          setCurrentPassword("");
+          setNewPassword("");
+          setConfirmPassword("");
+        },
+      }
+    );
+  }
 
-    setPasswordMutation.mutate({
-      current_password: hasPassword ? currentPassword : undefined,
-      new_password: newPassword,
-      new_password_confirmation: confirmPassword,
-    });
-  };
 
   const handleLinkN8n = () => {
     if (!n8nBaseUrl || !n8nApiKey) return;
@@ -54,6 +61,11 @@ const SettingsPage = () => {
     linkN8nMutation.mutate({
       base_url: n8nBaseUrl,
       api_key: n8nApiKey,
+    }, {
+      onSuccess: () => {
+        setN8nBaseUrl("");
+        setN8nApiKey("");
+      }
     });
   };
 
