@@ -3,42 +3,33 @@
 namespace App\Http\Controllers;
 
 use App\Models\UserCopilotHistory;
-use App\Models\Message;
-use App\Http\Controllers\Controller;
 use App\Service\UserCopilotHistoryService;
-use App\Service\UserService;
 use Illuminate\Http\Request;
 
-class UserCopilotHistoryController extends Controller{
+class UserCopilotHistoryController extends AuthenticatedController{
   
-    public function index(Request $request){
-        $userId = $request->user()->id; 
-        $histories = UserCopilotHistoryService::getUserHistories($userId);
+    public function index(){
+        $histories = UserCopilotHistoryService::getUserHistories($this->authUser->id);
         return $this->successResponse([
             'histories' => $histories,
         ]);
     }
 
     public function show(Request $request , UserCopilotHistory $userCopilotHistory){
-        $userId = $request->user()->id;  
-
-        $userCopilotHistory = UserCopilotHistoryService::getUserCopilotHistoryDetials($userId , $userCopilotHistory);
-
+        $userCopilotHistory = UserCopilotHistoryService::getUserCopilotHistoryDetials( $this->authUser->id , $userCopilotHistory);
         return $this->successResponse([
             'history' => $userCopilotHistory,
         ]);
     }
 
-    public function destroy(Request $request , UserCopilotHistory $userCopilotHistory){
-        $userId = $request->user()->id; 
-        UserCopilotHistoryService::deleteHistory($userId , $userCopilotHistory);
+    public function destroy(UserCopilotHistory $userCopilotHistory){
+        UserCopilotHistoryService::deleteHistory( $this->authUser->id , $userCopilotHistory);
 
         return $this->successResponse([], 'History deleted');
     }
 
-    public function download(Request $request , UserCopilotHistory $history){
-        $userId = $request->user()->id;
-        $lastMessage = UserCopilotHistoryService::getDownloadableContent($userId, $history);
+    public function download(UserCopilotHistory $history){
+        $lastMessage = UserCopilotHistoryService::getDownloadableContent( $this->authUser->id, $history);
         return response()->json(
             $lastMessage->ai_response,
             200,

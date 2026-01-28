@@ -2,40 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\CreatePostRequest;
 use App\Service\UserPostService;
 use Illuminate\Http\Request;
 
-class UserPostController extends Controller{
+class UserPostController extends AuthenticatedController{
 
     public function fetchPosts(Request $request){
-        $userId = $request->user()->id;
         $page = (int) $request->query('page', 1);
 
-        $paginatedPosts = UserPostService::getPosts($userId , $page);
+        $paginatedPosts = UserPostService::getPosts($this->authUser->id , $page);
         return $this->successResponse($paginatedPosts);
     }
 
-    public function toggleLike(Request $request , int $postId){
-        $userId = $request->user()->id;
+    public function toggleLike(int $postId){
 
-        $likeResp = UserPostService::toggleLike($userId , $postId);
+        $likeResp = UserPostService::toggleLike($this->authUser->id , $postId);
         return $this->successResponse($likeResp);
     }
 
-    public function export(Request $request , int $postId){
-        $userId = $request->user()->id;
+    public function export(int $postId){
 
-        $exportResp = UserPostService::export($userId , $postId);
+        $exportResp = UserPostService::export($this->authUser->id , $postId);
         return $this->successResponse($exportResp);
     }
 
     public function createPost(CreatePostRequest $request){
-        $userId = $request->user()->id;
         $form = $request->validated();
 
-        $createdResp = UserPostService::createPost($userId , $form);
+        $createdResp = UserPostService::createPost($this->authUser->id , $form);
         return $this->successResponse(["post_id" => $createdResp]);
     }   
 }

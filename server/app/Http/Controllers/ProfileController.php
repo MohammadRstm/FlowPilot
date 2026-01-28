@@ -9,16 +9,7 @@ use App\Service\UserService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
-class ProfileController extends Controller{
-
-    protected Model $authUser;
-
-    public function __construct(){
-        $this->middleware(function ($request, $next) {
-            $this->authUser = $request->user();
-            return $next($request);
-        });
-    }
+class ProfileController extends AuthenticatedController{
 
     public function getProfileDetails(Request $request){ 
         $viewerId = $this->authUser->id;// user viewing the profile (who made the request)
@@ -31,7 +22,7 @@ class ProfileController extends Controller{
         return $this->successResponse($profileDetails);
     }
 
-    public function getFriends(Request $request , string $name){
+    public function getFriends(string $name){
         $suggestions = UserService::getFriends($name , $this->authUser->id);
         return $this->successResponse($suggestions);
     }

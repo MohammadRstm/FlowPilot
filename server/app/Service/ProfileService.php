@@ -6,6 +6,7 @@ use App\Models\Follower;
 use App\Models\User;
 use App\Models\UserPost;
 use Exception;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -110,7 +111,7 @@ class ProfileService{
         ];
     }
 
-    public static function uploadFile(Model $user , UploadedFile $file){
+    public static function uploadFile(User $user , UploadedFile $file){
          try {
             $folder = 'avatar_photos';
             $disk = Storage::disk('public');

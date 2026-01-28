@@ -10,9 +10,8 @@ class AuthenticatedController extends Controller{
     
     protected Authenticatable $authUser;
 
-    public function __construct()
-    {
-        $this->middleware('auth'); // ensures user exists
+    public function __construct(){
+        $this->middleware('auth');
 
         $this->middleware(function ($request, $next) {
             $this->authUser = $request->user();

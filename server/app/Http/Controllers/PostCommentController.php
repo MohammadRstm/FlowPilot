@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\CommentPostRequest;
 use App\Service\PostCommentService;
 use Illuminate\Http\Request;
 
-class PostCommentController extends Controller{
+class PostCommentController extends AuthenticatedController{
 
-    public function toggleCommentLike(Request $request , int $commentId){
-        $userId = $request->user()->id;
+    public function toggleCommentLike(int $commentId){
+        $userId = $this->authUser->id;
 
         $likedResp = PostCommentService::toggleCommentLike($userId , $commentId);
         return $this->successResponse($likedResp);
@@ -23,9 +22,8 @@ class PostCommentController extends Controller{
 
     public function postComment($postId , CommentPostRequest $request){
         $content = $request->validated()["content"];
-        $userId = $request->user()->id;
 
-        $submitResp = PostCommentService::postComment($userId , $content , $postId);
+        $submitResp = PostCommentService::postComment($this->authUser->id, $content , $postId);
         return $this->successResponse($submitResp);
     }
   
