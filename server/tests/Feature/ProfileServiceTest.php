@@ -5,10 +5,9 @@ namespace Tests\Feature;
 use App\Models\Follower;
 use App\Models\User;
 use App\Models\UserPost;
-use App\Service\ProfileService;
+use App\Services\ProfileService;
 use Exception;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 

@@ -2,8 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Service\Copilot\ValidateFlowLogicService;
-use App\Service\Copilot\LLMService;
+use App\Services\Copilot\Services\ValidateFlowLogicService;
 use Tests\TestCase;
 
 class ValidateFlowLogicServiceTest extends TestCase

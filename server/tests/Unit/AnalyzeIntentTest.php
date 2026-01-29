@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Service\Copilot\AnalyzeIntent;
+use App\Services\Copilot\Services\AnalyzeIntent;
 use Tests\TestCase;
 
 class AnalyzeIntentTest extends TestCase

@@ -5,10 +5,9 @@ namespace Tests\Unit;
 use App\Models\Message;
 use App\Models\User;
 use App\Models\UserCopilotHistory;
-use App\Service\UserCopilotHistoryService;
+use App\Services\UserCopilotHistoryService;
 use Exception;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Tests\TestCase;
 
 class UserCopilotHistoryServiceTest extends TestCase

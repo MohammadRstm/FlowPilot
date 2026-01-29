@@ -2,11 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\AiModel;
-use App\Models\Message;
+
 use App\Models\User;
-use App\Models\UserCopilotHistory;
-use App\Service\UserService;
+use App\Services\UserService;
 use Exception;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

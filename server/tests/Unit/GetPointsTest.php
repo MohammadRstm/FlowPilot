@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Service\Copilot\GetPoints;
+use App\Services\Copilot\Services\GetPoints;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
