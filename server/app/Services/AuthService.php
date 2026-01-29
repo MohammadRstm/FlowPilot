@@ -29,7 +29,7 @@ class AuthService{
     }
 
     public static function login(array $credentials){
-        
+
         $user = User::where('email', $credentials['email'])->first();
         self::verifyUser($user , $credentials);
 
@@ -133,15 +133,15 @@ class AuthService{
             }
         }
 
-        // validate if password doesn't contain a capital letter
-        if(!preg_match('/[A-Z]/', $data["new_password"])){
-            throw new UserFacingException("Password must contain at least one capital letter"); 
-        }
+        // // validate if password doesn't contain a capital letter
+        // if(!preg_match('/[A-Z]/', $data["new_password"])){
+        //     throw new UserFacingException("Password must contain at least one capital letter"); 
+        // }
 
-        // validate if password length is at least 8 characters
-        if(strlen($data["new_password"]) < 8){
-            throw new UserFacingException("Password must be at least 8 characters long");
-        }
+        // // validate if password length is at least 8 characters
+        // if(strlen($data["new_password"]) < 8){
+        //     throw new UserFacingException("Password must be at least 8 characters long");
+        // }
     }
 
     private static function verifyGoogleAccount(array $data){
