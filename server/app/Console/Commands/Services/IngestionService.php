@@ -7,22 +7,16 @@ use Illuminate\Http\Client\Response;
 
 class IngestionService{
     public static function buildSparseVector(string $text): array{
-        $text = strtolower($text);
-        $text = preg_replace('/([a-z])([A-Z])/', '$1 $2', $text);
+        $text = self::normalizeText($text);
 
         $tokens = preg_split('/[^a-z0-9]+/i', $text);
-
-        $freqs = [];
-
-        foreach ($tokens as $token) {
-            if (strlen($token) < 2) continue;
-            $freqs[$token] = ($freqs[$token] ?? 0) + 1;
-        }
+        $freqs =self::buildFrequencyArray($tokens);
+        
 
         $indices = [];
         $values  = [];
 
-        foreach ($freqs as $token => $count) {
+        foreach($freqs as $token => $count){
             $indices[] = crc32($token);
             $values[]  = (float) $count; // raw TF (idf handled by Qdrant)
         }
@@ -53,5 +47,22 @@ class IngestionService{
         }
 
         return $vector;
+    }
+
+    /** helpers */
+    private static function buildFrequencyArray(array $tokens){
+        $freqs = [];
+        foreach($tokens as $token){
+            if (strlen($token) < 2) continue;
+            $freqs[$token] = ($freqs[$token] ?? 0) + 1;
+        }
+
+        return $freqs;
+    }
+
+    private static function normalizeText(string $text): string{
+        $text = strtolower($text);
+        $text = preg_replace('/\s+/', ' ', $text);
+        return trim($text);
     }
 }

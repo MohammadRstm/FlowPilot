@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Service\Copilot\WorkflowGeneration;
+use App\Services\Copilot\Services\WorkflowGeneration;
 use PHPUnit\Framework\TestCase;
 
 class N8nGeneratorTest extends TestCase

@@ -1,13 +1,14 @@
 <?php
 
-namespace App\Service\Copilot;
+namespace App\Services\Copilot;
 
 use App\Exceptions\UserFacingException;
+use App\Services\Copilot\Services\AnalyzeIntent;
+use App\Services\Copilot\Services\GetPoints;
+use App\Services\Copilot\Services\LLMService;
+use App\Services\Copilot\Services\RankingFlows;
+use App\Services\Copilot\Services\ValidateFlowLogicService;
 use Illuminate\Support\Facades\Log;
-
-// THINGS WE DO THAT DOESN'T MAKE SENSE : 
-// IN RAG WE SAVE N8N NODES CATALOGS AND N8N NODES SCHEMAS ALTHOUGH SCHEMAS ALONE MIGHT SUFFICE
-// ANALYZE INTENT SERVICE GIVES US THE NODES NEEDED FOR THE WORFKLOW GENERATION, BUT THERE IS NO GURANTEE THAT AN AI MODEL ACTUALLY KNOWS ALL THE N8N NODES AVAILABLE
 
 class GetAnswer{
     // Orchestrater
@@ -27,7 +28,7 @@ class GetAnswer{
 
             $validateWorkflowService = new ValidateFlowLogicService();
             $workflow = $validateWorkflowService->execute($workflow , $analysis , $finalPoints ,$stage ,  $trace);
-
+        
             return $workflow;
         }catch(UserFacingException $e){
             $error($e->getMessage());

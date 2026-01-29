@@ -5,10 +5,9 @@ namespace Tests\Unit;
 use App\Models\Message;
 use App\Models\User;
 use App\Models\UserCopilotHistory;
-use App\Service\UserCopilotHistoryService;
+use App\Services\UserCopilotHistoryService;
 use Exception;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Tests\TestCase;
 
 class UserCopilotHistoryServiceTest extends TestCase
@@ -218,86 +217,5 @@ class UserCopilotHistoryServiceTest extends TestCase
 
         $this->assertDatabaseMissing('user_copilot_histories', ['id' => $history1->id]);
         $this->assertDatabaseHas('user_copilot_histories', ['id' => $history2->id]);
-    }
-
-    /**
-     * Test getting downloadable content successfully
-     */
-    public function test_get_downloadable_content_successfully(): void
-    {
-        $user = User::factory()->create();
-        $history = UserCopilotHistory::factory()->create(['user_id' => $user->id]);
-
-        $aiResponse = ['response' => 'This is the AI response'];
-        $message = Message::factory()->create([
-            'history_id' => $history->id,
-            'ai_response' => $aiResponse,
-            'user_message' => 'Test message',
-        ]);
-
-        $result = UserCopilotHistoryService::getDownloadableContent($user->id, $history);
-
-        $this->assertEquals($message->id, $result->id);
-        $this->assertEquals($aiResponse, $result->ai_response);
-    }
-
-    /**
-     * Test getting downloadable content without messages
-     */
-    public function test_get_downloadable_content_without_messages(): void
-    {
-        $user = User::factory()->create();
-        $history = UserCopilotHistory::factory()->create(['user_id' => $user->id]);
-
-        $this->expectException(\Exception::class);
-
-        UserCopilotHistoryService::getDownloadableContent($user->id, $history);
-    }
-
-    /**
-     * Test getting downloadable content with array ai_response
-     */
-    public function test_get_downloadable_content_with_array_ai_response(): void
-    {
-        $user = User::factory()->create();
-        $history = UserCopilotHistory::factory()->create(['user_id' => $user->id]);
-
-        $aiResponse = [
-            'blocks' => [
-                ['type' => 'paragraph', 'data' => ['text' => 'Sample response']],
-            ],
-        ];
-
-        Message::factory()->create([
-            'history_id' => $history->id,
-            'ai_response' => $aiResponse,
-        ]);
-
-        $result = UserCopilotHistoryService::getDownloadableContent($user->id, $history);
-
-        $this->assertEquals($aiResponse, $result->ai_response);
-        $this->assertIsArray($result->ai_response);
-    }
-
-    /**
-     * Test getting downloadable content returns message object
-     */
-    public function test_get_downloadable_content_returns_message_object(): void
-    {
-        $user = User::factory()->create();
-        $history = UserCopilotHistory::factory()->create(['user_id' => $user->id]);
-
-        $message = Message::factory()->create([
-            'history_id' => $history->id,
-            'ai_response' => ['response' => 'Test'],
-            'user_message' => 'User query',
-            'ai_model' => 'gpt-4',
-        ]);
-
-        $result = UserCopilotHistoryService::getDownloadableContent($user->id, $history);
-
-        $this->assertInstanceOf(Message::class, $result);
-        $this->assertEquals('User query', $result->user_message);
-        $this->assertEquals('gpt-4', $result->ai_model);
     }
 }

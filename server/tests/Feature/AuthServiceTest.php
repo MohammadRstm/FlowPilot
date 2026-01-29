@@ -4,9 +4,8 @@ namespace Tests\Feature;
 
 use App\Exceptions\UserFacingException;
 use App\Models\User;
-use App\Service\AuthService;
+use App\Services\AuthService;
 use Exception;
-use Firebase\JWT\JWT;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;

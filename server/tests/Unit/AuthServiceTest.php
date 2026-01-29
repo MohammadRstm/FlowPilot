@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use App\Exceptions\UserFacingException;
 use App\Models\User;
-use App\Service\AuthService;
+use App\Services\AuthService;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Google_Client;

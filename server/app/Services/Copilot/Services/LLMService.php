@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service\Copilot;
+namespace App\Services\Copilot\Services;
 
 use App\Exceptions\UserFacingException;
 use Exception;
@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Log;
 
 class LLMService{
 
-    /** USER QUESTION ANALYZER */
     private static function callOpenAI($prompt){
         if(!$prompt || !$prompt["system"] || !$prompt["user"]) throw new Exception("Invalid prompt received");
 

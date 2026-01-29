@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service;
+namespace App\Services;
 
 use App\Models\Message;
 use App\Models\UserCopilotHistory;
@@ -40,15 +40,13 @@ class UserCopilotHistoryService{
         $userCopilotHistory->delete();
     }
 
-    public static function getDownloadableContent(int $userId , Model $history){
-
-
+    public static function getDownloadableContent(Model $history){
         $lastMessage = $history->messages()
             ->latest('created_at')
             ->first();
 
         if (!$lastMessage || !$lastMessage->ai_response) {
-            abort(404, 'No AI response found');
+            abort(404, 'No AI response found');// we use abort here because this is called in a download route
         }
 
         return $lastMessage;

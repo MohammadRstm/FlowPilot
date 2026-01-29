@@ -2,21 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Service\ProfileService;
-use Illuminate\Http\Request;
+use App\Services\ProfileService;
 
-class FollowerController extends Controller{
+class FollowerController extends AuthenticatedController{
     
-    public function followUser(Request $request , int $toBeFollowed){ 
-        $userId = $request->user()->id;
+    public function followUser(int $toBeFollowed){ 
+        $userId = $this->authUser->id;
 
         $result = ProfileService::toggeleFollow($userId, $toBeFollowed);
         return $this->successResponse($result , "User followed successfully");
     }
 
-    public function isFollowed(Request $request , int $toBeChecked){ 
-        $userId = $request->user()->id;
+    public function isFollowed(int $toBeChecked){ 
+        $userId = $this->authUser->id;
 
         $response = ProfileService::isFollowingUser($toBeChecked , $userId);
         return $this->successResponse($response);

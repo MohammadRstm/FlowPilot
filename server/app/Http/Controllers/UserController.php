@@ -3,12 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\AvatarUploadRequest;
 use App\Http\Requests\ConfirmWorkflowRequest;
-use App\Http\Requests\CopilotPayload;
-use App\Service\ProfileService;
-use App\Service\UserService;
-use Exception;
+use App\Services\UserService;
 use Illuminate\Http\Request;
 
 class UserController extends Controller{

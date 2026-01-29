@@ -13,13 +13,14 @@ import {
 } from "./types";
 
 import { useCopilotChatController } from "./hooks/ui/useCopilotChat.hook";
-import { useCopilotStream } from "./hooks/ui/useCopilotStream.hook";
 import { useCopilotFeedback } from "./hooks/ui/useCopilotFeedback.hook";
 import { applyTrace } from "./utils/traceAdapter";
 import { buildWorkflowFile, commitHistory, finalizeAssistantMessage } from "./utils/onComplete";
 import { useCopilotHistoryController } from "./hooks/ui/useCopilotHistoryController.hook";
 import { HistoryPanel } from "./components/HistoryPanel/HistoryPanel";
 import { useAuth } from "../../context/useAuth";
+import { useBackgroundStreamNotifications } from "./hooks/ui/useBackgroundStreamNotifications.hook";
+import { useCopilotStream } from "./hooks/ui/useCopilotStream.hook";
 
 export const Copilot =() => {
   const { user } = useAuth();
@@ -28,6 +29,7 @@ export const Copilot =() => {
   const [question, setQuestion] = useState("");
   const [stage, setStage] = useState<GenerationStage>("idle");
   const [currentHistoryId, setCurrentHistoryId] = useState<number | null>(null);
+  const [isUserOnPage, setIsUserOnPage] = useState(true);
 
   const activeKey = currentHistoryId ?? "new";
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -40,6 +42,8 @@ export const Copilot =() => {
     { new: [] }
   );
 
+  // Global background stream notifications
+  useBackgroundStreamNotifications();
 
   // streaming hook
   const { run , cancel , runId} = useCopilotStream({
@@ -95,6 +99,20 @@ export const Copilot =() => {
     setActiveGenerationKey,
   });
 
+  // Track if user is on the page for feedback
+  useEffect(() => {
+    const handleFocus = () => setIsUserOnPage(true);
+    const handleBlur = () => setIsUserOnPage(false);
+
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, []);
+
   // scroll effect
   useEffect(() => {
     chatRef.current?.scrollTo({
@@ -137,7 +155,11 @@ export const Copilot =() => {
     setCurrentHistoryId(newHistoryId);
     setStage("done");
     setActiveGenerationKey(null);
-    openFeedback(question, answer);
+    
+    // Only show feedback toast if user is still on the page
+    if (isUserOnPage) {
+      openFeedback(question, answer);
+    }
   };
 
   const handleStreamError = () => {
@@ -147,8 +169,6 @@ export const Copilot =() => {
       ...prev,
       [key]: [],
     }));
-
-    console.log("here");
 
     setMessageStore(prev => {
       const msgs = prev[key] ?? [];
@@ -225,7 +245,7 @@ export const Copilot =() => {
           </div>
         </div>
 
-        {feedback && (
+        {feedback && isUserOnPage && (
         <FeedbackToast
           feedback={feedback}
           onYes={confirmYes}

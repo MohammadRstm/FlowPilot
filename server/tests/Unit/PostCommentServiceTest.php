@@ -7,7 +7,7 @@ use App\Models\CommentsLike;
 use App\Models\PostComment;
 use App\Models\User;
 use App\Models\UserPost;
-use App\Service\PostCommentService;
+use App\Services\PostCommentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

@@ -9,15 +9,12 @@ import ProtectedRoutes from './Pages/components/ProtectedRoutes'
 import ProfilePage from './Pages/profile/Profile'
 import AboutPage from './Pages/AboutUs'
 import SettingsPage from './Pages/Settings/Settings'
-
-// big objectives
-// ADD THE ABILITY TO SEND USER WORKFLOWS TO ADD ON IT/FIX IT - HARD - BACKEND HEAVY
-// ADD THE ABILITY TO CREATE CUSTOM NODES - VERY HARD - F/B HEAVY ON BOTH
-// ADD THE ABILITY TO SAVE CREDENTIALS OR FIGURE OUT A WAY TO DO IT AUTOMATICALLY - HARD F/B HEAVY ON BOTH
-
-// white screen appearing on reload then page appears
+import { useBackgroundStreamNotifications } from './Pages/copilot/hooks/ui/useBackgroundStreamNotifications.hook'
 
 function App() {
+  // listens for background stream completions globally
+  useBackgroundStreamNotifications();
+
   return (
     <BrowserRouter>
       <Routes>

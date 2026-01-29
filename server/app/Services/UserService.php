@@ -1,16 +1,15 @@
 <?php
 
-namespace App\Service;
+namespace App\Services;
 
 use App\Models\AiModel;
 use App\Models\Message;
 use App\Models\User;
 use App\Models\UserCopilotHistory;
-use App\Service\Copilot\GetAnswer;
-use App\Service\Copilot\PostWorkflow;
-use App\Service\Copilot\SaveWorkflow;
+use App\Services\Copilot\GetAnswer;
+use App\Services\Copilot\Services\PostWorkflow;
+use App\Services\Copilot\Services\SaveWorkflow;
 use Exception;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
