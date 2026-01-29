@@ -34,6 +34,10 @@ class LLMService{
             return $decoded;
         }
 
+        return self::handleAIError($results, $model);
+    }
+
+    private static function handleAIError($results, $model){
         Log::error("RAW CONTENT :" ,  ["content" => $results]);
 
         if(preg_match('/\{.*\}|\[.*\]/s', $results, $m)){// AI may have included some markdown or explanation
