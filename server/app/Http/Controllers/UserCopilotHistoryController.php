@@ -15,7 +15,7 @@ class UserCopilotHistoryController extends AuthenticatedController{
         ]);
     }
 
-    public function show(Request $request , UserCopilotHistory $userCopilotHistory){
+    public function show(UserCopilotHistory $userCopilotHistory){
         $userCopilotHistory = UserCopilotHistoryService::getUserCopilotHistoryDetials( $this->authUser->id , $userCopilotHistory);
         return $this->successResponse([
             'history' => $userCopilotHistory,
@@ -29,7 +29,7 @@ class UserCopilotHistoryController extends AuthenticatedController{
     }
 
     public function download(UserCopilotHistory $history){
-        $lastMessage = UserCopilotHistoryService::getDownloadableContent( $this->authUser->id, $history);
+        $lastMessage = UserCopilotHistoryService::getDownloadableContent($history);
         return response()->json(
             $lastMessage->ai_response,
             200,

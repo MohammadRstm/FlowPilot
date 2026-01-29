@@ -2,7 +2,7 @@
 
 namespace App\Services\Copilot\Services;
 
-use App\Service\Copilot\Service\LLMService;
+use App\Services\Copilot\Services\LLMService;
 
 class AnalyzeIntent{
 

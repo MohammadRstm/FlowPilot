@@ -6,6 +6,7 @@ use App\Http\Requests\AvatarUploadRequest;
 use App\Services\ProfileService;
 use App\Services\UserService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ProfileController extends AuthenticatedController{
 

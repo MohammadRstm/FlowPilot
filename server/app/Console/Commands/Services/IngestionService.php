@@ -50,7 +50,7 @@ class IngestionService{
     }
 
     /** helpers */
-    private function buildFrequencyArray(array $tokens){
+    private static function buildFrequencyArray(array $tokens){
         $freqs = [];
         foreach($tokens as $token){
             if (strlen($token) < 2) continue;

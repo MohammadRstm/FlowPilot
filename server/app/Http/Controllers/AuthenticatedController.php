@@ -10,7 +10,7 @@ class AuthenticatedController extends Controller{
     protected Authenticatable $authUser;
 
     public function __construct(){
-        $this->middleware('auth');
+        $this->middleware('jwt.auth');
 
         $this->middleware(function ($request, $next) {
             $this->authUser = $request->user();

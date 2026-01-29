@@ -60,7 +60,6 @@ class UserPostService{
 
         $fileName = 'post-' . $post->id . '.json';
         $headers = self::getExportHeaders($fileName);
-
         $post->increment('imports');
 
         return [
@@ -74,11 +73,11 @@ class UserPostService{
         $jsonContent = null;
         $photoUrl = null;
 
-        if (isset($form['file'])) {
+        if(isset($form['file'])){
             $jsonContent = self::getJsonContent($form);
         }
 
-        if (isset($form['image'])) {
+        if(isset($form['image'])){
             $photoUrl = self::storeImageInStorage($form);
         }
 
@@ -120,6 +119,7 @@ class UserPostService{
         $weightComments = 2;
         $weightImports = 4;
         $followBoost = 100000;
+        
         return UserPost::query()
             ->with('user')
             ->select('user_posts.*')

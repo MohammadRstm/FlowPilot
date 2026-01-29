@@ -6,10 +6,7 @@ use App\Models\Follower;
 use App\Models\User;
 use App\Models\UserPost;
 use Exception;
-use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
@@ -37,10 +34,7 @@ class ProfileService{
         // is viewer following this profile?
         $viewerFollows = false;
         if($viewerId) {
-            $viewerFollows = DB::table('followers')
-            ->where('follower_id', $viewerId)
-            ->where('followed_id', $userId)
-            ->exists();
+            $viewerFollows = self::getFollowingStatus($viewerId, $userId);
         }
 
         // posts : ranked/paginated :: copilot histories : paginated
@@ -63,32 +57,18 @@ class ProfileService{
     }
 
     public static function toggeleFollow(int $userId, int $toBeFollowed){
-        if ($userId === $toBeFollowed) {
-            throw new Exception("You cannot follow yourself");
-        }
+        self::validateFollowingRequest($userId, $toBeFollowed);
 
-        // Ensure target user exists
-        if (!User::where('id', $toBeFollowed)->exists()) {
-            throw new Exception("User not found");
-        }
+        $alreadyFollowing = self::checkIfAlreadyFollowing($userId, $toBeFollowed);
 
-        $existing = Follower::where('follower_id', $userId)
-            ->where('followed_id', $toBeFollowed)
-            ->first();
-
-        if ($existing) {
-           Follower::where('follower_id', $userId)
-            ->where('followed_id', $toBeFollowed)
-            ->delete();
+        if($alreadyFollowing){
+            self::unfollowUser($userId, $toBeFollowed);
             return [
                 'following' => false,
             ];
         }
 
-        Follower::create([
-            'follower_id' => $userId,
-            'followed_id' => $toBeFollowed,
-        ]);
+        self::followUser($userId, $toBeFollowed);
 
         return [
             'following' => true,
@@ -139,6 +119,44 @@ class ProfileService{
             throw new Exception($e->getMessage());
         }
     }
+
+    /** helpers  */
+    private static function getFollowingStatus(int $viewerId, int $userId){
+        return DB::table('followers')
+            ->where('follower_id', $viewerId)
+            ->where('followed_id', $userId)
+            ->exists();
+    }
+
+    private static function validateFollowingRequest(int $userId, int $toBeFollowed){
+        if($userId === $toBeFollowed){
+            throw new Exception("You cannot follow yourself");
+        }
+
+        // ensure target user exists
+        if(!User::where('id', $toBeFollowed)->exists()){
+            throw new Exception("User not found");
+        }
+    }
+
+    private static function unfollowUser(int $userId, int $toBeFollowed){
+        Follower::where('follower_id', $userId)
+            ->where('followed_id', $toBeFollowed)
+            ->delete();
+    }
+
+    private static function checkIfAlreadyFollowing(int $userId, int $toBeFollowed){
+        return Follower::where('follower_id', $userId)
+            ->where('followed_id', $toBeFollowed)
+            ->first();
+    }
+
+    private static function followUser(int $userId, int $toBeFollowed){
+        Follower::create([
+            'follower_id' => $userId,
+            'followed_id' => $toBeFollowed,
+        ]);
+    }   
 
     private static function getNumberOfImports(int $userId){
         return User::select('id','first_name','last_name','email','photo_url','created_at')
