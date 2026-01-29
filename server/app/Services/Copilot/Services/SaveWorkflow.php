@@ -27,7 +27,17 @@ class SaveWorkflow{
 
             $endpoint = rtrim(env('QDRANT_CLUSTER_ENDPOINT', ''), '/');
 
-            Http::withHeaders([
+            self::callQdrant($endpoint, $denseVector, $sparseVector, $payload);
+
+            return $payload;
+        } catch (\Exception $e) {
+            Log::error("Failed to store workflow", ['error' => $e->getMessage()]);
+            throw new Exception("failed to store workflow in qdrant " . $e->getMessage());
+        }
+    }
+
+    private static function callQdrant($endpoint, $denseVector, $sparseVector, $payload){
+        Http::withHeaders([
                 'api-key' => env('QDRANT_API_KEY'),
             ])->put(
                 $endpoint . '/collections/n8n_workflows/points?wait=true',
@@ -44,12 +54,6 @@ class SaveWorkflow{
                     ],
                 ]
             );
-
-            return $payload;
-        } catch (\Exception $e) {
-            Log::error("Failed to store workflow", ['error' => $e->getMessage()]);
-            throw new Exception("failed to store workflow in qdrant " . $e->getMessage());
-        }
     }
 
     private static function buildPayload(array $json , string $question): array {
