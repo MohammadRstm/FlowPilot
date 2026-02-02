@@ -1,19 +1,19 @@
 import express from 'express';
 import cors from 'cors';
+import dotenv from 'dotenv';
+import routes from './api/routes';
 
-
+dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get("/helth" , (req , res) =>{
-    res.json({status:"alive"});
-});
+app.use('/api', routes);
 
 
-app.listen(PORT , ()=>{
-    console.log("Custom Node Generator Microservice is running on port " + PORT);
+app.listen(process.env.PORT || 3001 , ()=>{
+    console.log("Custom Node Generator Microservice is running on port " + (process.env.PORT || 3001));
 });
 
 
