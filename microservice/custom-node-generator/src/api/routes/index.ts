@@ -1,5 +1,6 @@
 import { Router } from "express";
 import healthRouter from "./health.routes";
+import generateCustomNodeRoutes from "./generator.route";
 
 
 const routes = Router();

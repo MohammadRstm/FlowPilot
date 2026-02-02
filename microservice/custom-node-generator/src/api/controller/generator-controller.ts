@@ -4,7 +4,8 @@ import { PROGRAMMATIC_BUILD_SYSTEM_PROMPT } from "../../ai/prompts/buildProgramm
 import { ANALYZE_SYSTEM_PROMPT } from "../../ai/prompts/nodeAnalysis.prompt";
 
 
-export async function planAndGenerateNode(userRequest: string){
+export const generateCustomNodeController = async (req, res) => {
+  const userRequest = req.body.userRequest;
 
   const analysis = await analyzerAgent.invoke({
     messages: [
