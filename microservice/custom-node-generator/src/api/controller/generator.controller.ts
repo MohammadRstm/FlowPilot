@@ -1,10 +1,11 @@
+import { Request, Response } from "express";
 import { analyzerAgent, builderAgent } from "../../ai/llmClient";
 import { DECLARATIVE_BUILD_SYSTEM_PROMPT } from "../../ai/prompts/buildDeclarativeNode.prompt";
 import { PROGRAMMATIC_BUILD_SYSTEM_PROMPT } from "../../ai/prompts/buildProgrammaticNode.prompt";
 import { ANALYZE_SYSTEM_PROMPT } from "../../ai/prompts/nodeAnalysis.prompt";
 
 
-export const generateCustomNodeController = async (req, res) => {
+export const generateCustomNodeController = async (req : Request, res : Response) => {
   const userRequest = req.body.userRequest;
 
   const analysis = await analyzerAgent.invoke({

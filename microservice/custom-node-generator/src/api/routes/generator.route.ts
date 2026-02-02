@@ -4,6 +4,6 @@ import { Router } from "express";
 
 const generateCustomNodeRoutes = Router();
 
-generateCustomNodeRoutes.post("/" , generateCustomNodeController);
+generateCustomNodeRoutes.post("/" , generateCustomNodeRoutes);
 
 export default generateCustomNodeRoutes;
